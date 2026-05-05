@@ -1,5 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
+    <style>
+    :root {
+        --wr-primary: #1d9bf0;
+        --wr-primary-dark: #0f4c81;
+        --wr-navy: #102a43;
+        --wr-line: rgba(15, 76, 129, 0.14);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+        background: #f7fbff;
+        color: #102a43;
+    }
+
+    .navbar-home {
+        background: rgba(255, 255, 255, 0.94) !important;
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--wr-line);
+        box-shadow: 0 12px 30px rgba(15, 42, 67, 0.08);
+    }
+
+    .navbar-home .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--wr-navy) !important;
+        font-size: 1.15rem;
+        letter-spacing: -0.02em;
+    }
+
+    .logo-img {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0 8px 18px rgba(15, 76, 129, 0.16);
+    }
+
+    .navbar-home .nav-link {
+        color: #183b56 !important;
+        font-weight: 700;
+        font-size: 0.92rem;
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
+    }
+
+    .navbar-home .nav-link:hover {
+        color: var(--wr-primary-dark) !important;
+    }
+
+    .nav-auth-btn {
+        border-radius: 999px !important;
+        padding: 0.6rem 1rem !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .nav-signup {
+        background: #e3f4ff !important;
+        color: var(--wr-primary-dark) !important;
+    }
+
+    .nav-login {
+        background: var(--wr-primary-dark) !important;
+        color: #fff !important;
+        border: 1px solid var(--wr-primary-dark) !important;
+    }
+
+    .wr-hero {
+        position: relative;
+        min-height: 100vh;
+        padding: 128px 0 82px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(29, 155, 240, 0.18), transparent 28%),
+            radial-gradient(circle at 82% 10%, rgba(56, 189, 248, 0.18), transparent 30%),
+            linear-gradient(135deg, #f8fcff 0%, #e7f6ff 48%, #f9fdff 100%);
+    }
+
+    .wr-hero::before,
+    .wr-hero::after {
+        content: '';
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(29, 155, 240, 0.12);
+        pointer-events: none;
+    }
+
+    .wr-hero::before {
+        width: 380px;
+        height: 380px;
+        right: -120px;
+        top: 120px;
+    }
+
+    .wr-hero::after {
+        width: 260px;
+        height: 260px;
+        left: -90px;
+        bottom: 60px;
+    }
+
+    .wr-hero .container {
+        position: relative;
+        z-index: 2;
+    }
+
+    .wr-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #ffffff;
+        border: 1px solid var(--wr-line);
+        color: var(--wr-primary-dark);
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 8px 14px;
+        box-shadow: 0 10px 24px rgba(15, 76, 129, 0.08);
+        margin-bottom: 18px;
+    }
+
+    .wr-hero-title {
+        font-size: clamp(2.65rem, 6vw, 5.2rem);
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: -0.06em;
+        color: var(--wr-navy);
+        margin-bottom: 18px;
+    }
+
+    .wr-hero-title span {
+        color: var(--wr-primary-dark);
+    }
+
+    .wr-hero-lead {
+        color: #31506a;
+        font-size: 1.16rem;
+        line-height: 1.75;
+        max-width: 640px;
+        margin-bottom: 26px;
+    }
+
+    .wr-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+
+    .wr-btn-primary,
+    .wr-btn-outline,
+    .wr-btn-light {
+        border-radius: 999px;
+        padding: 13px 20px;
+        font-weight: 800;
+        box-shadow: 0 12px 25px rgba(15, 76, 129, 0.12);
+    }
+
+    .wr-btn-primary {
+        background: var(--wr-primary-dark);
+        border-color: var(--wr-primary-dark);
+        color: #fff;
+    }
+
+    .wr-btn-primary:hover {
+        background: #0a355e;
+        border-color: #0a355e;
+        color: #fff;
+    }
+
+    .wr-btn-outline {
+        border: 1px solid rgba(15, 76, 129, 0.28);
+        color: var(--wr-primary-dark);
+        background: #fff;
+    }
+
+    .wr-btn-outline:hover {
+        background: #e8f5ff;
+        color: var(--wr-primary-dark);
+    }
+
+    .wr-btn-light {
+        border: 1px solid rgba(15, 76, 129, 0.16);
+        color: #183b56;
+        background: rgba(255, 255, 255, 0.76);
+    }
+
+    .wr-trust-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        max-width: 640px;
+    }
+
+    .wr-trust-card {
+        background: rgba(255,255,255,0.82);
+        border: 1px solid var(--wr-line);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 14px 30px rgba(15, 42, 67, 0.08);
+    }
+
+    .wr-trust-card i {
+        color: var(--wr-primary-dark);
+        margin-bottom: 8px;
+    }
+
+    .wr-trust-card strong {
+        display: block;
+        font-size: 0.95rem;
+        color: var(--wr-navy);
+    }
+
+    .wr-trust-card span {
+        display: block;
+        color: #63788c;
+        font-size: 0.82rem;
+        margin-top: 3px;
+    }
+
+    .wr-hero-visual {
+        position: relative;
+        max-width: 470px;
+        margin-left: auto;
+    }
+
+    .wr-logo-card {
+        background: #fff;
+        border: 1px solid var(--wr-line);
+        border-radius: 32px;
+        padding: 28px;
+        box-shadow: 0 26px 60px rgba(15, 42, 67, 0.16);
+    }
+
+    .wr-logo-card img {
+        width: 100%;
+        max-height: 310px;
+        object-fit: contain;
+        border-radius: 24px;
+        background: #f3f8fc;
+    }
+
+    .wr-service-mini {
+        margin-top: 16px;
+        background: #102a43;
+        color: #fff;
+        border-radius: 28px;
+        padding: 22px;
+        box-shadow: 0 22px 46px rgba(16, 42, 67, 0.22);
+    }
+
+    .wr-service-mini h5 {
+        font-weight: 900;
+        margin-bottom: 14px;
+    }
+
+    .wr-service-mini ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 10px;
+    }
+
+    .wr-service-mini li {
+        color: rgba(255,255,255,0.88);
+        font-weight: 600;
+        font-size: 0.92rem;
+    }
+
+    .wr-service-mini li i {
+        color: #7dd3fc;
+        margin-right: 8px;
+    }
+
+    .wr-floating-badge {
+        position: absolute;
+        right: -18px;
+        top: 28px;
+        background: #fff;
+        border: 1px solid var(--wr-line);
+        border-radius: 18px;
+        padding: 12px 14px;
+        box-shadow: 0 18px 34px rgba(15, 42, 67, 0.14);
+        font-weight: 900;
+        color: var(--wr-primary-dark);
+        z-index: 5;
+    }
+
+    .wr-floating-badge small {
+        display: block;
+        color: #63788c;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+
+    .wr-quick-strip {
+        margin-top: -42px;
+        position: relative;
+        z-index: 3;
+    }
+
+    .wr-quick-card {
+        background: #fff;
+        border: 1px solid var(--wr-line);
+        border-radius: 28px;
+        padding: 22px;
+        box-shadow: 0 18px 45px rgba(15, 42, 67, 0.12);
+    }
+
+    .wr-quick-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .wr-quick-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e9f6ff;
+        color: var(--wr-primary-dark);
+        flex: 0 0 auto;
+        font-size: 1.15rem;
+    }
+
+    .wr-quick-item h6 {
+        margin: 0 0 3px;
+        font-weight: 900;
+        color: var(--wr-navy);
+    }
+
+    .wr-quick-item p {
+        margin: 0;
+        color: #63788c;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 991.98px) {
+        .wr-hero {
+            padding-top: 108px;
+            text-align: center;
+        }
+
+        .wr-hero-lead,
+        .wr-trust-row,
+        .wr-hero-visual {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .wr-hero-actions {
+            justify-content: center;
+        }
+
+        .wr-hero-visual {
+            margin-top: 36px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .wr-trust-row {
+            grid-template-columns: 1fr;
+        }
+
+        .wr-floating-badge {
+            position: static;
+            margin-bottom: 14px;
+            display: inline-block;
+        }
+
+        .wr-quick-strip {
+            margin-top: 0;
+            padding-top: 24px;
+        }
+    }
+
+    .navbar-home .nav-auth-btn.nav-login {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid rgba(15, 23, 42, 0.12) !important;
+        border-radius: 14px !important;
+        padding: 9px 18px !important;
+        font-weight: 800 !important;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10) !important;
+    }
+
+    .navbar-home .nav-auth-btn.nav-login i {
+        color: #0f172a !important;
+    }
+
+    .navbar-home .nav-auth-btn.nav-login:hover {
+        background: #0f172a !important;
+        color: #ffffff !important;
+        border-color: #0f172a !important;
+    }
+
+    .navbar-home .nav-auth-btn.nav-login:hover i {
+        color: #ffffff !important;
+    }
+
+    .navbar-home .nav-auth-btn.nav-signup {
+        background: #38bdf8 !important;
+        color: #082f49 !important;
+        border-radius: 14px !important;
+        padding: 9px 18px !important;
+        font-weight: 800 !important;
+    }
+
+    .navbar-home .nav-auth-btn.nav-signup i {
+        color: #082f49 !important;
+    }
+
+    .navbar-home .nav-auth-btn.nav-signup:hover {
+        background: #0284c7 !important;
+        color: #ffffff !important;
+    }
+
+    .navbar-home .nav-auth-btn.nav-signup:hover i {
+        color: #ffffff !important;
+    }
+</style>
+
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,124 +447,169 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light navbar-home fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="#home">
-                <img src="image/294539416_407599744767669_1937739510480713048_n.jpg" alt="WRPlumb Logo" class="logo-img">
-                <strong>WRPlumb</strong>
-            </a>
-            <button
-                class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarNav"
-                aria-controls="navbarNav"
-                aria-expanded="false"
-                aria-label="Toggle navigation"
-            >
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#home">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#process">Process</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#services">Services</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#projects">Projects</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
-                    </li>
-                
-                    <li class="nav-item">
-                        <button
-                            type="button"
-                            class="nav-link btn nav-auth-btn nav-signup ms-2 border-0"
-                            data-bs-toggle="modal"
-                            data-bs-target="#registerModal"
-                        >
-                            <i class="fas fa-user-plus"></i> Sign Up
-                        </button>
-                    </li>
+<nav class="navbar navbar-expand-lg navbar-light navbar-home fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="#home">
+            <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb Logo" class="logo-img">
+            <strong>WRPlumb</strong>
+        </a>
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="#process">Process</a></li>
+                <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+                <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
+                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
 
-                    <li class="nav-item">
-                        <a class="nav-link btn nav-auth-btn nav-login ms-2" href="{{ route('login') }}">
-                            <i class="fas fa-sign-in-alt"></i> Client Login
-                        </a>
-                    </li>
-                </ul>
+                <li class="nav-item mt-2 mt-lg-0">
+                    <button
+                        type="button"
+                        class="nav-link btn nav-auth-btn nav-signup ms-lg-2 border-0"
+                        data-bs-toggle="modal"
+                        data-bs-target="#registerModal"
+                    >
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </button>
+                </li>
+
+                <li class="nav-item mt-2 mt-lg-0">
+                    <a class="nav-link btn nav-auth-btn nav-login ms-lg-2" href="{{ route('login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Client Login
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="home" class="wr-hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <div class="wr-eyebrow">
+                    <i class="fas fa-shield-alt"></i>
+                    Trusted Plumbing & Construction Services in CDO
+                </div>
+
+                <h1 class="wr-hero-title">
+                    Reliable service for every <span>plumbing</span> and construction need.
+                </h1>
+
+                <p class="wr-hero-lead">
+                    WRPlumb helps clients request quotations, book services, track job progress, and communicate with the team through a simple online portal.
+                </p>
+
+                <div class="wr-hero-actions">
+                    <button type="button" class="btn wr-btn-primary" data-bs-toggle="modal" data-bs-target="#registerModal">
+                        <i class="fas fa-user-plus me-2"></i>Get Started
+                    </button>
+
+                    <a href="#free-quotation" class="btn wr-btn-outline">
+                        <i class="fas fa-file-invoice me-2"></i>Free Quotation
+                    </a>
+
+                    <a href="#contact" class="btn wr-btn-light">
+                        <i class="fas fa-phone me-2"></i>Contact Us
+                    </a>
+                </div>
+
+                <div class="wr-trust-row">
+                    <div class="wr-trust-card">
+                        <i class="fas fa-tools"></i>
+                        <strong>Skilled Team</strong>
+                        <span>Plumbing and construction works</span>
+                    </div>
+
+                    <div class="wr-trust-card">
+                        <i class="fas fa-calendar-check"></i>
+                        <strong>Easy Booking</strong>
+                        <span>Submit requests online</span>
+                    </div>
+
+                    <div class="wr-trust-card">
+                        <i class="fas fa-clipboard-list"></i>
+                        <strong>Status Tracking</strong>
+                        <span>Monitor service progress</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="wr-hero-visual">
+                    <div class="wr-floating-badge">
+                        <i class="fas fa-star text-warning me-1"></i> Quality Work
+                        <small>Reliable output, fair rates</small>
+                    </div>
+
+                    <div class="wr-logo-card">
+                        <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb Plumbing and Construction">
+                    </div>
+
+                    <div class="wr-service-mini">
+                        <h5>What you can request</h5>
+                        <ul>
+                            <li><i class="fas fa-check-circle"></i> Residential plumbing repair and installation</li>
+                            <li><i class="fas fa-check-circle"></i> Water line, waste line, and sewer line works</li>
+                            <li><i class="fas fa-check-circle"></i> Renovation, masonry, painting, and steel works</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
-    </nav>
+    </div>
+</section>
 
-    <!-- Hero Section with Background Image -->
-    <section id="home" class="hero-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <!-- Logo Section -->
-                    <div class="hero-logo-section">
-                        <img src="image/294539416_407599744767669_1937739510480713048_n.jpg" alt="WRPlumb Plumbing &amp; Construction" class="logo-large">
+<!-- Quick Value Strip -->
+<section class="wr-quick-strip">
+    <div class="container">
+        <div class="wr-quick-card">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="wr-quick-item">
+                        <div class="wr-quick-icon"><i class="fas fa-file-signature"></i></div>
+                        <div>
+                            <h6>Request Online</h6>
+                            <p>Send service details and attachments.</p>
+                        </div>
                     </div>
-                    <h1>WRPlumb</h1>
-                    <p class="lead">Professional Plumbing &amp; Construction Services You Can Trust</p>
-                    <p>We are a local plumbing and construction service company in Cagayan de Oro City that constantly aims to deliver reliable &amp; cost effective service. Your trusted partner for all plumbing and construction needs.</p>
-                    <div class="mt-4 mb-5">
-                        <a href="client/register.html" class="btn btn-light btn-lg hero-btn me-3">
-                            <i class="fas fa-user-plus"></i> Get Started - Book a Service
-                        </a>
-                        <a href="#free-quotation" class="btn btn-outline-warning btn-lg hero-btn me-3">
-                            <i class="fas fa-file-invoice"></i> Free Quotation
-                        </a>
-                        <a href="#contact" class="btn btn-outline-light btn-lg hero-btn">
-                            <i class="fas fa-phone"></i> Contact Us
-                        </a>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="wr-quick-item">
+                        <div class="wr-quick-icon"><i class="fas fa-user-check"></i></div>
+                        <div>
+                            <h6>Team Review</h6>
+                            <p>Admin assigns the right personnel.</p>
+                        </div>
                     </div>
-                    
-                    <!-- Services Display -->
-                    <div class="services-overlay">
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <h3>PLUMBING</h3>
-                                <h4>SERVICES</h4>
-                                <ul>
-                                    <li>Residential Plumbing &amp; Repair</li>
-                                    <li>Waste Line Installation</li>
-                                    <li>Water Line Installation</li>
-                                    <li>Downspout &amp; Sewer Line Installation</li>
-                                    <li>Transfer &amp; Jockey Pump Installation</li>
-                                    <li>Plumbing Fixtures &amp; Accessories Installation</li>
-                                    <li>Fire Sprinkler System Installation</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <h3>CONSTRUCTION</h3>
-                                <h4>SERVICES</h4>
-                                <ul>
-                                    <li>New Home &amp; Commercial Building &amp; Renovation</li>
-                                    <li>Masonry Works</li>
-                                    <li>Carpentry</li>
-                                    <li>Finishing Works</li>
-                                    <li>Tile Installation</li>
-                                    <li>Steel Works</li>
-                                    <li>New &amp; Renovation Paint Works</li>
-                                </ul>
-                            </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="wr-quick-item">
+                        <div class="wr-quick-icon"><i class="fas fa-route"></i></div>
+                        <div>
+                            <h6>Track Progress</h6>
+                            <p>View quotation, job order, and billing updates.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- Video Ad Section -->
     <section class="video-ad-section section-padding">
@@ -448,6 +924,8 @@
                                 </div>
                             </div>
                         </div>
+
+
 
                         <div class="why-footer-clean mt-4">
                             <p class="mb-0">

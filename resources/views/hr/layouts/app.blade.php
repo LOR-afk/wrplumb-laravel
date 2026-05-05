@@ -7,6 +7,9 @@
     <link rel="icon" type="image/png" href="{{ asset('image/logo.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/common.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/hr/layout.css') }}">
+    @stack('styles')
     <style>
         :root {
             --wr-primary: #1d9bf0;
@@ -464,6 +467,11 @@
         <a href="{{ route('hr.receipts.index') }}"
             class="sidebar-link {{ request()->routeIs('hr.receipts.*') ? 'active' : '' }}">
                 <i class="fas fa-receipt me-2"></i> Receipts
+        </a>
+
+        <a href="{{ route('hr.reports.index') }}" class="sidebar-link {{ request()->routeIs('hr.reports.*') ? 'active' : '' }}">
+            <i class="fas fa-chart-column"></i>
+            <span>Reports</span>
         </a>
 
         <a href="{{ route('hr.support.index') }}" class="sidebar-link {{ request()->routeIs('hr.support.*') ? 'active' : '' }}">

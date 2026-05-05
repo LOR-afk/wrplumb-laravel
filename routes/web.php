@@ -36,13 +36,36 @@ use App\Http\Controllers\Client\ReceiptController as ClientReceiptController;
 use App\Http\Controllers\Admin\QuotationController as AdminQuotationController;
 use App\Http\Controllers\Admin\JobOrderController as AdminJobOrderController;
 use App\Http\Controllers\Client\JobOrderController as ClientJobOrderController;
+use App\Http\Controllers\Hr\ReportController as HrReportController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\PublicQuotationAcceptanceController;
 
+
+/*|--------------------------------------------------------------------------
+| Routes for public pages and quotation acceptance
+|--------------------------------------------------------------------------
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which contains the "web" middleware group. Now create something great!   |
+*/
 Route::get('/', function () {
     return view('home');
 })->name('home');
 
+Route::get('/internal-portal', function () {
+    return view('landing.internal');
+})->name('landing.internal');
+
 Route::post('/free-quotation', [PublicQuotationController::class, 'store'])
     ->name('free-quotation.store');
+
+Route::get('/quotation/view/{token}', [PublicQuotationAcceptanceController::class, 'show'])
+    ->name('public.quotations.show');
+
+Route::post('/quotation/view/{token}/accept', [PublicQuotationAcceptanceController::class, 'accept'])
+    ->name('public.quotations.accept');
+
+Route::post('/quotation/view/{token}/decline', [PublicQuotationAcceptanceController::class, 'decline'])
+    ->name('public.quotations.decline');
 
 /*
 |--------------------------------------------------------------------------
@@ -98,12 +121,17 @@ Route::middleware('auth')->group(function () {
 | Admin auth with OTP
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('guest')->prefix('admin')->group(function () {
     Route::get('/login', [AdminLoginController::class, 'showLogin'])->name('admin.login');
     Route::post('/login', [AdminLoginController::class, 'sendOtp'])->name('admin.login.send-otp');
 
     Route::get('/verify-otp', [AdminLoginController::class, 'showOtpForm'])->name('admin.otp.form');
     Route::post('/verify-otp', [AdminLoginController::class, 'verifyOtp'])->name('admin.otp.verify');
+    Route::post('/verify-otp/resend', [AdminLoginController::class, 'resendOtp'])
+    ->name('admin.otp.resend')
+    ->middleware('throttle:3,1');
+
 });
 
 /*
@@ -139,6 +167,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::patch('/admin/job-orders/{jobOrder}/complete', [AdminJobOrderController::class, 'complete'])->name('admin.job-orders.complete');
     Route::patch('/admin/job-orders/{jobOrder}/cancel', [AdminJobOrderController::class, 'cancel'])->name('admin.job-orders.cancel');
     Route::patch('/admin/job-orders/{jobOrder}/remarks', [AdminJobOrderController::class, 'updateRemarks'])->name('admin.job-orders.update-remarks');
+    Route::get('/reports', [AdminReportController::class, 'index'])->name('admin.reports.index');
+    Route::get('/reports/projects/export', [AdminReportController::class, 'exportProjects'])->name('admin.reports.projects.export');
 
     Route::get('/alerts', [AdminAlertController::class, 'index'])->name('admin.alerts.index');
 
@@ -189,6 +219,8 @@ Route::middleware(['auth', 'hr'])->prefix('hr')->group(function () {
     Route::get('/receipts/create/{payment}', [HrReceiptController::class, 'create'])->name('hr.receipts.create');
     Route::post('/receipts', [HrReceiptController::class, 'store'])->name('hr.receipts.store');
     Route::get('/receipts/{receipt}', [HrReceiptController::class, 'show'])->name('hr.receipts.show');
+    Route::get('/reports', [HrReportController::class, 'index'])->name('hr.reports.index');
+    Route::get('/reports/income/export', [HrReportController::class, 'exportIncome'])->name('hr.reports.income.export');
 
     Route::post('/logout', [HrLoginController::class, 'logout'])->name('hr.logout');
 });

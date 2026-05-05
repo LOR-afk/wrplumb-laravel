@@ -1,0 +1,241 @@
+    .job-order-page {
+        max-width: 1240px;
+        margin: 0 auto;
+    }
+
+    .jo-card {
+        background: #ffffff;
+        border: 1px solid var(--wr-border);
+        border-radius: 22px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .jo-hero {
+        padding: 24px;
+        margin-bottom: 20px;
+        background:
+            radial-gradient(circle at top right, rgba(29, 155, 240, 0.12), transparent 35%),
+            linear-gradient(135deg, #ffffff, #f8fbff);
+    }
+
+    .jo-hero-title {
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+
+    .jo-hero-subtitle {
+        color: #64748b;
+        margin-bottom: 0;
+        font-weight: 600;
+    }
+
+    .jo-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: 0.86rem;
+        white-space: nowrap;
+    }
+
+    .jo-status-badge.scheduled {
+        background: #eaf4ff;
+        color: #1d4ed8;
+    }
+
+    .jo-status-badge.progressing {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .jo-status-badge.completed {
+        background: #ecfdf3;
+        color: #15803d;
+    }
+
+    .jo-status-badge.cancelled {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .jo-status-badge.neutral {
+        background: #eef2f7;
+        color: #475569;
+    }
+
+    .jo-summary-card {
+        padding: 22px;
+        margin-bottom: 20px;
+    }
+
+    .jo-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .jo-summary-item {
+        min-height: 82px;
+        border: 1px solid #edf2f7;
+        background: #f8fbff;
+        border-radius: 18px;
+        padding: 14px 16px;
+    }
+
+    .jo-summary-label {
+        display: block;
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+
+    .jo-summary-value {
+        color: #0f172a;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .jo-section-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+        gap: 20px;
+        align-items: start;
+    }
+
+    .jo-action-card {
+        padding: 22px;
+        margin-bottom: 20px;
+    }
+
+    .jo-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.04rem;
+        font-weight: 900;
+        color: #0f172a;
+        margin-bottom: 16px;
+    }
+
+    .jo-section-title .icon-pill {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eaf4ff;
+        color: #1d4ed8;
+    }
+
+    .jo-section-title.success .icon-pill {
+        background: #ecfdf3;
+        color: #15803d;
+    }
+
+    .jo-section-title.danger {
+        color: #b91c1c;
+    }
+
+    .jo-section-title.danger .icon-pill {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .jo-readonly-block {
+        border: 1px solid #edf2f7;
+        background: #f8fbff;
+        border-radius: 16px;
+        padding: 14px 16px;
+        color: #334155;
+        font-weight: 600;
+        line-height: 1.6;
+        min-height: 54px;
+    }
+
+    .jo-readonly-block + .jo-readonly-block {
+        margin-top: 12px;
+    }
+
+    .jo-readonly-label {
+        color: #64748b;
+        display: block;
+        font-size: 0.76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+
+    .jo-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    .jo-action-button {
+        border-radius: 14px !important;
+        font-weight: 800 !important;
+        padding: 10px 16px !important;
+    }
+
+    .jo-danger-zone {
+        border-color: #fecaca;
+        background: linear-gradient(135deg, #fff7f7, #ffffff);
+    }
+
+    .jo-danger-note {
+        background: #fff1f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 14px;
+    }
+
+    .jo-empty-action {
+        border: 1px dashed #cbd5e1;
+        background: #f8fafc;
+        color: #64748b;
+        border-radius: 16px;
+        padding: 16px;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .jo-card textarea.form-control {
+        min-height: 126px;
+        resize: vertical;
+    }
+
+    @media (max-width: 1199.98px) {
+        .jo-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .jo-section-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .jo-summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .jo-hero {
+            padding: 20px;
+        }
+    }

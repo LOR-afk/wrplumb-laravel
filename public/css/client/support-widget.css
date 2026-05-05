@@ -1,0 +1,192 @@
+        /* Floating messenger support widget */
+        .client-support-widget {
+            position: fixed;
+            right: 26px;
+            bottom: 24px;
+            z-index: 1100;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .client-support-panel {
+            width: 370px;
+            max-width: calc(100vw - 32px);
+            height: 470px;
+            max-height: calc(100vh - 110px);
+            background: #ffffff;
+            border-radius: 26px;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+            overflow: hidden;
+            border: 1px solid rgba(15, 76, 129, 0.14);
+            display: none;
+            margin-bottom: 14px;
+            transform-origin: bottom right;
+        }
+
+        .client-support-panel.open {
+            display: block;
+            animation: wrSupportPop 0.18s ease-out;
+        }
+
+        @keyframes wrSupportPop {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .client-support-panel iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+            background: #ffffff;
+        }
+
+        .client-support-toggle {
+            width: 64px;
+            height: 64px;
+            border-radius: 999px;
+            border: 4px solid #ffffff;
+            background: linear-gradient(135deg, #1d9bf0, #0f4c81);
+            color: #ffffff;
+            box-shadow: 0 16px 36px rgba(15, 76, 129, 0.30);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .client-support-toggle:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 20px 44px rgba(15, 76, 129, 0.36);
+        }
+
+        .client-support-toggle img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.12));
+        }
+
+        .client-support-toggle .support-icon-fallback {
+            font-size: 1.45rem;
+            color: #ffffff;
+        }
+
+        .client-support-toggle::after {
+            content: "Support";
+            position: absolute;
+            right: 72px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        .client-support-toggle:hover::after {
+            opacity: 1;
+            right: 76px;
+        }
+
+        .client-support-toggle.open::after {
+            display: none;
+        }
+
+        /* This mode is used only inside the iframe support popup */
+        body.support-widget-mode {
+            background: transparent;
+        }
+
+        body.support-widget-mode .app-shell {
+            display: block;
+            min-height: 100vh;
+        }
+
+        body.support-widget-mode .main {
+            margin-left: 0;
+            min-height: 100vh;
+        }
+
+        body.support-widget-mode .content {
+            padding: 0;
+            height: 100vh;
+        }
+
+        body.support-widget-mode .alert {
+            margin: 10px 12px;
+            box-shadow: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                position: static;
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--wr-border);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .app-shell {
+                flex-direction: column;
+            }
+
+            .topbar {
+                height: auto;
+                padding: 18px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+            }
+
+            .content {
+                padding: 18px;
+            }
+
+            .topbar-title,
+            .page-header h1 {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .client-support-widget {
+                right: 14px;
+                bottom: 14px;
+            }
+
+            .client-support-panel {
+                width: calc(100vw - 28px);
+                height: min(70vh, 500px);
+                max-height: calc(100vh - 104px);
+                border-radius: 22px;
+            }
+
+            .client-support-toggle {
+                width: 58px;
+                height: 58px;
+            }
+
+            .client-support-toggle::after {
+                display: none;
+            }
+        }

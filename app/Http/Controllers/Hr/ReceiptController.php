@@ -10,13 +10,54 @@ use Illuminate\Support\Facades\Auth;
 
 class ReceiptController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $receipts = Receipt::with(['payment.invoice.quotation.request', 'issuer'])
-            ->latest()
-            ->paginate(10);
+        $query = Receipt::query()
+            ->with(['payment.invoice.quotation.request', 'issuer'])
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
 
-        return view('hr.receipts.index', compact('receipts'));
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('receipt_no', 'like', "%{$search}%")
+                        ->orWhereHas('payment', function ($paymentQuery) use ($search) {
+                            $paymentQuery->where('payment_no', 'like', "%{$search}%")
+                                ->orWhere('reference_number', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('payment.invoice', function ($invoiceQuery) use ($search) {
+                            $invoiceQuery->where('invoice_no', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('payment.invoice.quotation.request', function ($requestQuery) use ($search) {
+                            $requestQuery->where('full_name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($request->filled('date_from'), function ($q) use ($request) {
+                $q->whereDate('receipt_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($q) use ($request) {
+                $q->whereDate('receipt_date', '<=', $request->date_to);
+            });
+
+        $summaryQuery = clone $query;
+
+        $summary = [
+            'total_receipts' => (clone $summaryQuery)->count(),
+            'total_amount' => (clone $summaryQuery)->sum('amount_received'),
+            'this_month_amount' => Receipt::whereYear('receipt_date', now()->year)
+                ->whereMonth('receipt_date', now()->month)
+                ->sum('amount_received'),
+            'latest_receipt_date' => Receipt::max('receipt_date'),
+        ];
+
+        $receipts = $query
+            ->latest('receipt_date')
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('hr.receipts.index', compact('receipts', 'summary'));
     }
 
     public function create(Payment $payment)
@@ -79,7 +120,11 @@ class ReceiptController extends Controller
 
     public function show(Receipt $receipt)
     {
-        $receipt->load(['payment.invoice.quotation.request', 'payment.paymentSchedule', 'issuer']);
+        $receipt->load([
+            'payment.invoice.quotation.request',
+            'payment.paymentSchedule',
+            'issuer',
+        ]);
 
         return view('hr.receipts.show', compact('receipt'));
     }

@@ -29,6 +29,14 @@ class ContractController extends Controller
                 ->with('info', 'A contract already exists for this quotation.');
         }
 
+        if (!$this->quotationIsAccepted($quotation)) {
+            return redirect()
+                ->route('hr.quotations.show', $quotation)
+                ->withErrors([
+                    'quotation' => 'A contract can only be generated after the client accepts the quotation.'
+                ]);
+        }
+
         return view('hr.contracts.create', compact('quotation'));
     }
 
@@ -49,6 +57,12 @@ class ContractController extends Controller
         if ($quotation->contract) {
             return back()->withErrors([
                 'quotation_id' => 'This quotation already has a contract.'
+            ])->withInput();
+        }
+
+        if (!$this->quotationIsAccepted($quotation)) {
+            return back()->withErrors([
+                'quotation_id' => 'A contract can only be generated after the client accepts the quotation.'
             ])->withInput();
         }
 
@@ -98,6 +112,12 @@ class ContractController extends Controller
         return redirect()
             ->route('hr.contracts.show', $contract)
             ->with('success', 'Contract finalized successfully.');
+    }
+
+    protected function quotationIsAccepted(Quotation $quotation): bool
+    {
+        return $quotation->status === 'accepted'
+            || $quotation->client_response === 'accepted';
     }
 
     protected function generateContractNumber(): string

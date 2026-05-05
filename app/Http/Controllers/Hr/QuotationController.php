@@ -9,16 +9,49 @@ use App\Services\AlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 
 class QuotationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $quotations = Quotation::with(['request', 'items', 'preparedBy'])
-            ->latest()
-            ->paginate(10);
+        $query = Quotation::query()
+            ->with(['request', 'items', 'preparedBy', 'invoice'])
+            ->withCount('items');
 
-        return view('hr.quotations.index', compact('quotations'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+
+            $query->where(function ($q) use ($search) {
+                $q->where('quotation_no', 'like', "%{$search}%")
+                    ->orWhereHas('request', function ($requestQuery) use ($search) {
+                        $requestQuery->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('service_type', 'like', "%{$search}%")
+                            ->orWhere('service_category', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $summary = [
+            'total_quotations' => Quotation::count(),
+            'sent_quotations' => Quotation::where('status', 'sent')->count(),
+            'total_amount' => Quotation::sum('grand_total'),
+            'latest_created' => Quotation::max('created_at'),
+        ];
+
+        $quotations = $query
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('hr.quotations.index', compact('quotations', 'summary'));
     }
 
     public function create(QuotationRequest $quotationRequest)
@@ -107,6 +140,8 @@ class QuotationController extends Controller
                 'quotation_request_id' => $quotationRequest->id,
                 'quotation_no' => $this->generateQuotationNumber(),
                 'status' => 'draft',
+                'acceptance_token' => Str::random(64),
+                'client_response' => null,
                 'notes' => $validated['notes'] ?? null,
                 'payment_plan' => $validated['payment_plan'],
                 'payment_terms_json' => $paymentTerms,
@@ -131,43 +166,73 @@ class QuotationController extends Controller
     }
 
     public function show(Quotation $quotation)
-    {
-        $quotation->load(['request', 'items', 'preparedBy', 'invoice', 'contract']);
+        {
+            $quotation->load(['request', 'items', 'preparedBy', 'invoice', 'contract']);
 
-        return view('hr.quotations.show', compact('quotation'));
-    }
-
-    public function send(Quotation $quotation)
-    {
-        if ($quotation->status !== 'draft') {
-            return back()->withErrors([
-                'quotation' => 'Only draft quotations can be sent.'
-            ]);
+            return view('hr.quotations.show', compact('quotation'));
         }
 
-        $quotation->update([
-            'status' => 'sent',
-            'sent_at' => now(),
-        ]);
+        public function send(Quotation $quotation)
+        {
+            if (!in_array($quotation->status, ['draft', 'sent'])) {
+                return back()->withErrors([
+                    'quotation' => 'Only draft or sent quotations can be emailed.'
+                ]);
+            }
 
-        $request = $quotation->request;
+            $quotation->loadMissing(['request', 'items']);
 
-        $client = \App\Models\User::where('email', $request->email)
-            ->where('role', 'client')
-            ->first();
+            if (!$quotation->request || !$quotation->request->email) {
+                return back()->withErrors([
+                    'quotation' => 'This quotation has no client email address.'
+                ]);
+            }
 
-        if ($client) {
-            AlertService::send(
-                $client,
-                'Quotation sent',
-                'A quotation has been prepared for your service request.',
-                route('client.quotations.show', $quotation),
-                'info'
-            );
+            if (!$quotation->acceptance_token) {
+                $quotation->acceptance_token = Str::random(64);
+            }
+
+            $quotation->status = 'sent';
+            $quotation->sent_at = now();
+            $quotation->save();
+
+            $publicUrl = route('public.quotations.show', $quotation->acceptance_token);
+
+            $clientName = $quotation->request->full_name
+                ?? trim(($quotation->request->first_name ?? '') . ' ' . ($quotation->request->last_name ?? ''));
+
+            if (!$clientName) {
+                $clientName = 'Client';
+            }
+
+            $serviceType = $quotation->request->service_type ?? 'your requested service';
+
+            Mail::send('emails.quotation-ready', [
+                'quotation' => $quotation,
+                'publicUrl' => $publicUrl,
+                'clientName' => $clientName,
+                'serviceType' => $serviceType,
+            ], function ($message) use ($quotation, $clientName) {
+                $message->to($quotation->request->email, $clientName)
+                    ->subject('Your WRPlumb Quotation is Ready - ' . $quotation->quotation_no);
+            });
+
+            $client = \App\Models\User::where('email', $quotation->request->email)
+                ->where('role', 'client')
+                ->first();
+
+            if ($client) {
+                AlertService::send(
+                    $client,
+                    'Quotation sent',
+                    'A quotation has been prepared for your service request.',
+                    route('client.quotations.show', $quotation),
+                    'info'
+                );
+            }
+
+            return back()->with('success', 'Quotation email sent successfully.');
         }
-
-        return back()->with('success', 'Quotation sent to client successfully.');
-    }
 
     protected function generateQuotationNumber(): string
     {

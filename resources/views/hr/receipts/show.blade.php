@@ -4,72 +4,195 @@
 
 @section('content')
 <style>
-    .receipt-wrapper {
-        background: #fff;
-        border: 1px solid #dbe5f1;
-        border-radius: 20px;
-        padding: 32px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    .receipt-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
     }
 
-    .receipt-header {
+    .receipt-paper {
+        max-width: 980px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #dbe5f1;
+        border-radius: 22px;
+        padding: 42px;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.10);
+        color: #0f172a;
+    }
+
+    .receipt-top {
         display: flex;
         justify-content: space-between;
-        align-items: start;
-        gap: 20px;
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 20px;
-        margin-bottom: 24px;
+        align-items: flex-start;
+        gap: 24px;
+        border-bottom: 3px solid #0f4c81;
+        padding-bottom: 24px;
+        margin-bottom: 28px;
     }
 
-    .receipt-brand h2 {
+    .receipt-title {
+        font-size: 2.4rem;
+        letter-spacing: 0.08em;
+        font-weight: 950;
+        color: #0f4c81;
         margin: 0;
-        font-weight: 800;
-        font-size: 1.5rem;
     }
 
-    .receipt-brand p {
-        margin: 6px 0 0;
+    .company-block {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .receipt-logo {
+        width: 74px;
+        height: 74px;
+        object-fit: cover;
+        border-radius: 18px;
+        border: 1px solid #dbe5f1;
+        padding: 4px;
+        background: #ffffff;
+    }
+
+    .company-name {
+        font-weight: 950;
+        font-size: 1.25rem;
+        margin-bottom: 4px;
+    }
+
+    .company-details {
         color: #64748b;
+        line-height: 1.5;
+        font-size: 0.92rem;
     }
 
-    .receipt-meta {
+    .receipt-info-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: 1.3fr 0.9fr;
+        gap: 22px;
+        margin-bottom: 28px;
     }
 
-    .meta-box,
-    .section-box {
+    .receipt-box {
         border: 1px solid #e2e8f0;
-        border-radius: 16px;
+        border-radius: 18px;
         padding: 18px;
         background: #f8fafc;
     }
 
-    .meta-label,
-    .section-label {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
+    .receipt-label {
+        font-size: 0.78rem;
+        font-weight: 950;
         color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
         margin-bottom: 8px;
-        font-weight: 700;
     }
 
-    .meta-value,
-    .section-value {
+    .receipt-value {
         color: #0f172a;
-        font-weight: 600;
+        font-weight: 800;
         line-height: 1.6;
     }
 
-    .print-actions {
-        display: flex;
+    .receipt-meta-stack {
+        display: grid;
         gap: 12px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
+    }
+
+    .receipt-items {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+        overflow: hidden;
+        border-radius: 16px;
+    }
+
+    .receipt-items th {
+        background: #0f4c81;
+        color: #ffffff;
+        padding: 14px 16px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-align: left;
+    }
+
+    .receipt-items th.text-end,
+    .receipt-items td.text-end {
+        text-align: right;
+    }
+
+    .receipt-items td {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 14px 16px;
+        color: #334155;
+    }
+
+    .receipt-items tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .receipt-totals {
+        max-width: 390px;
+        margin-left: auto;
+        display: grid;
+        gap: 8px;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 0;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+    }
+
+    .total-row.grand {
+        border-bottom: 0;
+        background: #0f4c81;
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 16px 18px;
+        margin-top: 8px;
+        font-weight: 950;
+        font-size: 1.1rem;
+    }
+
+    .payment-method-box {
+        margin-top: 26px;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 18px;
+        background: #f8fafc;
+    }
+
+    .receipt-footer-note {
+        margin-top: 28px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+        color: #64748b;
+        line-height: 1.65;
+    }
+
+    .signature-area {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 46px;
+    }
+
+    .signature-box {
+        width: 280px;
+        text-align: center;
+    }
+
+    .signature-line {
+        border-top: 1px solid #0f172a;
+        padding-top: 8px;
+        font-weight: 800;
     }
 
     @page {
@@ -81,32 +204,53 @@
             visibility: hidden;
         }
 
-        .receipt-wrapper,
-        .receipt-wrapper * {
+        .receipt-paper,
+        .receipt-paper * {
             visibility: visible;
         }
 
-        .receipt-wrapper {
+        .receipt-paper {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
+            max-width: none;
             margin: 0;
             padding: 0;
-            box-shadow: none !important;
             border: none !important;
-            background: #fff !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
         }
 
         .no-print {
             display: none !important;
         }
     }
+
+    @media (max-width: 767.98px) {
+        .receipt-paper {
+            padding: 26px;
+        }
+
+        .receipt-top,
+        .receipt-info-grid {
+            grid-template-columns: 1fr;
+            flex-direction: column;
+        }
+
+        .receipt-title {
+            font-size: 2rem;
+        }
+
+        .receipt-items {
+            font-size: 0.88rem;
+        }
+    }
 </style>
 
 <div class="page-header-card mb-4 no-print">
     <h2 class="mb-1">Receipt Details</h2>
-    <p class="text-muted mb-0">Review and print the generated receipt.</p>
+    <p class="text-muted mb-0">Review, print, and issue the generated receipt.</p>
 </div>
 
 @if (session('success'))
@@ -117,87 +261,185 @@
     <div class="alert alert-info no-print">{{ session('info') }}</div>
 @endif
 
-<div class="print-actions no-print">
-    <a href="{{ route('hr.receipts.index') }}" class="btn btn-outline-secondary">Back to Receipts</a>
-    <a href="{{ route('hr.payments.show', $receipt->payment) }}" class="btn btn-outline-primary">View Payment</a>
-    <button type="button" class="btn btn-dark" onclick="window.print()">Print Receipt</button>
+<div class="receipt-actions no-print">
+    <a href="{{ route('hr.receipts.index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Receipts
+    </a>
+
+    <a href="{{ route('hr.payments.show', $receipt->payment) }}" class="btn btn-outline-primary">
+        <i class="fas fa-wallet me-1"></i> View Payment
+    </a>
+
+    @if ($receipt->payment && $receipt->payment->invoice)
+        <a href="{{ route('hr.invoices.show', $receipt->payment->invoice) }}" class="btn btn-outline-dark">
+            <i class="fas fa-file-invoice me-1"></i> View Invoice
+        </a>
+    @endif
+
+    <button type="button" class="btn btn-dark" onclick="window.print()">
+        <i class="fas fa-print me-1"></i> Print Receipt
+    </button>
 </div>
 
-<div class="receipt-wrapper">
-    <div class="receipt-header">
-        <div class="receipt-brand">
-            <h2>WR Plumbing and Construction Services</h2>
-            <p>Official Receipt</p>
+@php
+    $payment = $receipt->payment;
+    $invoice = $payment?->invoice;
+    $request = $invoice?->quotation?->request;
+    $schedule = $payment?->paymentSchedule;
+    $clientName = $request->full_name ?? trim(($request->first_name ?? '') . ' ' . ($request->last_name ?? '')) ?: '—';
+    $description = ($schedule->label ?? 'Invoice Payment') . ' - ' . ($invoice->invoice_no ?? 'Invoice');
+    $amount = (float) $receipt->amount_received;
+@endphp
+
+<div class="receipt-paper">
+    <div class="receipt-top">
+        <div class="company-block">
+            <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb Logo" class="receipt-logo">
+            <div>
+                <div class="company-name">WR Plumbing and Construction Services</div>
+                <div class="company-details">
+                    139 Upper Zone 4 Bulua, Cagayan de Oro, Philippines<br>
+                    Phone: (088) 850 5197<br>
+                    Email: wrplumbingcon@gmail.com
+                </div>
+            </div>
         </div>
 
         <div class="text-end">
-            <div class="meta-label">Receipt No.</div>
-            <div class="meta-value">{{ $receipt->receipt_no }}</div>
+            <h1 class="receipt-title">RECEIPT</h1>
+            <div class="small text-muted fw-bold">Official Payment Receipt</div>
         </div>
     </div>
 
-    <div class="receipt-meta">
-        <div class="meta-box">
-            <div class="meta-label">Receipt Date</div>
-            <div class="meta-value">{{ optional($receipt->receipt_date)->format('F d, Y') ?? '—' }}</div>
+    <div class="receipt-info-grid">
+        <div class="receipt-box">
+            <div class="receipt-label">Billed To</div>
+            <div class="receipt-value">
+                {{ $clientName }}<br>
+                {{ $request->address ?? '—' }}<br>
+                {{ $request->email ?? '—' }}<br>
+                {{ $request->phone ?? '—' }}
+            </div>
         </div>
 
-        <div class="meta-box">
-            <div class="meta-label">Issued At</div>
-            <div class="meta-value">{{ optional($receipt->issued_at)->format('F d, Y h:i A') ?? '—' }}</div>
-        </div>
+        <div class="receipt-meta-stack">
+            <div class="receipt-box">
+                <div class="receipt-label">Receipt Number</div>
+                <div class="receipt-value">{{ $receipt->receipt_no }}</div>
+            </div>
 
-        <div class="meta-box">
-            <div class="meta-label">Client</div>
-            <div class="meta-value">{{ $receipt->payment->invoice->quotation->request->full_name ?? '—' }}</div>
-        </div>
-
-        <div class="meta-box">
-            <div class="meta-label">Invoice No.</div>
-            <div class="meta-value">{{ $receipt->payment->invoice->invoice_no ?? '—' }}</div>
-        </div>
-
-        <div class="meta-box">
-            <div class="meta-label">Payment No.</div>
-            <div class="meta-value">{{ $receipt->payment->payment_no ?? '—' }}</div>
-        </div>
-
-        <div class="meta-box">
-            <div class="meta-label">Payment Schedule</div>
-            <div class="meta-value">{{ $receipt->payment->paymentSchedule->label ?? '—' }}</div>
+            <div class="receipt-box">
+                <div class="receipt-label">Date</div>
+                <div class="receipt-value">{{ optional($receipt->receipt_date)->format('F d, Y') ?? '—' }}</div>
+            </div>
         </div>
     </div>
 
-    <div class="section-box mb-4">
-        <div class="section-label">Amount Received</div>
-        <div class="section-value">PHP {{ number_format((float) $receipt->amount_received, 2) }}</div>
+    <table class="receipt-items">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th class="text-end">Cost per Unit</th>
+                <th class="text-end">Qty</th>
+                <th class="text-end">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <strong>{{ $description }}</strong><br>
+                    <span class="text-muted small">
+                        Payment No: {{ $payment->payment_no ?? '—' }}
+                        @if($payment?->reference_number)
+                            | Ref: {{ $payment->reference_number }}
+                        @endif
+                    </span>
+                </td>
+                <td class="text-end">PHP {{ number_format($amount, 2) }}</td>
+                <td class="text-end">1</td>
+                <td class="text-end">PHP {{ number_format($amount, 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="receipt-totals">
+        <div class="total-row">
+            <span>Subtotal</span>
+            <strong>PHP {{ number_format($amount, 2) }}</strong>
+        </div>
+
+        <div class="total-row">
+            <span>Discount</span>
+            <strong>PHP 0.00</strong>
+        </div>
+
+        <div class="total-row">
+            <span>Tax</span>
+            <strong>PHP 0.00</strong>
+        </div>
+
+        <div class="total-row grand">
+            <span>Total Paid</span>
+            <span>PHP {{ number_format($amount, 2) }}</span>
+        </div>
     </div>
 
-    <div class="section-box mb-4">
-        <div class="section-label">Payment Information</div>
-        <div class="section-value">
-            Method: {{ $receipt->payment_method ?? '—' }}<br>
-            Reference Number: {{ $receipt->reference_number ?? '—' }}
+    <div class="payment-method-box">
+        <div class="receipt-label">Payment Method</div>
+        <div class="receipt-value">
+            {{ $receipt->payment_method ?? $payment->payment_method ?? '—' }}
+            @if($receipt->reference_number)
+                <br><span class="text-muted">Reference Number: {{ $receipt->reference_number }}</span>
+            @endif
         </div>
     </div>
 
     @if (!empty($receipt->notes))
-        <div class="section-box mb-4">
-            <div class="section-label">Notes</div>
-            <div class="section-value">{{ $receipt->notes }}</div>
+        <div class="payment-method-box">
+            <div class="receipt-label">Notes</div>
+            <div class="receipt-value">{{ $receipt->notes }}</div>
         </div>
     @endif
 
-    <div class="section-box">
-        <div class="section-label">Acknowledgement</div>
-        <div class="section-value">
-            This receipt confirms that the amount stated above has been received by WR Plumbing and Construction Services for the payment referenced in this document.
-        </div>
+    <div class="receipt-footer-note">
+        This receipt confirms that the total paid amount above has been received by WR Plumbing and Construction Services for the referenced invoice/payment.
     </div>
 
-    <div class="mt-5 text-end">
-        <div class="meta-label">Issued By</div>
-        <div class="meta-value">{{ $receipt->issuer->name ?? $receipt->issuer->first_name ?? '—' }}</div>
+    <div class="signature-area">
+        <div class="signature-box">
+            <div class="signature-line">
+                {{ $receipt->issuer->name ?? $receipt->issuer->first_name ?? 'Authorized Representative' }}
+            </div>
+            <div class="small text-muted">Issued By</div>
+            <div class="small text-muted">
+                Issued at: {{ optional($receipt->issued_at)->format('F d, Y h:i A') ?? '—' }}
+            </div>
+
+            <div class="small text-muted">
+                Printed at: <span id="printedAt"></span>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    function updatePrintedAt() {
+        const now = new Date();
+
+        const formatted = now.toLocaleString('en-US', {
+            month: 'long',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+
+        document.getElementById('printedAt').textContent = formatted;
+    }
+
+    updatePrintedAt();
+    setInterval(updatePrintedAt, 1000);
+</script>
 @endsection

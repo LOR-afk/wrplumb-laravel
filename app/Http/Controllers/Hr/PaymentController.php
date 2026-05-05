@@ -12,13 +12,87 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $payments = Payment::with(['invoice.quotation.request', 'paymentSchedule', 'receiver'])
-            ->latest('payment_date')
-            ->paginate(10);
+        $invoiceQuery = Invoice::with([
+                'quotation.request',
+                'paymentSchedules',
+                'payments' => function ($query) {
+                    $query->latest('payment_date')->latest('id');
+                },
+                'payments.paymentSchedule',
+                'payments.receiver',
+                'payments.receipt',
+            ])
+            ->whereHas('payments');
 
-        return view('hr.payments.index', compact('payments'));
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+
+            $invoiceQuery->where(function ($query) use ($search) {
+                $query->where('invoice_no', 'like', "%{$search}%")
+                    ->orWhereHas('payments', function ($paymentQuery) use ($search) {
+                        $paymentQuery->where('payment_no', 'like', "%{$search}%")
+                            ->orWhere('reference_number', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('quotation.request', function ($requestQuery) use ($search) {
+                        $requestQuery->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $invoiceQuery->whereHas('payments', function ($query) use ($request) {
+                $query->where('status', $request->input('status'));
+            });
+        }
+
+        if ($request->filled('method')) {
+            $invoiceQuery->whereHas('payments', function ($query) use ($request) {
+                $query->where('payment_method', $request->input('method'));
+            });
+        }
+
+        if ($request->filled('schedule')) {
+            $schedule = trim($request->input('schedule'));
+
+            $invoiceQuery->whereHas('payments', function ($query) use ($schedule) {
+                $query->where('payment_type', 'like', "%{$schedule}%")
+                    ->orWhereHas('paymentSchedule', function ($scheduleQuery) use ($schedule) {
+                        $scheduleQuery->where('label', 'like', "%{$schedule}%");
+                    });
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $invoiceQuery->whereHas('payments', function ($query) use ($request) {
+                $query->whereDate('payment_date', '>=', $request->input('date_from'));
+            });
+        }
+
+        if ($request->filled('date_to')) {
+            $invoiceQuery->whereHas('payments', function ($query) use ($request) {
+                $query->whereDate('payment_date', '<=', $request->input('date_to'));
+            });
+        }
+
+        $paymentInvoices = $invoiceQuery
+            ->latest('updated_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        $paymentStats = [
+            'total_payments' => Payment::count(),
+            'confirmed_count' => Payment::where('status', 'confirmed')->count(),
+            'pending_count' => Payment::whereIn('status', ['pending', 'pending_verification'])->count(),
+            'rejected_count' => Payment::where('status', 'rejected')->count(),
+            'collected_amount' => Payment::where('status', 'confirmed')->sum('amount'),
+        ];
+
+        return view('hr.payments.index', compact('paymentInvoices', 'paymentStats'));
     }
 
     public function create(Invoice $invoice)
@@ -85,14 +159,14 @@ class PaymentController extends Controller
 
     public function show(Payment $payment)
     {
-            $payment->load([
-                'invoice.quotation.request',
-                'paymentSchedule',
-                'receiver',
-                'submitter',
-                'verifier',
-                'receipt',
-            ]);
+        $payment->load([
+            'invoice.quotation.request',
+            'paymentSchedule',
+            'receiver',
+            'submitter',
+            'verifier',
+            'receipt',
+        ]);
 
         return view('hr.payments.show', compact('payment'));
     }

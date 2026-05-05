@@ -13,8 +13,19 @@ class SupportController extends Controller
 {
     public function index()
     {
-        $conversations = SupportConversation::with('client')
+        /*
+         * Display one queued conversation per client only.
+         * If the same client has multiple HR-routed conversations,
+         * show only the latest conversation in the HR queue.
+         */
+        $latestConversationIds = SupportConversation::query()
             ->where('current_queue', 'hr')
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('client_id')
+            ->pluck('id');
+
+        $conversations = SupportConversation::with('client')
+            ->whereIn('id', $latestConversationIds)
             ->latest()
             ->paginate(10);
 
@@ -25,7 +36,12 @@ class SupportController extends Controller
     {
         abort_if($conversation->current_queue !== 'hr', 404);
 
-        $conversation->load(['client', 'messages']);
+        $conversation->load([
+            'client',
+            'messages' => function ($query) {
+                $query->orderBy('created_at');
+            },
+        ]);
 
         return view('hr.support.show', compact('conversation'));
     }
@@ -53,24 +69,27 @@ class SupportController extends Controller
         return back()->with('success', 'Reply sent successfully.');
     }
 
-        public function escalateToAdmin(SupportConversation $conversation)
-        {
-            $conversation->update([
-                'current_queue' => 'admin',
-                'routed_to' => 'admin',
-                'routed_at' => now(),
-                'status' => 'escalated',
-            ]);
+    public function escalateToAdmin(SupportConversation $conversation)
+    {
+        abort_if($conversation->current_queue !== 'hr', 404);
 
-            AlertService::sendToRole(
-                'admin',
-                'Support escalated by HR',
-                'A support conversation has been escalated to Admin for further review.',
-                route('admin.support.show', $conversation),
-                'warning'
-            );
+        $conversation->update([
+            'current_queue' => 'admin',
+            'routed_to' => 'admin',
+            'routed_at' => now(),
+            'status' => 'escalated',
+        ]);
 
-            return redirect()->route('hr.support.index')
-                ->with('success', 'Conversation escalated to Admin successfully.');
-}
+        AlertService::sendToRole(
+            'admin',
+            'Support escalated by HR',
+            'A support conversation has been escalated to Admin for further review.',
+            route('admin.support.show', $conversation),
+            'warning'
+        );
+
+        return redirect()
+            ->route('hr.support.index')
+            ->with('success', 'Conversation escalated to Admin successfully.');
+    }
 }

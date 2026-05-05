@@ -18,6 +18,7 @@ class SupportController extends Controller
                 }
             ])
             ->where('client_id', Auth::id())
+            ->whereIn('status', ['open', 'routed', 'escalated'])
             ->latest()
             ->first();
 
@@ -30,18 +31,27 @@ class SupportController extends Controller
             'message' => ['required', 'string', 'max:2000'],
         ]);
 
-        $conversation = SupportConversation::firstOrCreate(
-            [
+        /*
+         * IMPORTANT:
+         * Do not use firstOrCreate with ['client_id' => ..., 'status' => 'open'].
+         * Once a conversation becomes "routed", the next client message would create
+         * a new conversation, making the previous chat look like it disappeared.
+         */
+        $conversation = SupportConversation::where('client_id', Auth::id())
+            ->whereIn('status', ['open', 'routed', 'escalated'])
+            ->latest()
+            ->first();
+
+        if (!$conversation) {
+            $conversation = SupportConversation::create([
                 'client_id' => Auth::id(),
                 'status' => 'open',
-            ],
-            [
                 'current_queue' => 'bot',
                 'routed_to' => null,
                 'routed_at' => null,
                 'resolved_at' => null,
-            ]
-        );
+            ]);
+        }
 
         SupportMessage::create([
             'conversation_id' => $conversation->id,
@@ -49,6 +59,20 @@ class SupportController extends Controller
             'sender_id' => Auth::id(),
             'message' => $validated['message'],
         ]);
+
+        /*
+         * If the conversation is already handled by HR/Admin,
+         * do not let the bot answer again. Just append the client's message
+         * to the same conversation thread.
+         */
+        if (in_array($conversation->current_queue, ['hr', 'admin'], true)) {
+            $conversation->update([
+                'status' => $conversation->current_queue === 'admin' ? 'escalated' : 'routed',
+                'current_queue' => $conversation->current_queue,
+            ]);
+
+            return $this->redirectBackToSupport($request);
+        }
 
         $message = strtolower($validated['message']);
         $botReply = "I'm sorry, I couldn't find a clear answer to that. I'm redirecting your concern to HR for further assistance.";
@@ -78,6 +102,24 @@ class SupportController extends Controller
                 'current_queue' => 'hr',
                 'routed_to' => 'hr',
                 'routed_at' => now(),
+            ]);
+        } else {
+            $conversation->update([
+                'status' => 'open',
+                'current_queue' => 'bot',
+                'routed_to' => null,
+                'routed_at' => null,
+            ]);
+        }
+
+        return $this->redirectBackToSupport($request);
+    }
+
+    private function redirectBackToSupport(Request $request)
+    {
+        if ($request->boolean('support_widget')) {
+            return redirect()->route('client.support.index', [
+                'support_widget' => 1,
             ]);
         }
 

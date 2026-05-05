@@ -4,13 +4,17 @@
 @section('topbar_title', 'Support Requests')
 @section('topbar_subtitle', 'Review concerns escalated to Admin and respond promptly.')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/admin/support.css') }}">
+@endpush
+
 @section('content')
 <div class="page-header">
     <h1>Support Queue</h1>
     <p>Monitor conversations routed to Admin and manage escalated client concerns.</p>
 </div>
 
-<div class="panel mb-4">
+<div class="panel mb-4 support-filter-panel">
     <div class="panel-header">
         <h5><i class="fas fa-filter me-2 text-primary"></i>Filter Support Queue</h5>
     </div>
@@ -56,7 +60,7 @@
 
     <div class="panel-body">
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table align-middle support-queue-table">
                 <thead>
                     <tr>
                         <th>Client</th>
@@ -72,8 +76,8 @@
                     @forelse ($conversations as $conversation)
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark">{{ $conversation->client->name }}</div>
-                                <div class="text-muted small">{{ $conversation->client->email }}</div>
+                                <div class="client-name">{{ $conversation->client->name }}</div>
+                                <div class="client-email">{{ $conversation->client->email }}</div>
                             </td>
 
                             <td>
@@ -98,11 +102,13 @@
                                 @endif
                             </td>
 
-                            <td>{{ $conversation->messages_count }}</td>
+                            <td>
+                                <span class="support-message-count">{{ $conversation->messages_count }}</span>
+                            </td>
                             <td>{{ $conversation->created_at->format('Y-m-d h:i A') }}</td>
                             <td>{{ optional($conversation->routed_at)->format('Y-m-d h:i A') ?? '—' }}</td>
                             <td>
-                                <a href="{{ route('admin.support.show', $conversation) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('admin.support.show', $conversation) }}" class="btn btn-sm btn-primary support-open-btn">
                                     Open
                                 </a>
                             </td>

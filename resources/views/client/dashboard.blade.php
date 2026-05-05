@@ -4,6 +4,10 @@
 @section('topbar_title', 'Client Dashboard')
 @section('topbar_subtitle', 'Access your service requests and customer support.')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/client/dashboard.css') }}">
+@endpush
+
 @section('content')
 <div class="page-header">
     <h1>Welcome, {{ auth()->user()->first_name ?? 'Client' }}</h1>

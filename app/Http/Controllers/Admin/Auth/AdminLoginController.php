@@ -36,19 +36,7 @@ class AdminLoginController extends Controller
             ])->withInput($request->only('email'));
         }
 
-        $otp = (string) random_int(100000, 999999);
-
-        AdminLoginOtp::where('user_id', $admin->id)
-            ->whereNull('used_at')
-            ->update(['used_at' => now()]);
-
-        AdminLoginOtp::create([
-            'user_id' => $admin->id,
-            'otp_code' => Hash::make($otp),
-            'expires_at' => now()->addMinutes(5),
-        ]);
-
-        Mail::to($admin->email)->send(new AdminOtpMail($otp));
+        $this->createAndSendOtp($admin);
 
         session([
             'admin_otp_user_id' => $admin->id,
@@ -86,7 +74,7 @@ class AdminLoginController extends Controller
 
         if (!$otpRecord || now()->gt($otpRecord->expires_at)) {
             return back()->withErrors([
-                'otp' => 'OTP expired. Please login again.'
+                'otp' => 'OTP expired. You may request a new OTP or login again.'
             ]);
         }
 
@@ -107,6 +95,62 @@ class AdminLoginController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route('admin.dashboard');
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $userId = session('admin_otp_user_id');
+
+        if (!$userId) {
+            return redirect()->route('admin.login')
+                ->withErrors(['email' => 'Session expired. Please login again.']);
+        }
+
+        $admin = User::where('id', $userId)
+            ->where('role', 'admin')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$admin) {
+            session()->forget('admin_otp_user_id');
+
+            return redirect()->route('admin.login')
+                ->withErrors(['email' => 'Admin account not found or inactive. Please login again.']);
+        }
+
+        $latestOtp = AdminLoginOtp::where('user_id', $admin->id)
+            ->latest()
+            ->first();
+
+        if ($latestOtp && $latestOtp->created_at && $latestOtp->created_at->gt(now()->subSeconds(60))) {
+            $secondsLeft = max(1, 60 - (int) $latestOtp->created_at->diffInSeconds(now()));
+
+            return back()->withErrors([
+                'otp' => "Please wait {$secondsLeft} seconds before requesting another OTP."
+            ]);
+        }
+
+        $this->createAndSendOtp($admin);
+
+        return redirect()->route('admin.otp.form')
+            ->with('success', 'A new OTP has been sent to admin email.');
+    }
+
+    protected function createAndSendOtp(User $admin): void
+    {
+        $otp = (string) random_int(100000, 999999);
+
+        AdminLoginOtp::where('user_id', $admin->id)
+            ->whereNull('used_at')
+            ->update(['used_at' => now()]);
+
+        AdminLoginOtp::create([
+            'user_id' => $admin->id,
+            'otp_code' => Hash::make($otp),
+            'expires_at' => now()->addMinutes(5),
+        ]);
+
+        Mail::to($admin->email)->send(new AdminOtpMail($otp));
     }
 
     public function logout(Request $request)

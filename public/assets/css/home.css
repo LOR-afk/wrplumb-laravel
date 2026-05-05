@@ -1271,3 +1271,39 @@ footer.bg-dark {
         padding: 20px !important;
     }
 }
+
+    .navbar-home .navbar-nav .nav-link {
+        position: relative;
+        color: #0f172a !important;
+        font-weight: 700;
+        transition: all 0.25s ease;
+        border-radius: 12px;
+        padding: 8px 12px !important;
+    }
+
+    .navbar-home .navbar-nav .nav-link:hover {
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.22);
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .navbar-home .navbar-nav .nav-link::after {
+        content: "";
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 3px;
+        height: 2px;
+        background: #ffffff;
+        border-radius: 999px;
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.25s ease;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
+    }
+
+    .navbar-home .navbar-nav .nav-link:hover::after {
+        transform: scaleX(1);
+    }

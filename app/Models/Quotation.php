@@ -26,6 +26,10 @@ class Quotation extends Model
         'sent_at',
         'approved_at',
         'rejected_at',
+        'acceptance_token',
+        'client_response',
+        'accepted_at',
+        'declined_at',
     ];
 
     protected function casts(): array
@@ -44,6 +48,8 @@ class Quotation extends Model
             'rejected_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'accepted_at' => 'datetime',
+            'declined_at' => 'datetime',
         ];
     }
 
