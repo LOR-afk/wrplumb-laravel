@@ -289,3 +289,23 @@ html:has(body.support-widget-mode) {
         max-width: 86%;
     }
 }
+
+
+/* Support panel header avatar fix */
+.support-avatar {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #0f4c81;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 0 4px rgba(29, 155, 240, 0.12);
+}
+
+.support-avatar i {
+    color: #0f4c81 !important;
+    font-size: 1.25rem;
+}

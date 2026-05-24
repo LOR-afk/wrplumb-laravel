@@ -17,15 +17,27 @@
     --sidebar-collapsed-width: 86px;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
+    overflow-x: hidden;
+}
 
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: var(--wr-bg);
     color: var(--wr-text);
+    font-size: 0.9rem;
 }
 
+/* ================================
+   Shared Panels / Cards
+   ================================ */
 .panel {
     background: var(--wr-surface);
     border: 1px solid var(--wr-border);
@@ -35,7 +47,7 @@ body {
 }
 
 .panel-header {
-    padding: 20px 24px;
+    padding: 18px 22px;
     border-bottom: 1px solid var(--wr-border);
     background: #fbfdff;
 }
@@ -46,51 +58,94 @@ body {
     font-weight: 800;
 }
 
-.panel-body { 
-    padding: 24px; 
+.panel-body {
+    padding: 20px 22px;
 }
 
-.table { 
-    margin-bottom: 0; 
+.card,
+.panel,
+.q-card,
+.action-card,
+.audit-card,
+.q-list-panel,
+.q-filter-panel,
+.dashboard-card,
+.request-action-card,
+.client-card,
+.info-card {
+    border-radius: 16px;
+}
+
+/* ================================
+   Shared Tables
+   ================================ */
+.table {
+    margin-bottom: 0;
 }
 
 .table thead th {
     background: #f8fbff;
     color: #334155;
-    font-size: 0.92rem;
+    font-size: 0.78rem;
     font-weight: 800;
     border-bottom: 1px solid var(--wr-border);
-    padding: 16px 14px;
+    padding: 11px 12px;
     white-space: nowrap;
 }
 
 .table tbody td {
-    padding: 16px 14px;
+    padding: 11px 12px;
     vertical-align: middle;
     border-color: #edf2f7;
+    font-size: 0.84rem;
 }
 
+/* ================================
+   Shared Badges
+   ================================ */
 .badge-soft {
     display: inline-flex;
     align-items: center;
-    padding: 7px 12px;
+    padding: 6px 10px;
     border-radius: 999px;
     font-weight: 700;
-    font-size: 0.82rem;
+    font-size: 0.74rem;
 }
 
-.badge-soft.blue { background: #eaf4ff; color: #1d4ed8; }
-.badge-soft.green { background: #ecfdf3; color: #15803d; }
-.badge-soft.orange { background: #fff7ed; color: #c2410c; }
-.badge-soft.red { background: #fee2e2; color: #b91c1c; }
-.badge-soft.gray { background: #eef2f7; color: #475569; }
+.badge-soft.blue {
+    background: #eaf4ff;
+    color: #1d4ed8;
+}
 
+.badge-soft.green {
+    background: #ecfdf3;
+    color: #15803d;
+}
+
+.badge-soft.orange {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.badge-soft.red {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.badge-soft.gray {
+    background: #eef2f7;
+    color: #475569;
+}
+
+/* ================================
+   Shared Buttons / Forms
+   ================================ */
 .btn-primary {
     background: linear-gradient(90deg, #1d9bf0, #3bb6ff);
     border: none;
     border-radius: 12px;
     font-weight: 700;
-    padding: 10px 16px;
+    padding: 8px 14px;
 }
 
 .btn-outline-secondary,
@@ -99,16 +154,43 @@ body {
 .btn-outline-success {
     border-radius: 12px;
     font-weight: 700;
-    padding: 10px 16px;
+    padding: 8px 14px;
+}
+
+.btn {
+    min-height: 38px;
+    font-size: 0.84rem;
+}
+
+.btn-sm {
+    min-height: 30px;
+    padding: 5px 9px;
+    font-size: 0.74rem;
 }
 
 .form-control,
 .form-select,
 textarea {
-    border-radius: 14px !important;
+    border-radius: 12px !important;
     border: 1px solid var(--wr-border) !important;
-    padding: 11px 14px !important;
+    padding: 9px 12px !important;
     box-shadow: none !important;
+    font-size: 0.84rem !important;
+}
+
+.form-control,
+.form-select {
+    min-height: 38px;
+}
+
+textarea.form-control {
+    min-height: 72px;
+}
+
+.form-label {
+    font-size: 0.78rem;
+    margin-bottom: 5px;
+    font-weight: 700;
 }
 
 .form-control:focus,
@@ -122,4 +204,260 @@ textarea:focus {
     border: none;
     border-radius: 16px;
     box-shadow: var(--wr-shadow);
+}
+
+/* ================================
+   Safe Global Compact Density
+   Does not alter app-shell/sidebar/main widths.
+   Layout widths stay controlled by each role layout CSS.
+   ================================ */
+.topbar {
+    min-height: 64px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+}
+
+.topbar-title,
+.page-title,
+h1 {
+    font-size: 1.65rem !important;
+    line-height: 1.15 !important;
+}
+
+h2 {
+    font-size: 1.45rem !important;
+}
+
+h3 {
+    font-size: 1.25rem !important;
+}
+
+h4 {
+    font-size: 1.08rem !important;
+}
+
+h5 {
+    font-size: 0.98rem !important;
+}
+
+h6 {
+    font-size: 0.88rem !important;
+}
+
+.topbar-subtitle,
+.page-subtitle {
+    font-size: 0.84rem !important;
+}
+
+/* Compact content spacing only; do not control layout widths */
+.content,
+.main-content,
+.admin-content,
+.client-content {
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
+}
+
+/* Sidebar visual density only; do not change sidebar width */
+.sidebar-link {
+    min-height: 42px !important;
+    padding-top: 9px !important;
+    padding-bottom: 9px !important;
+    font-size: 0.86rem !important;
+}
+
+.sidebar-link span,
+.logout-btn span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-label {
+    font-size: 0.7rem !important;
+}
+
+.brand-wrap {
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
+}
+
+.brand-logo {
+    width: 38px !important;
+    height: 38px !important;
+}
+
+.brand-title {
+    font-size: 1rem !important;
+}
+
+.brand-subtitle {
+    font-size: 0.76rem !important;
+}
+
+.logout-btn {
+    min-height: 42px !important;
+    font-size: 0.86rem !important;
+}
+
+/* Shared cards/panels density */
+.card-body,
+.panel-body,
+.q-card,
+.action-card,
+.audit-card-body,
+.q-filter-body,
+.q-list-head,
+.q-list-body,
+.dashboard-card,
+.request-action-card,
+.client-card,
+.info-card {
+    padding: 14px 16px !important;
+}
+
+/* Dashboard / quotation / audit density */
+.dashboard-grid,
+.stats-grid,
+.q-stats-grid,
+.summary-clean-grid,
+.simple-progress,
+.mini-status-grid {
+    gap: 12px !important;
+}
+
+.q-stat-card,
+.summary-clean-box,
+.simple-step,
+.next-action-panel,
+.guided-recommendation,
+.system-decision-card {
+    padding: 11px 13px !important;
+    border-radius: 14px !important;
+}
+
+.q-stat-value {
+    font-size: 1.05rem !important;
+}
+
+.q-stat-label,
+.summary-clean-box span,
+.summary-meta-label,
+.action-label {
+    font-size: 0.68rem !important;
+}
+
+.summary-clean-box strong,
+.summary-meta-value,
+.simple-step strong {
+    font-size: 0.8rem !important;
+}
+
+.simple-step span,
+.guided-recommendation p,
+.system-decision-card p,
+.next-action-header p {
+    font-size: 0.72rem !important;
+}
+
+.audit-card-header {
+    padding: 14px 16px !important;
+}
+
+.audit-card-title {
+    font-size: 1rem !important;
+}
+
+.audit-card-subtitle {
+    font-size: 0.8rem !important;
+}
+
+/* Modal compact */
+.modal-header {
+    padding: 14px 18px !important;
+}
+
+.modal-body {
+    padding: 16px 18px !important;
+}
+
+.modal-title {
+    font-size: 1.05rem !important;
+}
+
+/* ================================
+   Mobile Responsive Base Fixes
+   ================================ */
+@media (max-width: 767.98px) {
+    body {
+        font-size: 14px;
+        overflow-x: hidden;
+    }
+
+    .content,
+    .main-content,
+    .admin-content,
+    .client-content {
+        padding: 16px !important;
+    }
+
+    .page-header,
+    .page-header-card {
+        padding: 18px !important;
+        border-radius: 18px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .page-header h1,
+    .page-header-card h2,
+    .topbar-title {
+        font-size: 1.35rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .page-header p,
+    .page-header-card p,
+    .topbar-subtitle {
+        font-size: 0.9rem !important;
+    }
+
+    .panel,
+    .card {
+        border-radius: 18px !important;
+    }
+
+    .panel-header,
+    .panel-body,
+    .card-body {
+        padding: 16px !important;
+    }
+
+    .table-responsive {
+        border-radius: 16px;
+        overflow-x: auto;
+    }
+
+    .table {
+        min-width: 720px;
+    }
+
+    .btn {
+        border-radius: 12px;
+    }
+
+    .mobile-full-btn,
+    .d-grid .btn {
+        width: 100%;
+    }
+
+    .form-control,
+    .form-select,
+    textarea {
+        font-size: 0.95rem !important;
+        min-height: 46px;
+    }
+
+    .row.g-4 {
+        --bs-gutter-y: 1rem;
+    }
 }

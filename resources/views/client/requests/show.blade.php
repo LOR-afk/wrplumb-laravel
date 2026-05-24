@@ -408,9 +408,8 @@
             <div class="detail-grid">
                 <div>
                     <div class="detail-label">{{ $hasJobOrder ? '' : 'Appointment Status' }}</div>
-                    @if (!$hasJobOrder)
-    <div>
-        <div class="detail-label">Appointment Status</div>
+                        @if (!$hasJobOrder)
+                    <div>
         <div class="detail-value">
             @if ($quotation->appointment_status === 'pending')
                 <span class="badge-soft orange">Pending</span>

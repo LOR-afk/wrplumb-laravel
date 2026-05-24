@@ -123,8 +123,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const oldServiceType = @json(old('service_type'));
 
     const serviceOptions = {
-        Plumbing: [
-            'Residential Plumbing & Repair',
+        plumbing: [
+            'Leak Repair',
+            'Clogged Drain',
+            'Toilet Repair',
+            'Sink/Faucet Repair',
+            'Pipe Replacement',
+            'Low Water Pressure',
             'Waste Line Installation',
             'Water Line Installation',
             'Downspout & Sewer Line Installation',
@@ -132,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'Plumbing Fixtures & Accessories Installation',
             'Fire Sprinkler System Installation'
         ],
-        Construction: [
+        construction: [
             'New Home & Commercial Building & Renovation',
             'Masonry Works',
             'Carpentry',
@@ -144,17 +149,19 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     function populateServiceTypes() {
-        const selectedCategory = serviceCategory.value;
+        if (!serviceCategory || !serviceType) return;
+
+        const selectedCategory = serviceCategory.value.trim().toLowerCase();
         const options = serviceOptions[selectedCategory] || [];
 
-        serviceType.innerHTML = '<option value="">Select a service</option>';
+        serviceType.innerHTML = '<option value="" selected disabled>Select a service</option>';
 
-        options.forEach(function (item) {
+        options.forEach(function (service) {
             const option = document.createElement('option');
-            option.value = item;
-            option.textContent = item;
+            option.value = service;
+            option.textContent = service;
 
-            if (oldServiceType && oldServiceType === item) {
+            if (oldServiceType === service) {
                 option.selected = true;
             }
 
@@ -162,11 +169,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    serviceCategory.addEventListener('change', function () {
-        populateServiceTypes();
-    });
-
     populateServiceTypes();
+
+    if (serviceCategory) {
+        serviceCategory.addEventListener('change', populateServiceTypes);
+    }
 });
 </script>
 @endsection

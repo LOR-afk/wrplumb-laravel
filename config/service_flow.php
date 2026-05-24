@@ -2,6 +2,11 @@
 
 return [
     'direct_service_types' => [
-        'Residential Plumbing & Repair',
+        'Leak Repair',
+        'Clogged Drain',
+        'Toilet Repair',
+        'Sink/Faucet Repair',
+        'Pipe Replacement',
+        'Low Water Pressure'
     ],
 ];

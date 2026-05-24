@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\EnsureAdmin;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,15 +10,14 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-            ->withMiddleware(function ($middleware): void {
-                $middleware->alias([
-                    'admin' => \App\Http\Middleware\EnsureAdmin::class,
-                    'hr' => \App\Http\Middleware\EnsureHr::class,
-                    'inspector' => \App\Http\Middleware\EnsureInspector::class,
-                ]);
-            })
+    ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'hr' => \App\Http\Middleware\EnsureHr::class,
+            'inspector' => \App\Http\Middleware\EnsureInspector::class,
+            'admin.otp' => \App\Http\Middleware\EnsureAdminOtpVerified::class,
+        ]);
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
-
-    

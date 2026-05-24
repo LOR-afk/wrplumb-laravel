@@ -60,6 +60,11 @@
             <span>Reports</span>
         </a>
 
+        <a href="{{ route('admin.audit-logs.index') }}" data-title="Audit Logs" class="sidebar-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
+            <i class="fas fa-shield-halved"></i>
+            <span>Audit Logs</span>
+        </a>
+
         <a href="{{ route('admin.support.index') }}" data-title="Support Requests" class="sidebar-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
             <i class="fas fa-comments"></i>
             <span>Support Requests</span>
@@ -156,6 +161,8 @@
     </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const body = document.body;
@@ -229,5 +236,7 @@
         }, 4500);
     });
 </script>
+
+@stack('scripts')
 </body>
 </html>

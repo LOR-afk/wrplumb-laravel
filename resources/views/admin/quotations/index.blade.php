@@ -2,13 +2,13 @@
 
 @section('title', 'View Quotations - WRPlumb')
 @section('topbar_title', 'View Quotations')
-@section('topbar_subtitle', 'Review quotation requests and manage assignment, schedule, and job order flow.')
+@section('topbar_subtitle', 'Review service requests and take the next required action.')
+
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/quotations.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/quotations.css') }}?v=20260522modalfix">
 @endpush
+
 @section('content')
-
-
 @php
     $quotationItems = method_exists($quotations, 'getCollection') ? $quotations->getCollection() : collect($quotations);
     $totalCount = method_exists($quotations, 'total') ? $quotations->total() : $quotationItems->count();
@@ -36,7 +36,7 @@
         <div class="q-stat-card">
             <div class="q-stat-icon orange"><i class="fas fa-clock"></i></div>
             <div>
-                <div class="q-stat-label">Pending on Page</div>
+                <div class="q-stat-label">Pending</div>
                 <div class="q-stat-value">{{ $pendingCount }}</div>
             </div>
         </div>
@@ -44,7 +44,7 @@
         <div class="q-stat-card">
             <div class="q-stat-icon green"><i class="fas fa-user-check"></i></div>
             <div>
-                <div class="q-stat-label">Assigned on Page</div>
+                <div class="q-stat-label">Assigned</div>
                 <div class="q-stat-value">{{ $assignedCount }}</div>
             </div>
         </div>
@@ -52,27 +52,20 @@
         <div class="q-stat-card">
             <div class="q-stat-icon gray"><i class="fas fa-clipboard-check"></i></div>
             <div>
-                <div class="q-stat-label">Active Jobs on Page</div>
+                <div class="q-stat-label">Active Jobs</div>
                 <div class="q-stat-value">{{ $activeJobCount }}</div>
             </div>
         </div>
     </div>
 
-    <div class="q-toolbar-card">
-        <div class="q-toolbar-head">
-            <div>
-                <h5 class="q-toolbar-title"><i class="fas fa-filter me-2 text-primary"></i>Filter Requests</h5>
-                <div class="text-muted small mt-1">Search and narrow quotation requests before reviewing details.</div>
-            </div>
+    <details class="q-filter-panel" {{ $activeFilterCount ? 'open' : '' }}>
+        <summary>
+            <span><i class="fas fa-filter me-2"></i>Filter Requests</span>
+            <span class="q-filter-count">{{ $activeFilterCount }} active</span>
+        </summary>
 
-            <div class="q-filter-count">
-                <i class="fas fa-sliders"></i>
-                {{ $activeFilterCount }} active {{ \Illuminate\Support\Str::plural('filter', $activeFilterCount) }}
-            </div>
-        </div>
-
-        <div class="q-toolbar-body">
-            <form method="GET" class="row g-3 align-items-end">
+        <div class="q-filter-body">
+            <form method="GET" class="row g-2 align-items-end">
                 <div class="col-lg-4 col-md-6">
                     <label class="form-label">Search</label>
                     <input
@@ -88,10 +81,14 @@
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
                         <option value="">All statuses</option>
-                        <option value="pending" @selected(request('status') === 'pending')>Pending</option>
-                        <option value="assigned" @selected(request('status') === 'assigned')>Assigned</option>
-                        <option value="in_progress" @selected(request('status') === 'in_progress')>In Progress</option>
-                        <option value="completed" @selected(request('status') === 'completed')>Completed</option>
+                        <option value="pending" @selected(request('status') === 'pending')>Pending Request</option>
+                        <option value="assigned" @selected(request('status') === 'assigned')>Assigned Request</option>
+                        <option value="in_progress" @selected(request('status') === 'in_progress')>In Progress Request</option>
+                        <option value="completed" @selected(request('status') === 'completed')>Completed Request</option>
+                        <option value="job_scheduled" @selected(request('status') === 'job_scheduled')>Job Scheduled</option>
+                        <option value="job_in_progress" @selected(request('status') === 'job_in_progress')>Job In Progress</option>
+                        <option value="job_completed" @selected(request('status') === 'job_completed')>Job Completed</option>
+                        <option value="job_cancelled" @selected(request('status') === 'job_cancelled')>Job Cancelled</option>
                     </select>
                 </div>
 
@@ -111,21 +108,19 @@
 
                 <div class="col-lg-2 col-md-12 d-flex gap-2">
                     <button class="btn btn-primary flex-fill">
-                        <i class="fas fa-magnifying-glass me-1"></i> Apply
+                        <i class="fas fa-magnifying-glass me-1"></i>Apply
                     </button>
-                    <a href="{{ route('admin.quotations.index') }}" class="btn btn-outline-secondary">
-                        Reset
-                    </a>
+                    <a href="{{ route('admin.quotations.index') }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
         </div>
-    </div>
+    </details>
 
     <div class="q-list-panel">
         <div class="q-list-head">
             <div>
-                <h5 class="q-list-title"><i class="fas fa-file-signature me-2 text-primary"></i>All Quotation Requests</h5>
-                <div class="q-list-subtitle">Showing {{ $displayedCount }} request(s) on this page. Expand a row to review and take action.</div>
+                <h5 class="q-list-title"><i class="fas fa-file-signature me-2 text-primary"></i>Service Requests</h5>
+                <div class="q-list-subtitle">Showing {{ $displayedCount }} request(s). Status filters distinguish request status from job order status.</div>
             </div>
         </div>
 
@@ -136,281 +131,317 @@
                         @php
                             $availableWorkers = $availableWorkersByQuotation[$quotation->id] ?? collect();
                             $hasAvailableWorkers = $availableWorkers->isNotEmpty();
+
                             $flow = $quotation->service_flow ?? 'inspection_required';
                             $visitPurpose = $quotation->visit_purpose ?? ($flow === 'direct_service' ? 'service' : 'inspection');
+
                             $clientName = $quotation->full_name ?? trim(($quotation->first_name ?? '') . ' ' . ($quotation->last_name ?? ''));
                             $assignmentLabel = $flow === 'direct_service' ? 'Personnel' : 'Inspector';
-                            $scheduleLabel = $flow === 'direct_service' ? 'Service' : 'Appointment';
+                            $scheduleLabel = $flow === 'direct_service' ? 'Service' : 'Inspection';
+
+                            $hasAssigned = !empty($quotation->worker_id);
+                            $hasScheduled = !empty($quotation->appointment_date)
+                                && !empty($quotation->appointment_time)
+                                && in_array($quotation->appointment_status, ['approved', 'rescheduled']);
+                            $hasJobOrder = !empty($quotation->jobOrder);
+
+                            $recommendationLabel = $flow === 'direct_service' ? 'Direct Service' : 'Inspection Required';
+                            $recommendationText = $flow === 'direct_service'
+                                ? 'The preferred date may be used as the actual service date after personnel assignment.'
+                                : 'This request needs a site inspection before service execution.';
+
+                            $rawScheduleTime = old('appointment_time', $quotation->appointment_time ?? $quotation->preferred_time ?? null);
+                            try {
+                                $scheduleTimeDisplay = $rawScheduleTime ? \Carbon\Carbon::parse($rawScheduleTime)->format('h:i A') : '';
+                            } catch (\Exception $e) {
+                                $scheduleTimeDisplay = $rawScheduleTime;
+                            }
                         @endphp
 
-                        <details class="quotation-item">
+                        <details class="quotation-item" @if($loop->first) open @endif>
                             <summary class="quotation-summary">
                                 <div class="summary-main">
-                                    <div class="summary-name-row">
-                                        <div class="summary-name">{{ $clientName ?: 'Unnamed Client' }}</div>
-                                    </div>
-
+                                    <div class="summary-name">{{ $clientName ?: 'Unnamed Client' }}</div>
                                     <div class="summary-sub">
                                         {{ $quotation->service_type }} • {{ $quotation->email }} • {{ $quotation->phone }}
                                     </div>
 
                                     <div class="summary-chip-row">
-                                        @if ($flow === 'direct_service')
-                                            <span class="flow-chip direct">
-                                                <i class="fas fa-bolt"></i> Direct Service
-                                            </span>
-                                        @else
-                                            <span class="flow-chip inspect">
-                                                <i class="fas fa-search-location"></i> Inspection First
-                                            </span>
-                                        @endif
-
                                         <span class="service-chip">
-                                            <i class="fas fa-calendar-day"></i>
-                                            {{ ucfirst($visitPurpose) }} Visit
+                                            <i class="fas fa-screwdriver-wrench"></i>{{ $quotation->service_type }}
                                         </span>
+
+                                        @if ($flow === 'direct_service')
+                                            <span class="flow-chip direct"><i class="fas fa-bolt"></i>Direct Service</span>
+                                        @else
+                                            <span class="flow-chip inspect"><i class="fas fa-search-location"></i>Inspection Required</span>
+                                        @endif
                                     </div>
                                 </div>
 
-                                <div>
+                                <div class="summary-meta">
                                     <div class="summary-meta-label">Preferred Date</div>
                                     <div class="summary-meta-value">
                                         {{ optional($quotation->preferred_date)->format('Y-m-d') ?? '—' }}
                                     </div>
                                 </div>
 
-                                <div>
+                                <div class="summary-meta">
                                     <div class="summary-meta-label">Status</div>
-                                    <div class="summary-meta-value mt-1">
+                                    <div class="summary-meta-value">
                                         @if ($quotation->jobOrder)
-                                            @if ($quotation->jobOrder->status === 'scheduled')
-                                                <span class="badge-soft blue">Job Scheduled</span>
-                                            @elseif ($quotation->jobOrder->status === 'in_progress')
-                                                <span class="badge-soft green">Job In Progress</span>
-                                            @elseif ($quotation->jobOrder->status === 'completed')
-                                                <span class="badge-soft green">Job Completed</span>
-                                            @elseif ($quotation->jobOrder->status === 'cancelled')
-                                                <span class="badge-soft red">Job Cancelled</span>
-                                            @else
-                                                <span class="badge-soft gray">{{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->status)) }}</span>
-                                            @endif
+                                            <span class="badge-soft blue">Job {{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->status)) }}</span>
+                                        @elseif ($quotation->status === 'pending')
+                                            <span class="badge-soft orange">Pending</span>
+                                        @elseif ($quotation->status === 'assigned')
+                                            <span class="badge-soft blue">Assigned</span>
+                                        @elseif ($quotation->status === 'completed')
+                                            <span class="badge-soft green">Completed</span>
                                         @else
-                                            @if ($quotation->status === 'pending')
-                                                <span class="badge-soft orange">Pending</span>
-                                            @elseif ($quotation->status === 'assigned')
-                                                <span class="badge-soft blue">Assigned</span>
-                                            @elseif ($quotation->status === 'in_progress')
-                                                <span class="badge-soft green">In Progress</span>
-                                            @elseif ($quotation->status === 'completed')
-                                                <span class="badge-soft green">Completed</span>
-                                            @else
-                                                <span class="badge-soft gray">{{ ucfirst(str_replace('_', ' ', $quotation->status)) }}</span>
-                                            @endif
+                                            <span class="badge-soft gray">{{ ucfirst(str_replace('_', ' ', $quotation->status)) }}</span>
                                         @endif
                                     </div>
                                 </div>
 
-                                <div>
+                                <div class="summary-meta">
                                     <div class="summary-meta-label">{{ $assignmentLabel }}</div>
-                                    <div class="summary-meta-value">
-                                        {{ $quotation->worker?->name ?? 'Not assigned' }}
-                                    </div>
+                                    <div class="summary-meta-value">{{ $quotation->worker?->name ?? 'Not assigned' }}</div>
                                 </div>
 
-                                <div class="summary-arrow">
-                                    <i class="fas fa-chevron-down"></i>
-                                </div>
+                                <div class="summary-arrow"><i class="fas fa-chevron-down"></i></div>
                             </summary>
 
                             <div class="quotation-body">
                                 <div class="quotation-body-grid">
                                     <div class="info-column">
-                                        <div class="q-card">
+                                        <div class="q-card simplified-card">
                                             <div class="q-card-title">
-                                                <i class="fas fa-timeline"></i> Request Timeline
-                                            </div>
-                                            @include('partials.request-timeline', ['quotation' => $quotation])
-                                        </div>
-
-                                        <div class="q-card">
-                                            <div class="q-card-title">
-                                                <i class="fas fa-circle-info"></i> Request Overview
+                                                <i class="fas fa-list-check"></i>Request Status
                                             </div>
 
-                                            <div class="mb-3 d-flex flex-wrap gap-2">
-                                                <span class="service-chip">
-                                                    <i class="fas fa-screwdriver-wrench"></i>
-                                                    {{ $quotation->service_type }}
-                                                </span>
-
-                                                @if ($flow === 'direct_service')
-                                                    <span class="flow-chip direct">
-                                                        <i class="fas fa-bolt"></i> Direct Service
-                                                    </span>
-                                                @else
-                                                    <span class="flow-chip inspect">
-                                                        <i class="fas fa-search-location"></i> Inspection Required
-                                                    </span>
-                                                @endif
-                                            </div>
-
-                                            <div class="detail-grid">
-                                                <div class="detail-box">
-                                                    <div class="detail-label">Category</div>
-                                                    <div class="detail-value">{{ ucfirst($quotation->service_category) }}</div>
-                                                </div>
-
-                                                <div class="detail-box">
-                                                    <div class="detail-label">Project Type</div>
-                                                    <div class="detail-value">{{ $quotation->project_type ?? '—' }}</div>
-                                                </div>
-
-                                                <div class="detail-box">
-                                                    <div class="detail-label">Address</div>
-                                                    <div class="detail-value">{{ $quotation->address }}</div>
-                                                </div>
-
-                                                <div class="detail-box">
-                                                    <div class="detail-label">Assigned At</div>
-                                                    <div class="detail-value">{{ optional($quotation->assigned_at)->format('Y-m-d h:i A') ?? '—' }}</div>
-                                                </div>
-
-                                                <div class="detail-box">
-                                                    <div class="detail-label">{{ $quotation->jobOrder ? 'Job Order Status' : 'Appointment Status' }}</div>
-                                                    <div class="detail-value">
-                                                        @if ($quotation->jobOrder)
-                                                            {{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->status)) }}
-                                                        @else
-                                                            {{ ucfirst(str_replace('_', ' ', $quotation->appointment_status ?? 'pending')) }}
-                                                        @endif
+                                            <div class="simple-progress">
+                                                <div class="simple-step completed">
+                                                    <div class="simple-step-icon"><i class="fas fa-paper-plane"></i></div>
+                                                    <div>
+                                                        <strong>Submitted</strong>
+                                                        <span>{{ optional($quotation->created_at)->format('M d, Y h:i A') }}</span>
                                                     </div>
                                                 </div>
 
-                                                <div class="detail-box">
-                                                    <div class="detail-label">{{ $scheduleLabel }} Schedule</div>
-                                                    <div class="detail-value">
-                                                        @if ($quotation->appointment_date && $quotation->appointment_time)
-                                                            {{ optional($quotation->appointment_date)->format('Y-m-d') }} • {{ date('h:i A', strtotime($quotation->appointment_time)) }}
-                                                        @else
-                                                            Not yet scheduled
-                                                        @endif
+                                                <div class="simple-step {{ $hasAssigned ? 'completed' : 'waiting' }}">
+                                                    <div class="simple-step-icon"><i class="fas fa-user-check"></i></div>
+                                                    <div>
+                                                        <strong>Assigned</strong>
+                                                        <span>{{ $hasAssigned ? ($quotation->worker?->name ?? 'Assigned') : 'Waiting' }}</span>
                                                     </div>
                                                 </div>
 
-                                                <div class="detail-box">
-                                                    <div class="detail-label">Service Flow</div>
-                                                    <div class="detail-value text-uppercase">{{ str_replace('_', ' ', $flow) }}</div>
+                                                <div class="simple-step {{ $hasScheduled ? 'completed' : 'waiting' }}">
+                                                    <div class="simple-step-icon"><i class="fas fa-calendar-check"></i></div>
+                                                    <div>
+                                                        <strong>Scheduled</strong>
+                                                        <span>
+                                                            @if ($hasScheduled)
+                                                                {{ optional($quotation->appointment_date)->format('M d, Y') }} • {{ date('h:i A', strtotime($quotation->appointment_time)) }}
+                                                            @else
+                                                                Waiting
+                                                            @endif
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                <div class="detail-box">
-                                                    <div class="detail-label">Flow Source</div>
-                                                    <div class="detail-value text-uppercase">{{ $quotation->flow_source ?? 'system' }}</div>
+                                                <div class="simple-step {{ $hasJobOrder ? 'completed' : 'waiting' }}">
+                                                    <div class="simple-step-icon"><i class="fas fa-clipboard-check"></i></div>
+                                                    <div>
+                                                        <strong>Job Order</strong>
+                                                        <span>{{ $hasJobOrder ? 'Created' : 'Not yet created' }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            @if ($flow === 'direct_service')
-                                                <div class="flow-alert direct mb-0">
-                                                    This request is classified as <strong>Direct Service</strong>. The preferred date may be treated as the preferred actual service date.
-                                                </div>
-                                            @else
-                                                <div class="flow-alert inspect mb-0">
-                                                    This request is classified as <strong>Inspection Required</strong>. The preferred date should be treated as the preferred site visit date first.
-                                                </div>
-                                            @endif
                                         </div>
 
-                                        <div class="q-card">
+                                        <div class="q-card simplified-card">
                                             <div class="q-card-title">
-                                                <i class="fas fa-note-sticky"></i> Notes and Request Details
+                                                <i class="fas fa-circle-info"></i>Request Summary
                                             </div>
 
-                                            <div class="detail-label mb-2">Client Request Details</div>
-                                            <div class="notes-box mb-3">
-                                                {{ $quotation->details }}
-                                            </div>
-
-                                            <div class="detail-label mb-2">Inspector Notes</div>
-                                            <div class="notes-box">
-                                                {{ $quotation->inspector_notes ?? 'No inspector notes yet.' }}
-                                            </div>
-
-                                            @if ($quotation->appointment_status === 'cancelled' && $quotation->cancel_reason)
-                                                <div class="detail-label mb-2 mt-3">Cancellation Reason</div>
-                                                <div class="notes-box">
-                                                    {{ $quotation->cancel_reason }}
+                                            <div class="summary-clean-grid">
+                                                <div class="summary-clean-box main">
+                                                    <span>Service Needed</span>
+                                                    <strong>{{ $quotation->service_type }}</strong>
                                                 </div>
-                                            @endif
 
-                                            @if (!empty($quotation->flow_override_reason))
-                                                <div class="detail-label mb-2 mt-3">Flow Override Reason</div>
-                                                <div class="notes-box">
-                                                    {{ $quotation->flow_override_reason }}
+                                                <div class="summary-clean-box">
+                                                    <span>Client</span>
+                                                    <strong>{{ $clientName ?: 'Unnamed Client' }}</strong>
                                                 </div>
-                                            @endif
+
+                                                <div class="summary-clean-box">
+                                                    <span>Preferred Date</span>
+                                                    <strong>{{ optional($quotation->preferred_date)->format('Y-m-d') ?? 'Not set' }}</strong>
+                                                </div>
+
+                                                <div class="summary-clean-box">
+                                                    <span>Address</span>
+                                                    <strong>{{ $quotation->address }}</strong>
+                                                </div>
+                                            </div>
+
+                                            <div class="system-decision-card {{ $flow === 'direct_service' ? 'direct' : 'inspect' }}">
+                                                <div class="decision-icon">
+                                                    @if ($flow === 'direct_service')
+                                                        <i class="fas fa-bolt"></i>
+                                                    @else
+                                                        <i class="fas fa-search-location"></i>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <h6>System Decision: {{ $recommendationLabel }}</h6>
+                                                    <p>{{ $recommendationText }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="q-card simplified-card details-button-card">
+                                            <button
+                                                type="button"
+                                                class="q-modal-trigger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#requestDetailsModal{{ $quotation->id }}"
+                                            >
+                                                <span><i class="fas fa-folder-open me-2"></i>View Full Request Details</span>
+                                                <i class="fas fa-up-right-from-square"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="modal fade wr-admin-modal" id="requestDetailsModal{{ $quotation->id }}" tabindex="-1" aria-labelledby="requestDetailsModalLabel{{ $quotation->id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <div>
+                                                            <h5 class="modal-title" id="requestDetailsModalLabel{{ $quotation->id }}">Request Details</h5>
+                                                            <p class="modal-subtitle mb-0">{{ $clientName ?: 'Unnamed Client' }} • {{ $quotation->service_type }}</p>
+                                                        </div>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        <div class="modal-section">
+                                                            <div class="modal-section-title">Request Information</div>
+                                                            <div class="summary-clean-grid modal-grid">
+                                                                <div class="summary-clean-box">
+                                                                    <span>Category</span>
+                                                                    <strong>{{ ucfirst($quotation->service_category) }}</strong>
+                                                                </div>
+
+                                                                <div class="summary-clean-box">
+                                                                    <span>Project Type</span>
+                                                                    <strong>{{ $quotation->project_type ?? '—' }}</strong>
+                                                                </div>
+
+                                                                <div class="summary-clean-box">
+                                                                    <span>Appointment Status</span>
+                                                                    <strong>{{ ucfirst(str_replace('_', ' ', $quotation->appointment_status ?? 'pending')) }}</strong>
+                                                                </div>
+
+                                                                <div class="summary-clean-box">
+                                                                    <span>Assigned At</span>
+                                                                    <strong>{{ optional($quotation->assigned_at)->format('Y-m-d h:i A') ?? '—' }}</strong>
+                                                                </div>
+
+                                                                <div class="summary-clean-box">
+                                                                    <span>Assigned To</span>
+                                                                    <strong>{{ $quotation->worker?->name ?? 'Not assigned' }}</strong>
+                                                                </div>
+
+                                                                <div class="summary-clean-box">
+                                                                    <span>Schedule</span>
+                                                                    <strong>
+                                                                        @if ($quotation->appointment_date && $quotation->appointment_time)
+                                                                            {{ optional($quotation->appointment_date)->format('Y-m-d') }} • {{ date('h:i A', strtotime($quotation->appointment_time)) }}
+                                                                        @else
+                                                                            Not set
+                                                                        @endif
+                                                                    </strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-section">
+                                                            <div class="modal-section-title">Client Request Details</div>
+                                                            <div class="notes-box">{{ $quotation->details }}</div>
+                                                        </div>
+
+                                                        <div class="modal-section">
+                                                            <div class="modal-section-title">Inspector Notes</div>
+                                                            <div class="notes-box">{{ $quotation->inspector_notes ?? 'No inspector notes yet.' }}</div>
+                                                        </div>
+
+                                                        @if ($quotation->appointment_status === 'cancelled' && $quotation->cancel_reason)
+                                                            <div class="modal-section">
+                                                                <div class="modal-section-title">Cancellation Reason</div>
+                                                                <div class="notes-box">{{ $quotation->cancel_reason }}</div>
+                                                            </div>
+                                                        @endif
+
+                                                        @if (!empty($quotation->flow_override_reason))
+                                                            <div class="modal-section">
+                                                                <div class="modal-section-title">Admin Change Reason</div>
+                                                                <div class="notes-box">{{ $quotation->flow_override_reason }}</div>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div class="action-column">
-                                        <div class="action-card">
+                                        <div class="action-card guided-action-card">
                                             <div class="action-title">
-                                                <i class="fas fa-bolt"></i> Admin Action Center
+                                                <i class="fas fa-bolt"></i>Admin Action Center
                                             </div>
 
-                                            <div class="action-stack">
-                                                <div class="job-order-box {{ $quotation->jobOrder ? '' : (($quotation->worker_id && ($quotation->appointment_date || $quotation->preferred_date)) ? 'job-order-ready' : 'job-order-blocked') }}">
-                                                    <div class="action-label">Job Order</div>
-
-                                                    @if ($quotation->jobOrder)
-                                                        <div class="fw-bold mb-1">{{ $quotation->jobOrder->job_order_no }}</div>
-                                                        <div class="text-muted small mb-3">
-                                                            Status: {{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->status)) }}
-                                                            @if ($quotation->jobOrder->scheduled_date)
-                                                                <br>Schedule: {{ optional($quotation->jobOrder->scheduled_date)->format('Y-m-d') }}
-                                                                @if ($quotation->jobOrder->scheduled_time)
-                                                                    • {{ $quotation->jobOrder->scheduled_time }}
-                                                                @endif
-                                                            @endif
-                                                        </div>
-
-                                                        <a href="{{ route('admin.job-orders.show', $quotation->jobOrder) }}" class="btn btn-action-outline w-100">
-                                                            <i class="fas fa-eye me-2"></i>View Job Order
-                                                        </a>
+                                            <div class="guided-recommendation {{ $flow === 'direct_service' ? 'direct' : 'inspect' }}">
+                                                <div class="guided-recommendation-icon">
+                                                    @if ($flow === 'direct_service')
+                                                        <i class="fas fa-bolt"></i>
                                                     @else
-                                                        @if ($quotation->worker_id && ($quotation->appointment_date || $quotation->preferred_date))
-                                                            <div class="small text-success fw-bold mb-3">
-                                                                This request is ready for service execution setup.
-                                                            </div>
-
-                                                            <a href="{{ route('admin.job-orders.create', $quotation) }}" class="btn btn-action-success w-100">
-                                                                <i class="fas fa-plus-circle me-2"></i>Create Job Order
-                                                            </a>
-                                                        @else
-                                                            <div class="small text-muted mb-3">
-                                                                Assign {{ strtolower($assignmentLabel) }} and provide a {{ strtolower($scheduleLabel) }} schedule first before creating a job order.
-                                                            </div>
-
-                                                            <button class="btn btn-outline-secondary w-100" disabled>
-                                                                <i class="fas fa-ban me-2"></i>Not Ready Yet
-                                                            </button>
-                                                        @endif
+                                                        <i class="fas fa-search-location"></i>
                                                     @endif
                                                 </div>
 
-                                                @if ($quotation->client_action_status === 'pending')
-                                                    <details class="action-section" open>
-                                                        <summary>
-                                                            <span><i class="fas fa-user-clock me-2 text-warning"></i>Client Request Review</span>
-                                                            <i class="fas fa-chevron-down section-chevron"></i>
-                                                        </summary>
-                                                        <div class="action-section-body">
+                                                <div>
+                                                    <div class="action-label">System Decision</div>
+                                                    <h5>{{ $recommendationLabel }}</h5>
+                                                    <p>{{ $recommendationText }}</p>
+                                                </div>
+                                            </div>
+
+                                            @if ($quotation->client_action_status === 'pending')
+                                                <div class="guided-alert-card">
+                                                    <div class="guided-alert-title">
+                                                        <i class="fas fa-user-clock"></i>
+                                                        Client has a pending request
+                                                    </div>
+
+                                                    <p class="mb-2">Review the client’s request before continuing.</p>
+
+                                                    <details class="guided-details">
+                                                        <summary>Review client request</summary>
+
+                                                        <div class="guided-details-body">
                                                             <div class="notes-box mb-3">
                                                                 <strong>Request:</strong> {{ ucfirst($quotation->client_action_request) }}<br>
+
                                                                 @if ($quotation->client_requested_date)
                                                                     <strong>Requested Date:</strong> {{ optional($quotation->client_requested_date)->format('Y-m-d') }}<br>
                                                                 @endif
+
                                                                 @if ($quotation->client_requested_time)
                                                                     <strong>Requested Time:</strong> {{ date('h:i A', strtotime($quotation->client_requested_time)) }}<br>
                                                                 @endif
+
                                                                 <strong>Reason:</strong> {{ $quotation->client_request_reason }}
                                                             </div>
 
@@ -418,213 +449,245 @@
                                                                 @csrf
 
                                                                 <div class="mb-3">
-                                                                    <label class="form-label">Decision</label>
-                                                                    <select name="decision" class="form-select" required>
-                                                                        <option value="">Select decision</option>
-                                                                        <option value="approved">Approve</option>
-                                                                        <option value="declined">Decline</option>
+                                                                    <label class="form-label">Review Notes</label>
+                                                                    <textarea name="client_request_review_notes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+                                                                </div>
+
+                                                                <div class="row g-2">
+                                                                    <div class="col-6">
+                                                                        <button name="decision" value="declined" class="btn btn-outline-danger w-100">Decline</button>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <button name="decision" value="approved" class="btn btn-action-primary w-100">Approve</button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </details>
+                                                </div>
+                                            @endif
+
+                                            <div class="next-action-panel">
+                                                <div class="next-action-header">
+                                                    <div class="next-action-icon">
+                                                        @if (!$hasAssigned)
+                                                            <span>1</span>
+                                                        @elseif (!$hasScheduled)
+                                                            <span>2</span>
+                                                        @elseif (!$hasJobOrder)
+                                                            <span>3</span>
+                                                        @else
+                                                            <i class="fas fa-check"></i>
+                                                        @endif
+                                                    </div>
+
+                                                    <div>
+                                                        <div class="action-label">Next Action</div>
+
+                                                        @if (!$hasAssigned)
+                                                            <h4>Assign {{ $assignmentLabel }}</h4>
+                                                            <p>Select the available person who will handle this request.</p>
+                                                        @elseif (!$hasScheduled)
+                                                            <h4>Set {{ $scheduleLabel }} Schedule</h4>
+                                                            <p>Confirm the date and time for the service or inspection.</p>
+                                                        @elseif (!$hasJobOrder)
+                                                            <h4>Create Job Order</h4>
+                                                            <p>The request is ready for service execution setup.</p>
+                                                        @else
+                                                            <h4>Job Order Created</h4>
+                                                            <p>This request already has a job order record.</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                @if (!$hasAssigned)
+                                                    <form method="POST" action="{{ route('admin.quotations.assign-worker', $quotation) }}">
+                                                        @csrf
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Available {{ $assignmentLabel }}</label>
+                                                            <select name="worker_id" class="form-select" required @disabled(!$hasAvailableWorkers)>
+                                                                <option value="">
+                                                                    {{ $hasAvailableWorkers ? 'Select ' . strtolower($assignmentLabel) : 'No available ' . strtolower($assignmentLabel) }}
+                                                                </option>
+
+                                                                @foreach ($availableWorkers as $worker)
+                                                                    <option value="{{ $worker->id }}" @selected($quotation->worker_id == $worker->id)>
+                                                                        {{ $worker->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="next-action-note">
+                                                            @if ($quotation->preferred_date)
+                                                                @if ($hasAvailableWorkers)
+                                                                    Available personnel are shown for {{ optional($quotation->preferred_date)->format('Y-m-d') }}.
+                                                                @else
+                                                                    No personnel is marked available on {{ optional($quotation->preferred_date)->format('Y-m-d') }}.
+                                                                @endif
+                                                            @else
+                                                                Preferred date is not set. Active personnel are shown.
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Assignment Notes</label>
+                                                            <textarea
+                                                                name="admin_notes"
+                                                                class="form-control"
+                                                                rows="2"
+                                                                placeholder="Add assignment notes..."
+                                                            >{{ old('admin_notes', $quotation->admin_notes) }}</textarea>
+                                                        </div>
+
+                                                        <button class="btn btn-action-primary w-100" @disabled(!$hasAvailableWorkers)>
+                                                            <i class="fas fa-user-check me-2"></i>Save Assignment
+                                                        </button>
+                                                    </form>
+                                                @elseif (!$hasScheduled)
+                                                    <form method="POST" action="{{ route('admin.quotations.update-appointment', $quotation) }}">
+                                                        @csrf
+
+                                                        <input type="hidden" name="appointment_status" value="approved">
+
+                                                        <div class="row g-2">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">{{ $scheduleLabel }} Date</label>
+                                                                <input
+                                                                    type="date"
+                                                                    name="appointment_date"
+                                                                    class="form-control"
+                                                                    value="{{ old('appointment_date', optional($quotation->appointment_date ?? $quotation->preferred_date)->format('Y-m-d')) }}"
+                                                                    required
+                                                                >
+                                                            </div>
+
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">{{ $scheduleLabel }} Time</label>
+                                                                <input
+                                                                    type="text"
+                                                                    name="appointment_time"
+                                                                    class="form-control"
+                                                                    value="{{ $scheduleTimeDisplay }}"
+                                                                    placeholder="01:02 PM"
+                                                                    inputmode="numeric"
+                                                                    required
+                                                                >
+                                                            </div>
+                                                        </div>
+
+                                                        @error('appointment_date')
+                                                            <small class="text-danger d-block mt-2">{{ $message }}</small>
+                                                        @enderror
+
+                                                        @error('appointment_time')
+                                                            <small class="text-danger d-block mt-2">{{ $message }}</small>
+                                                        @enderror
+
+                                                        <button class="btn btn-action-primary w-100 mt-3">
+                                                            <i class="fas fa-calendar-check me-2"></i>Save Schedule
+                                                        </button>
+                                                    </form>
+                                                @elseif (!$hasJobOrder)
+                                                    <div class="ready-job-card">
+                                                        <i class="fas fa-circle-check"></i>
+                                                        <div>
+                                                            <strong>Ready for job order</strong>
+                                                            <span>Assignment and schedule are already set.</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <a href="{{ route('admin.job-orders.create', $quotation) }}" class="btn btn-action-success w-100">
+                                                        <i class="fas fa-plus-circle me-2"></i>Create Job Order
+                                                    </a>
+                                                @else
+                                                    <div class="ready-job-card">
+                                                        <i class="fas fa-circle-check"></i>
+                                                        <div>
+                                                            <strong>{{ $quotation->jobOrder->job_order_no }}</strong>
+                                                            <span>Status: {{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->status)) }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <a href="{{ route('admin.job-orders.show', $quotation->jobOrder) }}" class="btn btn-action-outline w-100">
+                                                        <i class="fas fa-eye me-2"></i>View Job Order
+                                                    </a>
+                                                @endif
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                class="q-modal-trigger q-modal-trigger-muted"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#moreOptionsModal{{ $quotation->id }}"
+                                            >
+                                                <span><i class="fas fa-sliders me-2"></i>More Options</span>
+                                                <i class="fas fa-up-right-from-square"></i>
+                                            </button>
+
+                                            <div class="modal fade wr-admin-modal" id="moreOptionsModal{{ $quotation->id }}" tabindex="-1" aria-labelledby="moreOptionsModalLabel{{ $quotation->id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <div>
+                                                                <h5 class="modal-title" id="moreOptionsModalLabel{{ $quotation->id }}">More Options</h5>
+                                                                <p class="modal-subtitle mb-0">Use only when the system decision needs manual review.</p>
+                                                            </div>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <div class="mini-status-grid mb-3">
+                                                                <div>
+                                                                    <span>Assigned To</span>
+                                                                    <strong>{{ $quotation->worker?->name ?? 'Not assigned' }}</strong>
+                                                                </div>
+                                                                <div>
+                                                                    <span>Schedule</span>
+                                                                    <strong>
+                                                                        @if ($quotation->appointment_date && $quotation->appointment_time)
+                                                                            {{ optional($quotation->appointment_date)->format('Y-m-d') }} • {{ date('h:i A', strtotime($quotation->appointment_time)) }}
+                                                                        @else
+                                                                            Not set
+                                                                        @endif
+                                                                    </strong>
+                                                                </div>
+                                                                <div>
+                                                                    <span>System Decision</span>
+                                                                    <strong>{{ $recommendationLabel }}</strong>
+                                                                </div>
+                                                            </div>
+
+                                                            <form method="POST" action="{{ route('admin.quotations.update-flow', $quotation) }}">
+                                                                @csrf
+                                                                @method('PATCH')
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Change System Decision</label>
+                                                                    <select name="service_flow" class="form-select" required>
+                                                                        <option value="direct_service" @selected($flow === 'direct_service')>Direct Service</option>
+                                                                        <option value="inspection_required" @selected($flow === 'inspection_required')>Inspection Required</option>
                                                                     </select>
                                                                 </div>
 
                                                                 <div class="mb-3">
-                                                                    <label class="form-label">Review Notes</label>
-                                                                    <textarea name="client_request_review_notes" class="form-control" rows="3"></textarea>
+                                                                    <label class="form-label">Reason</label>
+                                                                    <textarea
+                                                                        name="flow_override_reason"
+                                                                        class="form-control"
+                                                                        rows="3"
+                                                                        placeholder="Optional admin note"
+                                                                    >{{ old('flow_override_reason', $quotation->flow_override_reason) }}</textarea>
                                                                 </div>
 
-                                                                <button class="btn btn-action-primary w-100">Submit Review</button>
+                                                                <button class="btn btn-action-outline w-100">
+                                                                    <i class="fas fa-save me-2"></i>Save Changes
+                                                                </button>
                                                             </form>
                                                         </div>
-                                                    </details>
-                                                @endif
-
-                                                <details class="action-section" open>
-                                                    <summary>
-                                                        <span><i class="fas fa-user-check me-2 text-primary"></i>Assign {{ $assignmentLabel }}</span>
-                                                        <i class="fas fa-chevron-down section-chevron"></i>
-                                                    </summary>
-                                                    <div class="action-section-body">
-                                                        <form method="POST" action="{{ route('admin.quotations.assign-worker', $quotation) }}">
-                                                            @csrf
-
-                                                            <div class="mb-2">
-                                                                <label class="form-label">{{ $assignmentLabel }}</label>
-                                                                <select
-                                                                    name="worker_id"
-                                                                    class="form-select"
-                                                                    required
-                                                                    @disabled(!$hasAvailableWorkers)
-                                                                >
-                                                                    <option value="">
-                                                                        {{ $hasAvailableWorkers ? 'Select ' . strtolower($assignmentLabel) : 'No available ' . strtolower($assignmentLabel) }}
-                                                                    </option>
-
-                                                                    @foreach ($availableWorkers as $worker)
-                                                                        <option value="{{ $worker->id }}" @selected($quotation->worker_id == $worker->id)>
-                                                                            {{ $worker->name }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="small text-muted mb-3">
-                                                                @if ($quotation->preferred_date)
-                                                                    @if ($hasAvailableWorkers)
-                                                                        Showing available workers on {{ optional($quotation->preferred_date)->format('Y-m-d') }}.
-                                                                    @else
-                                                                        No workers marked available on {{ optional($quotation->preferred_date)->format('Y-m-d') }}.
-                                                                    @endif
-                                                                @else
-                                                                    Preferred date not set. Showing all active workers.
-                                                                @endif
-                                                            </div>
-
-                                                            @if ($flow === 'direct_service')
-                                                                <div class="flow-alert direct">
-                                                                    This request may proceed directly to service scheduling and worker assignment.
-                                                                </div>
-                                                            @else
-                                                                <div class="flow-alert inspect">
-                                                                    This request should go through inspection before quotation and execution.
-                                                                </div>
-                                                            @endif
-
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Assignment Notes</label>
-                                                                <textarea
-                                                                    name="admin_notes"
-                                                                    class="form-control"
-                                                                    rows="3"
-                                                                    placeholder="Add assignment notes..."
-                                                                >{{ old('admin_notes', $quotation->admin_notes) }}</textarea>
-                                                            </div>
-
-                                                            <button class="btn btn-action-primary w-100" @disabled(!$hasAvailableWorkers)>
-                                                                <i class="fas fa-user-check me-2"></i>Save Assignment
-                                                            </button>
-                                                        </form>
                                                     </div>
-                                                </details>
-
-                                                <details class="action-section" open>
-                                                    <summary>
-                                                        <span><i class="fas fa-calendar-check me-2 text-primary"></i>Schedule {{ $scheduleLabel }}</span>
-                                                        <i class="fas fa-chevron-down section-chevron"></i>
-                                                    </summary>
-                                                    <div class="action-section-body">
-                                                        @if ($flow === 'direct_service')
-                                                            <div class="flow-alert direct">
-                                                                This request is marked as <strong>Direct Service</strong>. The client’s preferred date/time may be used as the actual service schedule.
-                                                            </div>
-                                                        @endif
-
-                                                        <form method="POST" action="{{ route('admin.quotations.update-appointment', $quotation) }}">
-                                                            @csrf
-
-                                                            <div class="mb-3">
-                                                                <label class="form-label">{{ $scheduleLabel }} Status</label>
-                                                                <select name="appointment_status" class="form-select" required>
-                                                                    <option value="pending" @selected($quotation->appointment_status === 'pending')>Pending</option>
-                                                                    <option value="approved" @selected($quotation->appointment_status === 'approved')>Approved</option>
-                                                                    <option value="rescheduled" @selected($quotation->appointment_status === 'rescheduled')>Rescheduled</option>
-                                                                    <option value="cancelled" @selected($quotation->appointment_status === 'cancelled')>Cancelled</option>
-                                                                </select>
-                                                            </div>
-                                                            @error('appointment_status')
-                                                                <small class="text-danger d-block mb-2">{{ $message }}</small>
-                                                            @enderror
-
-                                                            <div class="row g-2">
-                                                                <div class="col-md-6">
-                                                                    <label class="form-label">{{ $scheduleLabel }} Date</label>
-                                                                    <input
-                                                                        type="date"
-                                                                        name="appointment_date"
-                                                                        class="form-control"
-                                                                        value="{{ old('appointment_date', optional($quotation->appointment_date)->format('Y-m-d')) }}"
-                                                                    >
-                                                                </div>
-
-                                                                <div class="col-md-6">
-                                                                    <label class="form-label">{{ $scheduleLabel }} Time</label>
-                                                                    <input
-                                                                        type="time"
-                                                                        name="appointment_time"
-                                                                        class="form-control"
-                                                                        value="{{ old('appointment_time', $quotation->appointment_time) }}"
-                                                                    >
-                                                                </div>
-                                                            </div>
-
-                                                            @error('appointment_date')
-                                                                <small class="text-danger d-block mt-2">{{ $message }}</small>
-                                                            @enderror
-                                                            @error('appointment_time')
-                                                                <small class="text-danger d-block mt-2">{{ $message }}</small>
-                                                            @enderror
-
-                                                            <div class="mt-3">
-                                                                <label class="form-label">Cancel Reason</label>
-                                                                <textarea
-                                                                    name="cancel_reason"
-                                                                    class="form-control"
-                                                                    rows="2"
-                                                                    placeholder="Optional reason if cancelled..."
-                                                                >{{ old('cancel_reason', $quotation->cancel_reason) }}</textarea>
-                                                            </div>
-                                                            @error('cancel_reason')
-                                                                <small class="text-danger d-block mt-2">{{ $message }}</small>
-                                                            @enderror
-
-                                                            <button class="btn btn-action-outline w-100 mt-3">
-                                                                <i class="fas fa-calendar-check me-2"></i>Save {{ $scheduleLabel }}
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </details>
-
-                                                <details class="action-section">
-                                                    <summary>
-                                                        <span><i class="fas fa-shuffle me-2 text-primary"></i>Service Flow Override</span>
-                                                        <i class="fas fa-chevron-down section-chevron"></i>
-                                                    </summary>
-                                                    <div class="action-section-body">
-                                                        <form method="POST" action="{{ route('admin.quotations.update-flow', $quotation) }}">
-                                                            @csrf
-                                                            @method('PATCH')
-
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Current Flow</label>
-                                                                <div class="notes-box">
-                                                                    <strong>{{ $flow === 'direct_service' ? 'Direct Service' : 'Inspection Required' }}</strong><br>
-                                                                    Visit Purpose: {{ ucfirst($visitPurpose) }}<br>
-                                                                    Source: {{ strtoupper($quotation->flow_source ?? 'system') }}
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Override Flow</label>
-                                                                <select name="service_flow" class="form-select" required>
-                                                                    <option value="direct_service" @selected($flow === 'direct_service')>Direct Service</option>
-                                                                    <option value="inspection_required" @selected($flow === 'inspection_required')>Inspection Required</option>
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Reason</label>
-                                                                <textarea
-                                                                    name="flow_override_reason"
-                                                                    class="form-control"
-                                                                    rows="3"
-                                                                    placeholder="Optional admin note"
-                                                                >{{ old('flow_override_reason', $quotation->flow_override_reason) }}</textarea>
-                                                            </div>
-
-                                                            <button class="btn btn-action-primary w-100">
-                                                                <i class="fas fa-shuffle me-2"></i>Update Flow
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </details>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -643,7 +706,7 @@
                         <i class="fas fa-file-circle-xmark"></i>
                     </div>
                     <div class="fw-bold text-dark mb-1">No quotation requests found</div>
-                    <div class="text-muted">Incoming service quotation requests will appear here.</div>
+                    <div class="text-muted">Incoming service requests will appear here.</div>
                 </div>
             @endif
         </div>

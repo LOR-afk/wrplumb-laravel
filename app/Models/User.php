@@ -11,8 +11,9 @@ use App\Models\Payment;
 use App\Models\Contract;
 use App\Models\Receipt;
 use App\Models\JobOrder;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 

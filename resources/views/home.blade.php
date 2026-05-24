@@ -1,492 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-    <style>
-    :root {
-        --wr-primary: #1d9bf0;
-        --wr-primary-dark: #0f4c81;
-        --wr-navy: #102a43;
-        --wr-line: rgba(15, 76, 129, 0.14);
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-        background: #f7fbff;
-        color: #102a43;
-    }
-
-    .navbar-home {
-        background: rgba(255, 255, 255, 0.94) !important;
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--wr-line);
-        box-shadow: 0 12px 30px rgba(15, 42, 67, 0.08);
-    }
-
-    .navbar-home .navbar-brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--wr-navy) !important;
-        font-size: 1.15rem;
-        letter-spacing: -0.02em;
-    }
-
-    .logo-img {
-        width: 44px;
-        height: 44px;
-        object-fit: cover;
-        border-radius: 12px;
-        box-shadow: 0 8px 18px rgba(15, 76, 129, 0.16);
-    }
-
-    .navbar-home .nav-link {
-        color: #183b56 !important;
-        font-weight: 700;
-        font-size: 0.92rem;
-        padding-left: 0.85rem !important;
-        padding-right: 0.85rem !important;
-    }
-
-    .navbar-home .nav-link:hover {
-        color: var(--wr-primary-dark) !important;
-    }
-
-    .nav-auth-btn {
-        border-radius: 999px !important;
-        padding: 0.6rem 1rem !important;
-        line-height: 1 !important;
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .nav-signup {
-        background: #e3f4ff !important;
-        color: var(--wr-primary-dark) !important;
-    }
-
-    .nav-login {
-        background: var(--wr-primary-dark) !important;
-        color: #fff !important;
-        border: 1px solid var(--wr-primary-dark) !important;
-    }
-
-    .wr-hero {
-        position: relative;
-        min-height: 100vh;
-        padding: 128px 0 82px;
-        overflow: hidden;
-        background:
-            radial-gradient(circle at 12% 18%, rgba(29, 155, 240, 0.18), transparent 28%),
-            radial-gradient(circle at 82% 10%, rgba(56, 189, 248, 0.18), transparent 30%),
-            linear-gradient(135deg, #f8fcff 0%, #e7f6ff 48%, #f9fdff 100%);
-    }
-
-    .wr-hero::before,
-    .wr-hero::after {
-        content: '';
-        position: absolute;
-        border-radius: 999px;
-        background: rgba(29, 155, 240, 0.12);
-        pointer-events: none;
-    }
-
-    .wr-hero::before {
-        width: 380px;
-        height: 380px;
-        right: -120px;
-        top: 120px;
-    }
-
-    .wr-hero::after {
-        width: 260px;
-        height: 260px;
-        left: -90px;
-        bottom: 60px;
-    }
-
-    .wr-hero .container {
-        position: relative;
-        z-index: 2;
-    }
-
-    .wr-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: #ffffff;
-        border: 1px solid var(--wr-line);
-        color: var(--wr-primary-dark);
-        font-weight: 800;
-        border-radius: 999px;
-        padding: 8px 14px;
-        box-shadow: 0 10px 24px rgba(15, 76, 129, 0.08);
-        margin-bottom: 18px;
-    }
-
-    .wr-hero-title {
-        font-size: clamp(2.65rem, 6vw, 5.2rem);
-        line-height: 0.95;
-        font-weight: 900;
-        letter-spacing: -0.06em;
-        color: var(--wr-navy);
-        margin-bottom: 18px;
-    }
-
-    .wr-hero-title span {
-        color: var(--wr-primary-dark);
-    }
-
-    .wr-hero-lead {
-        color: #31506a;
-        font-size: 1.16rem;
-        line-height: 1.75;
-        max-width: 640px;
-        margin-bottom: 26px;
-    }
-
-    .wr-hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 28px;
-    }
-
-    .wr-btn-primary,
-    .wr-btn-outline,
-    .wr-btn-light {
-        border-radius: 999px;
-        padding: 13px 20px;
-        font-weight: 800;
-        box-shadow: 0 12px 25px rgba(15, 76, 129, 0.12);
-    }
-
-    .wr-btn-primary {
-        background: var(--wr-primary-dark);
-        border-color: var(--wr-primary-dark);
-        color: #fff;
-    }
-
-    .wr-btn-primary:hover {
-        background: #0a355e;
-        border-color: #0a355e;
-        color: #fff;
-    }
-
-    .wr-btn-outline {
-        border: 1px solid rgba(15, 76, 129, 0.28);
-        color: var(--wr-primary-dark);
-        background: #fff;
-    }
-
-    .wr-btn-outline:hover {
-        background: #e8f5ff;
-        color: var(--wr-primary-dark);
-    }
-
-    .wr-btn-light {
-        border: 1px solid rgba(15, 76, 129, 0.16);
-        color: #183b56;
-        background: rgba(255, 255, 255, 0.76);
-    }
-
-    .wr-trust-row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        max-width: 640px;
-    }
-
-    .wr-trust-card {
-        background: rgba(255,255,255,0.82);
-        border: 1px solid var(--wr-line);
-        border-radius: 20px;
-        padding: 16px;
-        box-shadow: 0 14px 30px rgba(15, 42, 67, 0.08);
-    }
-
-    .wr-trust-card i {
-        color: var(--wr-primary-dark);
-        margin-bottom: 8px;
-    }
-
-    .wr-trust-card strong {
-        display: block;
-        font-size: 0.95rem;
-        color: var(--wr-navy);
-    }
-
-    .wr-trust-card span {
-        display: block;
-        color: #63788c;
-        font-size: 0.82rem;
-        margin-top: 3px;
-    }
-
-    .wr-hero-visual {
-        position: relative;
-        max-width: 470px;
-        margin-left: auto;
-    }
-
-    .wr-logo-card {
-        background: #fff;
-        border: 1px solid var(--wr-line);
-        border-radius: 32px;
-        padding: 28px;
-        box-shadow: 0 26px 60px rgba(15, 42, 67, 0.16);
-    }
-
-    .wr-logo-card img {
-        width: 100%;
-        max-height: 310px;
-        object-fit: contain;
-        border-radius: 24px;
-        background: #f3f8fc;
-    }
-
-    .wr-service-mini {
-        margin-top: 16px;
-        background: #102a43;
-        color: #fff;
-        border-radius: 28px;
-        padding: 22px;
-        box-shadow: 0 22px 46px rgba(16, 42, 67, 0.22);
-    }
-
-    .wr-service-mini h5 {
-        font-weight: 900;
-        margin-bottom: 14px;
-    }
-
-    .wr-service-mini ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: grid;
-        gap: 10px;
-    }
-
-    .wr-service-mini li {
-        color: rgba(255,255,255,0.88);
-        font-weight: 600;
-        font-size: 0.92rem;
-    }
-
-    .wr-service-mini li i {
-        color: #7dd3fc;
-        margin-right: 8px;
-    }
-
-    .wr-floating-badge {
-        position: absolute;
-        right: -18px;
-        top: 28px;
-        background: #fff;
-        border: 1px solid var(--wr-line);
-        border-radius: 18px;
-        padding: 12px 14px;
-        box-shadow: 0 18px 34px rgba(15, 42, 67, 0.14);
-        font-weight: 900;
-        color: var(--wr-primary-dark);
-        z-index: 5;
-    }
-
-    .wr-floating-badge small {
-        display: block;
-        color: #63788c;
-        font-weight: 700;
-        margin-top: 2px;
-    }
-
-    .wr-quick-strip {
-        margin-top: -42px;
-        position: relative;
-        z-index: 3;
-    }
-
-    .wr-quick-card {
-        background: #fff;
-        border: 1px solid var(--wr-line);
-        border-radius: 28px;
-        padding: 22px;
-        box-shadow: 0 18px 45px rgba(15, 42, 67, 0.12);
-    }
-
-    .wr-quick-item {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-
-    .wr-quick-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #e9f6ff;
-        color: var(--wr-primary-dark);
-        flex: 0 0 auto;
-        font-size: 1.15rem;
-    }
-
-    .wr-quick-item h6 {
-        margin: 0 0 3px;
-        font-weight: 900;
-        color: var(--wr-navy);
-    }
-
-    .wr-quick-item p {
-        margin: 0;
-        color: #63788c;
-        font-size: 0.9rem;
-    }
-
-    @media (max-width: 991.98px) {
-        .wr-hero {
-            padding-top: 108px;
-            text-align: center;
-        }
-
-        .wr-hero-lead,
-        .wr-trust-row,
-        .wr-hero-visual {
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .wr-hero-actions {
-            justify-content: center;
-        }
-
-        .wr-hero-visual {
-            margin-top: 36px;
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .wr-trust-row {
-            grid-template-columns: 1fr;
-        }
-
-        .wr-floating-badge {
-            position: static;
-            margin-bottom: 14px;
-            display: inline-block;
-        }
-
-        .wr-quick-strip {
-            margin-top: 0;
-            padding-top: 24px;
-        }
-    }
-
-    .navbar-home .nav-auth-btn.nav-login {
-        background: #ffffff !important;
-        color: #0f172a !important;
-        border: 1px solid rgba(15, 23, 42, 0.12) !important;
-        border-radius: 14px !important;
-        padding: 9px 18px !important;
-        font-weight: 800 !important;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10) !important;
-    }
-
-    .navbar-home .nav-auth-btn.nav-login i {
-        color: #0f172a !important;
-    }
-
-    .navbar-home .nav-auth-btn.nav-login:hover {
-        background: #0f172a !important;
-        color: #ffffff !important;
-        border-color: #0f172a !important;
-    }
-
-    .navbar-home .nav-auth-btn.nav-login:hover i {
-        color: #ffffff !important;
-    }
-
-    .navbar-home .nav-auth-btn.nav-signup {
-        background: #38bdf8 !important;
-        color: #082f49 !important;
-        border-radius: 14px !important;
-        padding: 9px 18px !important;
-        font-weight: 800 !important;
-    }
-
-    .navbar-home .nav-auth-btn.nav-signup i {
-        color: #082f49 !important;
-    }
-
-    .navbar-home .nav-auth-btn.nav-signup:hover {
-        background: #0284c7 !important;
-        color: #ffffff !important;
-    }
-
-    .navbar-home .nav-auth-btn.nav-signup:hover i {
-        color: #ffffff !important;
-    }
-</style>
-
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Professional Plumbing Services</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/custom.css?v=20260225b">
-    <link rel="stylesheet" href="assets/css/home.css?v=20260225b">
+    <title>WRPlumb | Plumbing and Construction Services</title>
 
+    <link rel="icon" type="image/jpeg" href="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260517a">
 </head>
 <body>
-    <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-light navbar-home fixed-top">
     <div class="container">
-        <a class="navbar-brand" href="#home">
+        <a class="navbar-brand" href="#home" aria-label="WRPlumb homepage">
             <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb Logo" class="logo-img">
             <strong>WRPlumb</strong>
         </a>
-        <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-        >
+
+        <button id="landingNavbarToggle" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
                 <li class="nav-item"><a class="nav-link" href="#process">Process</a></li>
                 <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-                <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
                 <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-
                 <li class="nav-item mt-2 mt-lg-0">
-                    <button
-                        type="button"
-                        class="nav-link btn nav-auth-btn nav-signup ms-lg-2 border-0"
-                        data-bs-toggle="modal"
-                        data-bs-target="#registerModal"
-                    >
-                        <i class="fas fa-user-plus"></i> Sign Up
+                    <button type="button" class="nav-link btn nav-auth-btn nav-signup ms-lg-2 border-0" data-bs-toggle="modal" data-bs-target="#registerModal">
+                        <i class="fas fa-user-plus"></i> Create Account
                     </button>
                 </li>
-
                 <li class="nav-item mt-2 mt-lg-0">
                     <a class="nav-link btn nav-auth-btn nav-login ms-lg-2" href="{{ route('login') }}">
-                        <i class="fas fa-sign-in-alt"></i> Client Login
+                        <i class="fas fa-sign-in-alt"></i> Login
                     </a>
                 </li>
             </ul>
@@ -494,1177 +43,156 @@
     </div>
 </nav>
 
-<!-- Hero Section -->
-<section id="home" class="wr-hero">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-7">
-                <div class="wr-eyebrow">
-                    <i class="fas fa-shield-alt"></i>
-                    Trusted Plumbing & Construction Services in CDO
-                </div>
+<main>
+    <section id="home" class="wr-hero">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7">
+                    <div class="wr-eyebrow"><i class="fas fa-shield-alt"></i> Plumbing and construction service portal</div>
+                    <h1 class="wr-hero-title">Request, schedule, and track WRPlumb services in one place.</h1>
+                    <p class="wr-hero-lead">A simple online system for clients to request plumbing or construction services, receive updates, and monitor quotation, scheduling, billing, payment, and receipt records.</p>
 
-                <h1 class="wr-hero-title">
-                    Reliable service for every <span>plumbing</span> and construction need.
-                </h1>
-
-                <p class="wr-hero-lead">
-                    WRPlumb helps clients request quotations, book services, track job progress, and communicate with the team through a simple online portal.
-                </p>
-
-                <div class="wr-hero-actions">
-                    <button type="button" class="btn wr-btn-primary" data-bs-toggle="modal" data-bs-target="#registerModal">
-                        <i class="fas fa-user-plus me-2"></i>Get Started
-                    </button>
-
-                    <a href="#free-quotation" class="btn wr-btn-outline">
-                        <i class="fas fa-file-invoice me-2"></i>Free Quotation
-                    </a>
-
-                    <a href="#contact" class="btn wr-btn-light">
-                        <i class="fas fa-phone me-2"></i>Contact Us
-                    </a>
-                </div>
-
-                <div class="wr-trust-row">
-                    <div class="wr-trust-card">
-                        <i class="fas fa-tools"></i>
-                        <strong>Skilled Team</strong>
-                        <span>Plumbing and construction works</span>
+                    <div class="wr-hero-actions">
+                        <a href="{{ route('login') }}" class="btn wr-btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Login to Portal</a>
+                        <button type="button" class="btn wr-btn-outline" data-bs-toggle="modal" data-bs-target="#registerModal"><i class="fas fa-user-plus me-2"></i>Create Client Account</button>
+                        <button type="button" class="btn wr-btn-light" data-bs-toggle="modal" data-bs-target="#quoteModal"><i class="fas fa-file-signature me-2"></i>Request a Quote</button>
                     </div>
 
-                    <div class="wr-trust-card">
-                        <i class="fas fa-calendar-check"></i>
-                        <strong>Easy Booking</strong>
-                        <span>Submit requests online</span>
-                    </div>
-
-                    <div class="wr-trust-card">
-                        <i class="fas fa-clipboard-list"></i>
-                        <strong>Status Tracking</strong>
-                        <span>Monitor service progress</span>
+                    <div class="wr-trust-row">
+                        <div class="wr-trust-card"><i class="fas fa-calendar-check"></i><strong>Easy Request</strong><span>Submit service details online</span></div>
+                        <div class="wr-trust-card"><i class="fas fa-user-check"></i><strong>Team Review</strong><span>Admin/HR handles scheduling</span></div>
+                        <div class="wr-trust-card"><i class="fas fa-receipt"></i><strong>Clear Records</strong><span>Track quotations and payments</span></div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-lg-5">
-                <div class="wr-hero-visual">
-                    <div class="wr-floating-badge">
-                        <i class="fas fa-star text-warning me-1"></i> Quality Work
-                        <small>Reliable output, fair rates</small>
-                    </div>
-
-                    <div class="wr-logo-card">
+                <div class="col-lg-5">
+                    <div class="wr-hero-card">
                         <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb Plumbing and Construction">
-                    </div>
-
-                    <div class="wr-service-mini">
-                        <h5>What you can request</h5>
-                        <ul>
-                            <li><i class="fas fa-check-circle"></i> Residential plumbing repair and installation</li>
-                            <li><i class="fas fa-check-circle"></i> Water line, waste line, and sewer line works</li>
-                            <li><i class="fas fa-check-circle"></i> Renovation, masonry, painting, and steel works</li>
-                        </ul>
+                        <div class="wr-hero-card-body">
+                            <span class="status-pill"><i class="fas fa-circle"></i> Ready to serve</span>
+                            <h5>For clients, admin, HR, and inspectors</h5>
+                            <p>One login page. The system opens the correct dashboard based on the user role.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Quick Value Strip -->
-<section class="wr-quick-strip">
+    <section id="process" class="process-section">
+        <div class="container">
+            <div class="section-heading text-center">
+                <span class="section-kicker">How it works</span>
+                <h2>Simple client journey</h2>
+                <p>Only the essential steps are shown so users understand the system quickly.</p>
+            </div>
+            <div class="process-grid">
+                <div class="process-card"><div class="process-icon">1</div><h4>Submit Request</h4><p>Client provides service details, address, preferred date, and optional attachments.</p></div>
+                <div class="process-card"><div class="process-icon">2</div><h4>Review and Schedule</h4><p>The system identifies whether the request is ready for service or needs inspection first.</p></div>
+                <div class="process-card"><div class="process-icon">3</div><h4>Track Updates</h4><p>Client can view request status, quotation, contract, job order, invoice, and payment updates.</p></div>
+                <div class="process-card"><div class="process-icon">4</div><h4>Confirm Records</h4><p>Receipts and completed service records remain organized for client and staff reference.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="services-section">
+        <div class="container">
+            <div class="section-heading text-center">
+                <span class="section-kicker">Services</span>
+                <h2>What clients can request</h2>
+                <p>WRPlumb supports common plumbing concerns and construction-related work requests.</p>
+            </div>
+            <div class="service-summary-grid">
+                <div class="service-summary-card">
+                    <div class="service-summary-icon"><i class="fas fa-faucet"></i></div>
+                    <h4>Plumbing Services</h4>
+                    <p>Leak repair, clogged drain, toilet and faucet repair, pipe replacement, water line, waste line, pump, fixtures, and sprinkler system requests.</p>
+                </div>
+                <div class="service-summary-card">
+                    <div class="service-summary-icon"><i class="fas fa-hard-hat"></i></div>
+                    <h4>Construction Services</h4>
+                    <p>Renovation, masonry, carpentry, finishing works, tile installation, steel works, welding, and painting work requests.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <div class="contact-card">
+                <div>
+                    <span class="section-kicker">Contact</span>
+                    <h2>Need help with a request?</h2>
+                    <p>Contact WRPlumb or login to the portal to manage your request records.</p>
+                </div>
+                <div class="contact-details">
+                    <div><i class="fas fa-map-marker-alt"></i><span>139 Upper Zone 4 Bulua, Cagayan de Oro, Philippines</span></div>
+                    <div><i class="fas fa-phone"></i><a href="tel:+63888505197">(088) 850 5197</a></div>
+                    <div><i class="fas fa-envelope"></i><a href="mailto:wrplumbing@gmail.com">wrplumbing@gmail.com</a></div>
+                </div>
+                <div class="contact-actions">
+                    <button type="button" class="btn wr-btn-primary" data-bs-toggle="modal" data-bs-target="#quoteModal"><i class="fas fa-file-signature me-2"></i>Request a Quote</button>
+                    <a href="{{ route('login') }}" class="btn wr-btn-outline"><i class="fas fa-sign-in-alt me-2"></i>Login</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer-section">
     <div class="container">
-        <div class="wr-quick-card">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="wr-quick-item">
-                        <div class="wr-quick-icon"><i class="fas fa-file-signature"></i></div>
-                        <div>
-                            <h6>Request Online</h6>
-                            <p>Send service details and attachments.</p>
-                        </div>
-                    </div>
-                </div>
+        <div class="d-flex flex-wrap justify-content-between gap-2">
+            <p class="mb-0"><strong>WRPlumb</strong> — Plumbing and Construction Services</p>
+            <p class="mb-0">&copy; <span id="current-year"></span> WRPlumb. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
 
-                <div class="col-md-4">
-                    <div class="wr-quick-item">
-                        <div class="wr-quick-icon"><i class="fas fa-user-check"></i></div>
-                        <div>
-                            <h6>Team Review</h6>
-                            <p>Admin assigns the right personnel.</p>
-                        </div>
-                    </div>
+<div class="modal fade" id="quoteModal" tabindex="-1" aria-labelledby="quoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content wr-modal-content border-0">
+            <div class="modal-header wr-modal-header">
+                <div>
+                    <h4 class="modal-title mb-1" id="quoteModalLabel">Service Request Form</h4>
+                    <p class="mb-0 text-muted small">Provide accurate details so WRPlumb can review your request properly.</p>
                 </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="fq-error" class="alert alert-danger d-none" role="alert"></div>
+                <div id="fq-success" class="alert alert-success d-none" role="alert"></div>
 
-                <div class="col-md-4">
-                    <div class="wr-quick-item">
-                        <div class="wr-quick-icon"><i class="fas fa-route"></i></div>
-                        <div>
-                            <h6>Track Progress</h6>
-                            <p>View quotation, job order, and billing updates.</p>
-                        </div>
+                @if (session('success'))
+                    <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+                @endif
+
+                @if ($errors->any() && old('form_type') !== 'register')
+                    <div class="alert alert-danger" role="alert">Failed to submit request. Please check the required fields.</div>
+                @endif
+
+                <form id="free-quotation-form" action="{{ route('free-quotation.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-5"><label for="fq-first-name" class="form-label">First Name</label><input type="text" id="fq-first-name" name="first_name" class="form-control" placeholder="Your first name" required></div>
+                        <div class="col-lg-2 col-md-2 fq-mi-col"><label for="fq-middle-initial" class="form-label">M.I. <small class="text-muted">(Optional)</small></label><input type="text" id="fq-middle-initial" name="middle_initial" class="form-control" maxlength="1" placeholder="M"><input type="hidden" id="fq-name" name="name" value=""></div>
+                        <div class="col-lg-6 col-md-5"><label for="fq-last-name" class="form-label">Last Name</label><input type="text" id="fq-last-name" name="last_name" class="form-control" placeholder="Your last name" required></div>
+                        <div class="col-md-6"><label for="fq-email" class="form-label">Email</label><input type="email" id="fq-email" name="email" class="form-control" placeholder="you@example.com" required></div>
+                        <div class="col-md-6"><label for="fq-phone" class="form-label">Contact Number</label><input type="text" id="fq-phone" name="phone" class="form-control" placeholder="09XXXXXXXXX" required></div>
+                        <div class="col-md-6"><label for="fq-service-category" class="form-label">Service Category</label><select id="fq-service-category" name="service_category" class="form-select" required><option value="" selected disabled>Select a category</option><option value="plumbing">Plumbing</option><option value="construction">Construction</option></select></div>
+                        <div class="col-md-6"><label for="fq-service-type" class="form-label">Service Needed</label><select id="fq-service-type" name="service_type" class="form-select" required><option value="" selected disabled>Select a service</option></select></div>
+                        <div class="col-md-6"><label for="fq-project-type" class="form-label">Project Type</label><select id="fq-project-type" name="project_type" class="form-select" required><option value="" selected disabled>Select project type</option><option value="Residential">Residential</option><option value="Commercial">Commercial</option></select></div>
+                        <div class="col-md-6"><label for="fq-preferred-date" class="form-label">Preferred Service Date</label><input type="date" id="fq-preferred-date" name="preferred_date" class="form-control"></div>
+                        <div class="col-12"><label for="fq-address" class="form-label">Service Address</label><div class="address-autocomplete"><div class="input-group"><input type="text" id="fq-address" name="address" class="form-control" placeholder="Enter address, e.g., Barra, Opol" autocomplete="street-address" required><a id="fq-address-map" class="btn btn-outline-secondary disabled" href="#" target="_blank" rel="noopener noreferrer" aria-disabled="true" tabindex="-1" title="Open the typed address in Google Maps"><i class="fas fa-map-marked-alt"></i></a></div><div id="fq-address-suggestions" class="address-suggestions d-none"></div><input type="hidden" id="fq-address-lat" name="address_lat" value=""><input type="hidden" id="fq-address-lon" name="address_lon" value=""></div></div>
+                        <div class="col-12"><label for="fq-details" class="form-label">Details of the Problem / Work Needed</label><textarea id="fq-details" name="details" rows="4" class="form-control" placeholder="Describe your plumbing or construction concern." required></textarea></div>
+                        <div class="col-12"><label for="fq-attachments" class="form-label">Attach Photos / Videos <span class="text-muted">(Optional)</span></label><input type="file" id="fq-attachments" name="attachments[]" class="form-control" accept="image/*,video/*" multiple><div class="form-text">Photos/videos help the team understand the concern before scheduling service or inspection. Max 25MB per file.</div></div>
+                        <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="fq-consent" required><label class="form-check-label" for="fq-consent">I agree that WRPlumb may contact me via phone or email regarding this service request.</label></div></div>
+                        <div class="col-12"><button type="submit" class="btn wr-submit-btn w-100"><i class="fas fa-paper-plane me-2"></i>Submit Service Request</button></div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
-</section>
-
-    <!-- Video Ad Section -->
-    <section class="video-ad-section section-padding">
-        <div class="container">
-            <div class="text-center mb-4">
-                <h2>WRPlumb In Action</h2>
-                <p class="lead text-muted mb-0">Watch our featured service ad and see our quality work standards.</p>
-            </div>
-            <div class="video-ad-grid">
-                <div class="video-ad-wrap">
-                    <video
-                        class="video-ad-media video-ad-media-plumbing video-ad-clip"
-                        autoplay
-                        muted
-                        loop
-                        playsinline
-                        preload="metadata"
-                        poster="image/294539416_407599744767669_1937739510480713048_n.jpg"
-                        aria-label="Plumbing and construction promotional video"
-                        data-clip-start="0"
-                        data-clip-end="18"
-                    >
-                        <source src="image/Plumbing%20Video%20Template%20%28Editable%29.mp4" type="video/mp4">
-                        <track kind="captions" srclang="en" label="English captions" src="data:text/vtt,WEBVTT%0A">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="video-ad-overlay">
-                        <div class="video-ad-badge">
-                            <img src="image/294539416_407599744767669_1937739510480713048_n.jpg" alt="WR Logo">
-                        </div>
-                        <div class="video-ad-copy">
-                            <h4 class="mb-2">Reliable Plumbing &amp; Construction</h4>
-                            <p class="mb-0">Professional team, quality output, and trusted service for every project.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="video-ad-wrap">
-                    <video
-                        class="video-ad-media video-ad-media-construction video-ad-clip"
-                        autoplay
-                        muted
-                        loop
-                        playsinline
-                        preload="metadata"
-                        poster="image/294539416_407599744767669_1937739510480713048_n.jpg"
-                        aria-label="Construction works promotional video"
-                        data-clip-start="6"
-                        data-clip-end="28"
-                    >
-                        <source src="image/The%20Power%20and%20Beauty%20of%20Construction%20Sites%EF%BC%9A%20A%20Cinematic%20Reel.mp4" type="video/mp4">
-                        <track kind="captions" srclang="en" label="English captions" src="data:text/vtt,WEBVTT%0A">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="video-ad-overlay">
-                        <div class="video-ad-badge">
-                            <img src="image/294539416_407599744767669_1937739510480713048_n.jpg" alt="WR Logo">
-                        </div>
-                        <div class="video-ad-copy">
-                            <h4 class="mb-2">Built Strong, Delivered Right</h4>
-                            <p class="mb-0">WRPlumb Construction Services with trusted workmanship, durable builds, and on-time project delivery.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Statistics Section -->
-    <section class="stats-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 col-6">
-                    <div class="stat-box">
-                        <h2 id="stat-completed-projects">0</h2>
-                        <p class="text-muted">Completed Projects</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-box">
-                        <h2 id="stat-happy-clients">0</h2>
-                        <p class="text-muted">Happy Clients</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-box">
-                        <h2 id="stat-services-completed">0</h2>
-                        <p class="text-muted">Services Completed</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-box">
-                        <h2 id="stat-active-projects">0</h2>
-                        <p class="text-muted">Active Projects</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Process Timeline Section -->
-    <section id="process" class="process-section section-padding">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2>Application Process</h2>
-                <p class="lead text-muted mb-0">How clients use the portal from login to payment</p>
-            </div>
-
-            <div class="process-timeline">
-                <div class="process-item reveal">
-                    <div class="process-marker">1</div>
-                    <div class="process-content">
-                        <h4>Login to Your Client Portal</h4>
-                        <p>Create an account or sign in to access your dashboard and service features.</p>
-                    </div>
-                </div>
-                <div class="process-item reveal">
-                    <div class="process-marker">2</div>
-                    <div class="process-content">
-                        <h4>Submit a Service Request</h4>
-                        <p>Choose service type, enter your concern, and provide your service address.</p>
-                    </div>
-                </div>
-                <div class="process-item reveal">
-                    <div class="process-marker">3</div>
-                    <div class="process-content">
-                        <h4>Upload Supporting Photos (Optional)</h4>
-                        <p>Add pictures or files so your request can be reviewed more accurately.</p>
-                    </div>
-                </div>
-                <div class="process-item reveal">
-                    <div class="process-marker">4</div>
-                    <div class="process-content">
-                        <h4>Track Request Status in Real-Time</h4>
-                        <p>Monitor updates directly from your portal without needing follow-up calls.</p>
-                    </div>
-                </div>
-                <div class="process-item reveal">
-                    <div class="process-marker">5</div>
-                    <div class="process-content">
-                        <h4>Receive Quotation in Portal</h4>
-                        <p>View your quotation details, costs, and notes in one place.</p>
-                    </div>
-                </div>
-                <div class="process-item reveal">
-                    <div class="process-marker">6</div>
-                    <div class="process-content">
-                        <h4>View Job Order and Schedule</h4>
-                        <p>Check approved job details and service schedule from your client account.</p>
-                    </div>
-                </div>
-                <div class="process-item reveal">
-                    <div class="process-marker">7</div>
-                    <div class="process-content">
-                        <h4>Receive Invoice and Billing Summary</h4>
-                        <p>See your billing breakdown, due amounts, and payment status updates online.</p>
-                    </div>
-                </div>
-                <div class="process-item reveal">
-                    <div class="process-marker">8</div>
-                    <div class="process-content">
-                        <h4>Submit Payment and Confirm Completion</h4>
-                        <p>Record your payment and track confirmation through the portal notifications.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-<section id="about" class="section-padding about-clean-section">
-    <div class="container">
-        <div class="row g-4 align-items-stretch">
-            
-            <!-- LEFT: About -->
-            <div class="col-lg-6">
-                <div class="card about-clean-card h-100 border-0 shadow-sm">
-                    <div class="card-body p-4 p-lg-5">
-                        <span class="about-kicker">About WRPlumb</span>
-                        <h2 class="about-title mt-2 mb-3">Your Trusted Local Plumbing & Construction Partner</h2>
-
-                        <div class="about-badges mb-4">
-                            <span class="badge-chip">
-                                <i class="fas fa-check-circle"></i> Licensed & Insured
-                            </span>
-                            <span class="badge-chip">
-                                <i class="fas fa-bolt"></i> Fast Response
-                            </span>
-                            <span class="badge-chip">
-                                <i class="fas fa-tags"></i> Transparent Pricing
-                            </span>
-                        </div>
-
-                        <p class="about-lead">
-                            We are a local plumbing and construction service company in Cagayan de Oro City
-                            committed to delivering reliable and cost-effective service.
-                        </p>
-
-                        <p class="about-text">
-                            WRPlumb provides residential and commercial plumbing and construction solutions
-                            with a strong focus on workmanship, professionalism, and customer satisfaction.
-                        </p>
-
-                        <p class="about-text mb-4">
-                            Our experienced and certified team works to ensure every project is completed
-                            efficiently, safely, and to a high standard.
-                        </p>
-
-                        <div class="row g-3 about-info-grid">
-                            <div class="col-sm-6">
-                                <div class="info-box h-100">
-                                    <div class="info-icon blue"><i class="fas fa-map-marker-alt"></i></div>
-                                    <h6>Our Location</h6>
-                                    <p>139 Upper Zone 4 Bulua<br>Cagayan de Oro, Philippines</p>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-6">
-                                <div class="info-box h-100">
-                                    <div class="info-icon green"><i class="fas fa-clock"></i></div>
-                                    <h6>Open Now</h6>
-                                    <p>We're currently open and ready to serve you.</p>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-6">
-                                <div class="info-box h-100">
-                                    <div class="info-icon gold"><i class="fas fa-tag"></i></div>
-                                    <h6>Price Range</h6>
-                                    <p>Moderate pricing with quality service at fair rates.</p>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-6">
-                                <div class="info-box h-100">
-                                    <div class="info-icon gray"><i class="fas fa-building"></i></div>
-                                    <h6>Service Coverage</h6>
-                                    <p>Residential and commercial plumbing & construction.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="about-actions mt-4">
-                            <a href="#free-quotation" class="btn btn-warning me-2 mb-2">
-                                <i class="fas fa-file-invoice"></i> Free Quotation
-                            </a>
-                            <a href="#services" class="btn btn-outline-primary mb-2">
-                                <i class="fas fa-tools"></i> View Services
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT: Why Choose Us -->
-            <div class="col-lg-6">
-                <div class="card about-clean-card h-100 border-0 shadow-sm">
-                    <div class="card-body p-4 p-lg-5">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
-                            <h3 class="mb-0 why-title">Why Choose Us?</h3>
-                            <span class="why-badge-clean">
-                                <i class="fas fa-star"></i> Trusted Local Team
-                            </span>
-                        </div>
-
-                        <div class="why-list-clean">
-                            <div class="why-item-clean">
-                                <div class="why-icon-clean"><i class="fas fa-user-check"></i></div>
-                                <div>
-                                    <h6>Experienced Team</h6>
-                                    <p>Years of expertise in plumbing solutions and construction work.</p>
-                                </div>
-                            </div>
-
-                            <div class="why-item-clean">
-                                <div class="why-icon-clean"><i class="fas fa-award"></i></div>
-                                <div>
-                                    <h6>Quality Service</h6>
-                                    <p>We guarantee satisfaction and maintain high work standards.</p>
-                                </div>
-                            </div>
-
-                            <div class="why-item-clean">
-                                <div class="why-icon-clean"><i class="fas fa-bolt"></i></div>
-                                <div>
-                                    <h6>24/7 Availability</h6>
-                                    <p>Emergency services are available when you need immediate help.</p>
-                                </div>
-                            </div>
-
-                            <div class="why-item-clean">
-                                <div class="why-icon-clean"><i class="fas fa-tags"></i></div>
-                                <div>
-                                    <h6>Affordable Pricing</h6>
-                                    <p>Competitive rates without compromising quality.</p>
-                                </div>
-                            </div>
-
-                            <div class="why-item-clean">
-                                <div class="why-icon-clean"><i class="fas fa-shield-alt"></i></div>
-                                <div>
-                                    <h6>Licensed & Insured</h6>
-                                    <p>Fully certified and protected for your peace of mind.</p>
-                                </div>
-                            </div>
-
-                            <div class="why-item-clean">
-                                <div class="why-icon-clean"><i class="fas fa-hand-holding-heart"></i></div>
-                                <div>
-                                    <h6>Work Warranty</h6>
-                                    <p>We stand behind our work with dependable service support.</p>
-                                </div>
-                            </div>
-                        </div>
-
-
-
-                        <div class="why-footer-clean mt-4">
-                            <p class="mb-0">
-                                Have questions?
-                                <a href="#contact">Contact us</a> and we will respond quickly.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</section>
-
-    <!-- Services Section -->
-    <section id="services" class="section-padding bg-light">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2>Our Services</h2>
-                <p class="lead text-muted">Comprehensive plumbing &amp; construction solutions for your needs</p>
-            </div>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card service-card">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-tools fa-3x text-primary mb-3"></i>
-                            <h5>Emergency Repairs</h5>
-                            <p class="text-muted">24/7 emergency plumbing services for urgent issues like leaks, burst pipes, and clogs.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card service-card">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-faucet fa-3x text-primary mb-3"></i>
-                            <h5>Installation Services</h5>
-                            <p class="text-muted">Professional installation of fixtures, water heaters, pipes, and plumbing systems.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card service-card">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-wrench fa-3x text-primary mb-3"></i>
-                            <h5>Maintenance &amp; Inspection</h5>
-                            <p class="text-muted">Regular maintenance and inspections to keep your plumbing system in top condition.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card service-card">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-shower fa-3x text-primary mb-3"></i>
-                            <h5>Bathroom Remodeling</h5>
-                            <p class="text-muted">Complete bathroom plumbing solutions for renovations and upgrades.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card service-card">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-sink fa-3x text-primary mb-3"></i>
-                            <h5>Kitchen Plumbing</h5>
-                            <p class="text-muted">Expert kitchen plumbing services including sink installation and garbage disposal.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card service-card">
-                        <div class="card-body text-center p-4">
-                            <i class="fas fa-water fa-3x text-primary mb-3"></i>
-                            <h5>Water System Services</h5>
-                            <p class="text-muted">Water heater installation, repair, and water quality solutions.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Plumbing / Construction: what we do -->
-            <div class="row mt-4">
-                <div class="col-lg-10 mx-auto">
-                    <div class="card shadow-sm">
-                        <div class="card-body p-4 p-md-5">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                                <div>
-                                    <h3 class="mb-1">What We Do</h3>
-                                    <div class="text-muted">Choose a category to see the specific works we offer.</div>
-                                </div>
-                                <ul class="nav nav-pills services-pills" id="serviceCategoryTabs" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" id="plumbing-tab" data-bs-toggle="pill" data-bs-target="#plumbing-pane" type="button" role="tab" aria-controls="plumbing-pane" aria-selected="true">
-                                            <i class="fas fa-faucet"></i> Plumbing
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="construction-tab" data-bs-toggle="pill" data-bs-target="#construction-pane" type="button" role="tab" aria-controls="construction-pane" aria-selected="false">
-                                            <i class="fas fa-hard-hat"></i> Construction
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="tab-content pt-2" id="serviceCategoryTabsContent">
-                                <div class="tab-pane fade show active" id="plumbing-pane" role="tabpanel" aria-labelledby="plumbing-tab" tabindex="0">
-                                    <div class="row g-4">
-                                        <div class="col-md-6">
-                                            <div class="services-list-title">Plumbing Services</div>
-                                            <ul class="list-group list-group-flush services-list">
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Residential Plumbing &amp; Repair</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Waste Line Installation</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Water Line Installation</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Downspout &amp; Sewer Line Installation</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Transfer &amp; Jockey Pump Installation</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Plumbing Fixtures &amp; Accessories Installation</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Fire Sprinkler System Installation</li>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="services-callout">
-                                                <div class="d-flex align-items-start gap-3">
-                                                    <div class="services-callout-icon">
-                                                        <i class="fas fa-shield-alt"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-bold">Need a quote fast?</div>
-                                                        <div class="text-muted small">Submit a free quotation request and our team will contact you.</div>
-                                                        <div class="mt-3">
-                                                            <a href="#free-quotation" class="btn btn-warning btn-sm">
-                                                                <i class="fas fa-file-invoice"></i> Free Quotation
-                                                            </a>
-                                                            <a href="#contact" class="btn btn-outline-primary btn-sm ms-2">
-                                                                <i class="fas fa-phone"></i> Contact
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="tab-pane fade" id="construction-pane" role="tabpanel" aria-labelledby="construction-tab" tabindex="0">
-                                    <div class="row g-4">
-                                        <div class="col-md-6">
-                                            <div class="services-list-title">Construction Services</div>
-                                            <ul class="list-group list-group-flush services-list">
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>New Home &amp; Commercial Building &amp; Renovation</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Masonry Works</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Carpentry</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Finishing Works</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Tile Installation</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Steel Works</li>
-                                                <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>New &amp; Renovation Paint Works</li>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="services-callout">
-                                                <div class="d-flex align-items-start gap-3">
-                                                    <div class="services-callout-icon">
-                                                        <i class="fas fa-clipboard-list"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-bold">Planning a project?</div>
-                                                        <div class="text-muted small">Tell us the scope and preferred date, and we will prepare an estimate.</div>
-                                                        <div class="mt-3">
-                                                            <a href="#free-quotation" class="btn btn-warning btn-sm">
-                                                                <i class="fas fa-file-invoice"></i> Free Quotation
-                                                            </a>
-                                                            <a href="#projects" class="btn btn-outline-primary btn-sm ms-2">
-                                                                <i class="fas fa-project-diagram"></i> View Projects
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detailed Service Types with Images -->
-            <div class="mt-5">
-                <div class="text-center mb-4">
-                    <h3>Service Types You Can Request</h3>
-                    <p class="text-muted">See what each service covers before you request a free quotation.</p>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm service-type-card">
-                            <img src="image/technician.webp" class="card-img-top" alt="Maintenance Technician">
-                            <div class="card-body">
-                                <h5 class="card-title">Maintenance Technician</h5>
-                                <p class="card-text text-muted">
-                                    General maintenance for your home or building including minor repairs, inspections, and preventive checks to avoid bigger problems.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm service-type-card">
-                            <img src="image/plumber.webp" class="card-img-top" alt="Plumber">
-                            <div class="card-body">
-                                <h5 class="card-title">Plumber</h5>
-                                <p class="card-text text-muted">
-                                    Plumbing repair and installation for leaks, clogged drains, water lines, waste lines, and bathroom/kitchen fixtures.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm service-type-card">
-                            <img src="image/construction.webp" class="card-img-top" alt="Construction Worker">
-                            <div class="card-body">
-                                <h5 class="card-title">Construction Worker</h5>
-                                <p class="card-text text-muted">
-                                    Support for house and building construction, structural works, renovation, and general construction labor.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm service-type-card">
-                            <img src="image/painter.webp" class="card-img-top" alt="Painter">
-                            <div class="card-body">
-                                <h5 class="card-title">Painter</h5>
-                                <p class="card-text text-muted">
-                                    Interior and exterior painting, repainting, and finishing works to refresh and protect your property.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm service-type-card">
-                            <img src="image/weilder.webp" class="card-img-top" alt="Welder">
-                            <div class="card-body">
-                                <h5 class="card-title">Welder</h5>
-                                <p class="card-text text-muted">
-                                    Steel works for gates, railings, frames, and other metal fabrication and repair needs.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm service-type-card">
-                            <img src="image/mason.webp" class="card-img-top" alt="Mason">
-                            <div class="card-body">
-                                <h5 class="card-title">Mason</h5>
-                                <p class="card-text text-muted">
-                                    Masonry works such as hollow block laying, plastering, concrete works, and tiling for floors and walls.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm service-type-card">
-                            <img src="image/handy.webp" class="card-img-top" alt="Repair Man">
-                            <div class="card-body">
-                                <h5 class="card-title">Repair Man (Construction &amp; Plumbing)</h5>
-                                <p class="card-text text-muted">
-                                    Small repair jobs for both plumbing and construction such as fixture replacement, minor leaks, and small structural fixes.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Free Quotation Section -->
-    <section id="free-quotation" class="section-padding">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2>Request a Free Quotation</h2>
-                <p class="lead text-muted">
-                    Fill out this form and our team will contact you with a free quotation based on the service type you choose.
-                </p>
-            </div>
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h4 class="mb-3"><i class="fas fa-file-invoice-dollar text-warning"></i> Free Quotation Form</h4>
-                            <div id="fq-error" class="alert alert-danger d-none" role="alert"></div>
-                            <div id="fq-success" class="alert alert-success d-none" role="alert"></div>
-                            @if (session('success'))
-    <div class="alert alert-success" role="alert">
-        {{ session('success') }}
-    </div>
-@endif
-
-@if ($errors->any())
-    <div class="alert alert-danger" role="alert">
-        Failed to submit request. Please check the required fields.
-    </div>
-@endif
-                            <form id="free-quotation-form" action="{{ route('free-quotation.store') }}" method="POST" enctype="multipart/form-data">
-                                     @csrf
-                                <div class="row g-3">
-                                    <div class="col-lg-4 col-md-5">
-                                        <label for="fq-first-name" class="form-label">First Name</label>
-                                        <input type="text" id="fq-first-name" name="first_name" class="form-control" placeholder="Your first name" required>
-                                    </div>
-                                    <div class="col-lg-2 col-md-2 fq-mi-col">
-                                        <label for="fq-middle-initial" class="form-label">M.I. <small class="text-muted">(Optional)</small></label>
-                                        <input type="text" id="fq-middle-initial" name="middle_initial" class="form-control" maxlength="1" placeholder="M">
-                                        <input type="hidden" id="fq-name" name="name" value="">
-                                    </div>
-                                    <div class="col-lg-6 col-md-5">
-                                        <label for="fq-last-name" class="form-label">Last Name</label>
-                                        <input type="text" id="fq-last-name" name="last_name" class="form-control" placeholder="Your last name" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="fq-email" class="form-label">Email</label>
-                                        <input type="email" id="fq-email" name="email" class="form-control" placeholder="you@example.com" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="fq-phone" class="form-label">Contact Number</label>
-                                        <input type="text" id="fq-phone" name="phone" class="form-control" placeholder="09XXXXXXXXX" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="fq-service-category" class="form-label">Service Category</label>
-                                        <select id="fq-service-category" name="service_category" class="form-select" required>
-                                            <option value="" selected disabled>Select a category</option>
-                                            <option value="plumbing">Plumbing</option>
-                                            <option value="construction">Construction</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="fq-service-type" class="form-label">Service Type</label>
-                                        <select id="fq-service-type" name="service_type" class="form-select" required>
-                                            <option value="" selected disabled>Select a service</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="fq-project-type" class="form-label">Project Type</label>
-                                        <select id="fq-project-type" name="project_type" class="form-select" required>
-                                            <option value="" selected disabled>Select project type</option>
-                                            <option value="Residential">Residential</option>
-                                            <option value="Commercial">Commercial</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="fq-preferred-date" class="form-label">Preferred Service Date</label>
-                                        <input type="date" id="fq-preferred-date" name="preferred_date" class="form-control">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label for="fq-address" class="form-label">Service Address</label>
-                                        <div class="address-autocomplete">
-                                        <div class="input-group">
-                                            <input
-                                                type="text"
-                                                id="fq-address"
-                                                name="address"
-                                                class="form-control"
-                                                placeholder="Enter address (e.g., Barra, Opol)"
-                                                autocomplete="street-address"
-                                                required
-                                            >
-                                            <a
-                                                id="fq-address-map"
-                                                class="btn btn-outline-secondary disabled"
-                                                href="#"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                aria-disabled="true"
-                                                tabindex="-1"
-                                                title="Open the typed address in Google Maps"
-                                            >
-                                                <i class="fas fa-map-marked-alt"></i>
-                                            </a>
-                                        </div>
-                                        <div id="fq-address-suggestions" class="address-suggestions d-none"></div>
-                                        <input type="hidden" id="fq-address-lat" name="address_lat" value="">
-                                        <input type="hidden" id="fq-address-lon" name="address_lon" value="">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label for="fq-details" class="form-label">Details of the Problem / Work Needed</label>
-                                        <textarea id="fq-details" name="details" rows="4" class="form-control" placeholder="Describe your plumbing or construction concern so we can estimate properly." required></textarea>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label for="fq-attachments" class="form-label">Attach Photos / Videos (Optional)</label>
-                                        <input
-                                            type="file"
-                                            id="fq-attachments"
-                                            name="attachments[]"
-                                            class="form-control"
-                                            accept="image/*,video/*"
-                                            multiple
-                                        >
-                                        <div class="form-text">
-                                            Upload photos/videos so we can confirm the problem and prepare the right tools/materials before dispatch.
-                                            Include a close-up of the issue and a wider view of the area if possible.
-                                            After review, we may contact you to schedule an inspector visit.
-                                            Max 25MB per file.
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="1" id="fq-consent" required>
-                                            <label class="form-check-label" for="fq-consent">
-                                                I agree that WRPlumb may contact me via phone or email regarding this free quotation request.
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 mt-3">
-                                        <button type="submit" class="btn btn-warning w-100">
-                                            <i class="fas fa-paper-plane"></i> Submit Free Quotation Request
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Featured Projects Section -->
-    <section id="projects" class="section-padding">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2>Featured Projects</h2>
-                <p class="lead text-muted">Some of our best completed plumbing and construction services</p>
-            </div>
-            <div id="projects-container">
-                <div class="row">
-                    <!-- Sample Project 1 -->
-                    <div class="col-md-4 mb-4">
-                        <div class="card project-card h-100 shadow-sm">
-                            <img src="image/projects/plumbing-highrise.webp" class="card-img-top" alt="High-Rise Building Plumbing Installation">
-                            <div class="card-body">
-                                <h5 class="card-title">High-Rise Plumbing Installation</h5>
-                                <p class="card-text text-muted">
-                                    Complete water and waste line installation for a multi-storey residential building in Cagayan de Oro,
-                                    including fire sprinkler and booster pump systems.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sample Project 2 -->
-                    <div class="col-md-4 mb-4">
-                        <div class="card project-card h-100 shadow-sm">
-                            <img src="image/projects/house-renovation.webp" class="card-img-top" alt="Residential House Renovation">
-                            <div class="card-body">
-                                <h5 class="card-title">Residential House Renovation</h5>
-                                <p class="card-text text-muted">
-                                    Full renovation of a 2-storey house including new plumbing layout, tile installation,
-                                    masonry works, and interior/exterior repainting.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sample Project 3 -->
-                    <div class="col-md-4 mb-4">
-                        <div class="card project-card h-100 shadow-sm">
-                            <img src="image/projects/commercial-kitchen.webp" class="card-img-top" alt="Commercial Kitchen Re-Piping">
-                            <div class="card-body">
-                                <h5 class="card-title">Commercial Kitchen Re-Piping</h5>
-                                <p class="card-text text-muted">
-                                    Upgrade of an industrial kitchen plumbing system with new stainless supply lines,
-                                    grease trap installation, and drainage improvements to meet safety standards.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center mt-3">
-                    <p class="text-muted small mb-0">
-                        These are sample projects. Your actual completed projects from the system can be displayed here later.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="section-padding bg-light">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2>Get In Touch</h2>
-                <p class="lead text-muted">We're here to help with all your plumbing needs</p>
-            </div>
-            <div class="row contact-grid">
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100 equal-card contact-card">
-                        <div class="card-body p-4 d-flex flex-column">
-                            <h4 class="mb-4">Contact Information</h4>
-                            <div class="contact-list flex-grow-1">
-                                <div class="mb-3">
-                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                    <strong>Address:</strong><br>
-                                    139 Upper Zone 4 Bulua<br>
-                                    Cagayan de Oro, Philippines
-                                </div>
-                                <div class="mb-3">
-                                    <i class="fas fa-phone text-primary me-2"></i>
-                                    <strong>Phone:</strong><br>
-                                    <a href="tel:+63888505197" class="text-decoration-none">(088) 850 5197</a>
-                                </div>
-                                <div class="mb-3">
-                                    <i class="fas fa-envelope text-primary me-2"></i>
-                                    <strong>Email:</strong><br>
-                                    <a href="mailto:wrplumbingcon@gmail.com" class="text-decoration-none">wrplumbingcon@gmail.com</a>
-                                </div>
-                                <div class="mb-3">
-                                    <i class="fas fa-clock text-success me-2"></i>
-                                    <strong>Status:</strong><br>
-                                    <span class="badge bg-success">Open Now</span> - We're ready to serve you!
-                                </div>
-                                <div class="mb-3">
-                                    <i class="fas fa-tag text-warning me-2"></i>
-                                    <strong>Price Range:</strong><br>
-                                    <span class="badge bg-warning text-dark">Moderate Pricing</span> - Quality service at fair rates
-                                </div>
-                                <div class="mb-3">
-                                    <i class="fas fa-info-circle text-primary me-2"></i>
-                                    <strong>About Us:</strong><br>
-                                    Local plumbing and construction service company in Cagayan de Oro City that constantly aims to deliver reliable &amp; cost effective service.
-                                </div>
-                            </div>
-
-                            <div class="contact-actions pt-3 border-top">
-                                <a
-                                    class="btn btn-outline-primary btn-sm"
-                                    href="https://www.google.com/maps?q=139%20Upper%20Zone%204%20Bulua%2C%20Cagayan%20de%20Oro%2C%20Philippines"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <i class="fas fa-location-arrow"></i> Get Directions
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100 equal-card reviews-card">
-                        <div class="card-body p-4 d-flex flex-column">
-                            <h4 class="mb-4"><i class="fas fa-star text-warning"></i> Customer Reviews</h4>
-
-                            <div class="reviews-list flex-grow-1">
-                            
-                            <!-- Review 1 -->
-                            <div class="mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="me-2">
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                    </div>
-                                    <strong>Lore</strong>
-                                </div>
-                                <p class="text-muted small mb-0">"Excellent service! WRPlumb fixed our plumbing issues quickly and professionally. Highly recommended!"</p>
-                                <small class="text-muted"><i class="fas fa-calendar"></i> 2 weeks ago</small>
-                            </div>
-                            
-                            <!-- Review 2 -->
-                            <div class="mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="me-2">
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star-half-alt text-warning"></i>
-                                    </div>
-                                    <strong>Tamayo</strong>
-                                </div>
-                                <p class="text-muted small mb-0">"Great construction work on our renovation project. Quality materials and on-time completion. Very satisfied!"</p>
-                                <small class="text-muted"><i class="fas fa-calendar"></i> 1 month ago</small>
-                            </div>
-                            
-                            <!-- Review 3 -->
-                            <div class="mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="me-2">
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                    </div>
-                                    <strong>Noel Amber</strong>
-                                </div>
-                                <p class="text-muted small mb-0">"Reliable and cost-effective service. The team was professional and cleaned up after the work. Will definitely hire again!"</p>
-                                <small class="text-muted"><i class="fas fa-calendar"></i> 3 weeks ago</small>
-                            </div>
-                            
-                            <!-- Review 4 -->
-                            <div class="mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="me-2">
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                    </div>
-                                    <strong>Clint Denzel</strong>
-                                </div>
-                                <p class="text-muted small mb-0">"Professional and reliable service. They installed our new water heater perfectly. Will definitely call them again for future needs."</p>
-                                <small class="text-muted"><i class="fas fa-calendar"></i> 2 months ago</small>
-                            </div>
-                            
-                            <!-- Review 5 -->
-                            <div class="mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="me-2">
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star-half-alt text-warning"></i>
-                                    </div>
-                                    <strong>Clark</strong>
-                                </div>
-                                <p class="text-muted small mb-0">"Great experience with WRPlumb. They were prompt, courteous, and fixed our drainage issue efficiently. Highly recommend their services."</p>
-                                <small class="text-muted"><i class="fas fa-calendar"></i> 1 month ago</small>
-                            </div>
-                            
-                            <!-- Review 6 -->
-                            <div class="mb-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="me-2">
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                        <i class="fas fa-star text-warning"></i>
-                                    </div>
-                                    <strong>Jehv</strong>
-                                </div>
-                                <p class="text-muted small mb-0">"The best plumbing service in Cagayan de Oro! They handled a complex pipe replacement with ease and professionalism. Very satisfied!"</p>
-                                <small class="text-muted"><i class="fas fa-calendar"></i> 1 month ago</small>
-                            </div>
-                            
-                            <hr>
-                            
-                            <!-- Additional Information -->
-                            <div class="mt-3">
-                                <h6 class="mb-3"><i class="fas fa-info-circle text-primary"></i> Why Choose WRPlumb?</h6>
-                                <ul class="list-unstyled small">
-                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Licensed &amp; Insured Professionals</li>
-                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> 24/7 Emergency Service Available</li>
-                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Free Estimates &amp; Consultations</li>
-                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Warranty on All Work</li>
-                                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Competitive &amp; Transparent Pricing</li>
-                                </ul>
-                            </div>
-                            
-                            <hr>
-                            </div>
-
-                            <!-- Quick Links (fixed at bottom for consistent card height) -->
-                            <div class="reviews-actions pt-3 border-top text-center">
-                                <a href="client/register.html" class="btn btn-primary btn-sm me-2">
-                                    <i class="fas fa-user-plus"></i> Register Now
-                                </a>
-                                <a href="client/index.html" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-sign-in-alt"></i> Client Login
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Map Section -->
-            <div class="row mt-2">
-                <div class="col-12">
-                    <div class="card map-card">
-                        <div class="card-body p-4">
-                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                                <h4 class="mb-0"><i class="fas fa-map-marked-alt text-primary"></i> Find Us</h4>
-                                <div class="small text-muted">
-                                    139 Upper Zone 4 Bulua, Cagayan de Oro, Philippines
-                                </div>
-                            </div>
-
-                            <div class="map-embed">
-                                <iframe
-                                    title="WRPlumb Location Map"
-                                    loading="lazy"
-                                    referrerpolicy="no-referrer-when-downgrade"
-                                    allow="fullscreen"
-                                    sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-                                    src="https://www.google.com/maps?q=139%20Upper%20Zone%204%20Bulua%2C%20Cagayan%20de%20Oro%2C%20Philippines&amp;output=embed"
-                                ></iframe>
-                            </div>
-                            <div class="mt-3 d-flex flex-wrap gap-2">
-                                <a
-                                    class="btn btn-primary btn-sm"
-                                    href="https://www.google.com/maps?q=139%20Upper%20Zone%204%20Bulua%2C%20Cagayan%20de%20Oro%2C%20Philippines"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <i class="fas fa-directions"></i> Open in Google Maps
-                                </a>
-                                <span class="small text-muted align-self-center">
-                                    Tip: You can zoom and switch to satellite view.
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5><i class="fas fa-wrench"></i> WRPlumb</h5>
-                    <p class="mb-0">Professional Plumbing Services</p>
-                    <p class="text-muted small">&copy; <span id="current-year"></span> WRPlumb. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-1">139 Upper Zone 4 Bulua, Cagayan de Oro, Philippines</p>
-                    <p class="mb-1">Phone: <a href="tel:+63888505197" class="text-white text-decoration-none">(088) 850 5197</a> | Email: <a href="mailto:wrplumbingcon@gmail.com" class="text-white text-decoration-none">wrplumbingcon@gmail.com</a></p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Bootstrap JS (CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 
 <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1674,71 +202,70 @@
                     <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb Logo" class="register-modal-logo">
                     <div>
                         <h4 class="modal-title mb-1" id="registerModalLabel">Create Your Account</h4>
-                        <p class="mb-0 text-muted small">Join WRPlumb and start booking services today</p>
+                        <p class="mb-0 text-muted small">Create a client account and verify your email before using the portal.</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
             <div class="modal-body p-4 p-lg-5">
+                @if ($errors->any() && old('form_type') === 'register')
+                    <div class="alert alert-danger rounded-3"><strong>Account registration failed.</strong><ul class="mb-0 mt-2">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+                @endif
                 <form id="register-form" method="POST" action="{{ route('register.store') }}">
                     @csrf
                     <input type="hidden" name="form_type" value="register">
-
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
+                        <div class="col-md-6 mb-3"><label for="username" class="form-label">Username <span class="text-danger">*</span></label><input type="text" class="form-control @error('username') is-invalid @enderror" id="username" name="username" value="{{ old('username') }}" required>@error('username')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                     </div>
-
                     <div class="row">
-                        <div class="col-md-5 mb-3">
-                            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" required>
-                        </div>
-
-                        <div class="col-md-2 mb-3">
-                            <label for="middle_initial" class="form-label">M.I.</label>
-                            <input type="text" class="form-control" id="middle_initial" name="middle_initial" maxlength="1">
-                        </div>
-
-                        <div class="col-md-5 mb-3">
-                            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="last_name" name="last_name" required>
-                        </div>
+                        <div class="col-md-5 mb-3"><label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label><input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" value="{{ old('first_name') }}" required>@error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                        <div class="col-md-2 mb-3"><label for="middle_initial" class="form-label">M.I.</label><input type="text" class="form-control @error('middle_initial') is-invalid @enderror" id="middle_initial" name="middle_initial" value="{{ old('middle_initial') }}" maxlength="1">@error('middle_initial')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                        <div class="col-md-5 mb-3"><label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label><input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" value="{{ old('last_name') }}" required>@error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                        <input type="tel" class="form-control" id="phone" name="phone" required>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="address" class="form-label">Address</label>
-                        <textarea class="form-control" id="address" name="address" rows="2"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 register-submit-btn">
-                        <i class="fas fa-user-plus me-2"></i>Create Account
-                    </button>
+                    <div class="mb-3"><label for="password" class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required><div class="form-text">Use at least 8 characters with uppercase, lowercase, number, and special character.</div>@error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <div class="mb-3"><label for="email" class="form-label">Email <span class="text-danger">*</span></label><input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>@error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <div class="mb-3"><label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label><input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required>@error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <div class="mb-4"><label for="address" class="form-label">Address</label><textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="2">{{ old('address') }}</textarea>@error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <button type="submit" class="btn wr-submit-btn w-100"><i class="fas fa-user-plus me-2"></i>Create Account</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-    
-    <!-- Custom JavaScript -->
-    <script src="assets/js/home.js?v=20260225b"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@if ($errors->any() && old('form_type') === 'register')
+<script>document.addEventListener('DOMContentLoaded', function () { const registerModal = document.getElementById('registerModal'); if (registerModal && typeof bootstrap !== 'undefined') { new bootstrap.Modal(registerModal).show(); } });</script>
+@endif
+
+@if ($errors->any() && old('form_type') !== 'register')
+<script>document.addEventListener('DOMContentLoaded', function () { const quoteModal = document.getElementById('quoteModal'); if (quoteModal && typeof bootstrap !== 'undefined') { new bootstrap.Modal(quoteModal).show(); } });</script>
+@endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentYear = document.getElementById('current-year');
+        if (currentYear) currentYear.textContent = new Date().getFullYear();
+
+        const toggle = document.getElementById('landingNavbarToggle');
+        const menu = document.getElementById('navbarNav');
+        if (toggle && menu) {
+            toggle.addEventListener('click', function () {
+                const isOpen = menu.classList.toggle('show');
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                document.body.classList.toggle('landing-menu-open', isOpen);
+            });
+        }
+        document.querySelectorAll('#navbarNav .nav-link, #navbarNav .nav-auth-btn').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (menu) menu.classList.remove('show');
+                if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('landing-menu-open');
+            });
+        });
+    });
+</script>
+<script src="{{ asset('assets/js/home.js') }}?v=20260225b"></script>
 </body>
 </html>

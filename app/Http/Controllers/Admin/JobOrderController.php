@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JobOrder;
 use App\Models\QuotationRequest;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -68,6 +69,17 @@ class JobOrderController extends Controller
 
         $this->syncQuotationRequestFromJobOrder($jobOrder);
 
+        $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
+
+        AuditLogService::log(
+            'Admin Created Job Order',
+            'Job Orders',
+            $jobOrder,
+            null,
+            $this->jobOrderAuditSnapshot($jobOrder),
+            "Admin created job order {$jobOrder->job_order_no} for quotation request #{$quotation->id}."
+        );
+
         return redirect()
             ->route('admin.job-orders.show', $jobOrder)
             ->with('success', 'Job order created successfully.');
@@ -88,12 +100,25 @@ class JobOrderController extends Controller
             ]);
         }
 
+        $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
+
         $jobOrder->update([
             'status' => 'in_progress',
             'started_at' => now(),
         ]);
 
         $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
+
+        $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
+
+        AuditLogService::log(
+            'Admin Started Job Order',
+            'Job Orders',
+            $jobOrder,
+            $oldValues,
+            $this->jobOrderAuditSnapshot($jobOrder),
+            "Admin started job order {$jobOrder->job_order_no}."
+        );
 
         return back()->with('success', 'Job order marked as in progress.');
     }
@@ -110,6 +135,8 @@ class JobOrderController extends Controller
             ]);
         }
 
+        $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
+
         $jobOrder->update([
             'status' => 'completed',
             'completed_at' => now(),
@@ -117,6 +144,17 @@ class JobOrderController extends Controller
         ]);
 
         $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
+
+        $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
+
+        AuditLogService::log(
+            'Admin Completed Job Order',
+            'Job Orders',
+            $jobOrder,
+            $oldValues,
+            $this->jobOrderAuditSnapshot($jobOrder),
+            "Admin completed job order {$jobOrder->job_order_no}."
+        );
 
         return back()->with('success', 'Job order marked as completed.');
     }
@@ -133,6 +171,8 @@ class JobOrderController extends Controller
             ]);
         }
 
+        $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
+
         $jobOrder->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
@@ -140,6 +180,17 @@ class JobOrderController extends Controller
         ]);
 
         $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
+
+        $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
+
+        AuditLogService::log(
+            'Admin Cancelled Job Order',
+            'Job Orders',
+            $jobOrder,
+            $oldValues,
+            $this->jobOrderAuditSnapshot($jobOrder),
+            "Admin cancelled job order {$jobOrder->job_order_no}."
+        );
 
         return back()->with('success', 'Job order cancelled successfully.');
     }
@@ -151,10 +202,23 @@ class JobOrderController extends Controller
             'admin_notes' => ['nullable', 'string'],
         ]);
 
+        $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
+
         $jobOrder->update([
             'work_remarks' => $validated['work_remarks'] ?? null,
             'admin_notes' => $validated['admin_notes'] ?? null,
         ]);
+
+        $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
+
+        AuditLogService::log(
+            'Admin Updated Job Order Remarks',
+            'Job Orders',
+            $jobOrder,
+            $oldValues,
+            $this->jobOrderAuditSnapshot($jobOrder),
+            "Admin updated remarks for job order {$jobOrder->job_order_no}."
+        );
 
         return back()->with('success', 'Job order remarks updated successfully.');
     }
@@ -215,6 +279,49 @@ class JobOrderController extends Controller
         if (!empty($payload)) {
             $quotation->update($payload);
         }
+    }
+
+    protected function jobOrderAuditSnapshot(JobOrder $jobOrder): array
+    {
+        return [
+            'job_order_no' => $jobOrder->job_order_no,
+            'quotation_request_id' => $jobOrder->quotation_request_id,
+            'worker_id' => $jobOrder->worker_id,
+            'worker_name' => $jobOrder->worker?->name,
+            'service_flow' => $jobOrder->service_flow,
+            'service_type' => $jobOrder->service_type,
+            'project_type' => $jobOrder->project_type,
+            'scheduled_date' => $this->formatDateValue($jobOrder->scheduled_date),
+            'scheduled_time' => $jobOrder->scheduled_time,
+            'status' => $jobOrder->status,
+            'scope_of_work' => $jobOrder->scope_of_work,
+            'admin_notes' => $jobOrder->admin_notes,
+            'work_remarks' => $jobOrder->work_remarks,
+            'completion_notes' => $jobOrder->completion_notes,
+            'started_at' => $this->formatDateTimeValue($jobOrder->started_at),
+            'completed_at' => $this->formatDateTimeValue($jobOrder->completed_at),
+            'cancelled_at' => $this->formatDateTimeValue($jobOrder->cancelled_at),
+            'created_by' => $jobOrder->created_by,
+            'created_by_name' => $jobOrder->creator?->name,
+        ];
+    }
+
+    protected function formatDateValue($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        return date('Y-m-d', strtotime((string) $value));
+    }
+
+    protected function formatDateTimeValue($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        return date('Y-m-d H:i:s', strtotime((string) $value));
     }
 
     protected function generateJobOrderNumber(): string

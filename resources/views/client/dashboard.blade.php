@@ -7,7 +7,7 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/client/dashboard.css') }}">
 @endpush
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 @section('content')
 <div class="page-header">
     <h1>Welcome, {{ auth()->user()->first_name ?? 'Client' }}</h1>
