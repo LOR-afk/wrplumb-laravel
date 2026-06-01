@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\InspectorAvailabilityController as AdminInspector
 use App\Http\Controllers\Admin\JobOrderController as AdminJobOrderController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\WarrantyClaimController as AdminWarrantyClaimController;
+use App\Http\Controllers\Admin\BackJobController as AdminBackJobController;
 
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\SupportController as ClientSupportController;
@@ -30,6 +32,7 @@ use App\Http\Controllers\Client\PaymentController as ClientPaymentController;
 use App\Http\Controllers\Client\ContractController as ClientContractController;
 use App\Http\Controllers\Client\ReceiptController as ClientReceiptController;
 use App\Http\Controllers\Client\JobOrderController as ClientJobOrderController;
+use App\Http\Controllers\Client\WarrantyClaimController as ClientWarrantyClaimController;
 
 use App\Http\Controllers\Hr\DashboardController as HrDashboardController;
 use App\Http\Controllers\Hr\SupportController as HrSupportController;
@@ -204,6 +207,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/client/job-orders', [ClientJobOrderController::class, 'index'])->name('client.job-orders.index');
     Route::get('/client/job-orders/{jobOrder}', [ClientJobOrderController::class, 'show'])->name('client.job-orders.show');
 
+    Route::post('/client/job-orders/{jobOrder}/warranty-claims', [ClientWarrantyClaimController::class, 'store'])
+        ->middleware('throttle:3,1')
+        ->name('client.warranty-claims.store');
+
     Route::get('/client/alerts', [ClientAlertController::class, 'index'])->name('client.alerts.index');
 });
 
@@ -238,10 +245,28 @@ Route::middleware(['auth', 'admin', 'admin.otp'])->prefix('admin')->group(functi
 
     Route::get('/inspectors/availability', [AdminInspectorAvailabilityController::class, 'index'])->name('admin.inspectors.availability');
 
-    Route::get('/clients', [ClientController::class, 'index'])->name('admin.clients.index');
+    Route::get('/clients', [ClientController::class, 'index'])
+        ->name('admin.clients.index');
+
+    Route::post('/clients', [ClientController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('admin.clients.store');
+
+    Route::patch('/clients/{user}', [ClientController::class, 'update'])
+        ->middleware('throttle:10,1')
+        ->name('admin.clients.update');
+
     Route::patch('/clients/{user}/toggle-status', [ClientController::class, 'toggleStatus'])
-        ->middleware('throttle:20,1')
+        ->middleware('throttle:10,1')
         ->name('admin.clients.toggle-status');
+
+    Route::patch('/clients/{user}/verify-email', [ClientController::class, 'verifyEmail'])
+        ->middleware('throttle:10,1')
+        ->name('admin.clients.verify-email');
+
+    Route::patch('/clients/{user}/reset-password', [ClientController::class, 'resetPassword'])
+        ->middleware('throttle:5,1')
+        ->name('admin.clients.reset-password');
 
     Route::get('/quotations', [AdminQuotationController::class, 'index'])->name('admin.quotations.index');
     Route::post('/quotations/{quotation}/assign-worker', [AdminQuotationController::class, 'assignWorker'])
@@ -289,6 +314,46 @@ Route::middleware(['auth', 'admin', 'admin.otp'])->prefix('admin')->group(functi
     Route::get('/reports/projects/export', [AdminReportController::class, 'exportProjects'])->name('admin.reports.projects.export');
 
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
+
+    Route::get('/warranty-claims', [AdminWarrantyClaimController::class, 'index'])
+        ->name('admin.warranty-claims.index');
+
+    Route::get('/warranty-claims/{warrantyClaim}', [AdminWarrantyClaimController::class, 'show'])
+        ->name('admin.warranty-claims.show');
+
+    Route::patch('/warranty-claims/{warrantyClaim}/approve', [AdminWarrantyClaimController::class, 'approve'])
+        ->middleware('throttle:10,1')
+        ->name('admin.warranty-claims.approve');
+
+    Route::patch('/warranty-claims/{warrantyClaim}/reject', [AdminWarrantyClaimController::class, 'reject'])
+        ->middleware('throttle:10,1')
+        ->name('admin.warranty-claims.reject');
+
+    Route::post('/warranty-claims/{warrantyClaim}/create-backjob', [AdminWarrantyClaimController::class, 'createBackJob'])
+        ->middleware('throttle:5,1')
+        ->name('admin.warranty-claims.create-backjob');
+
+    Route::get('/backjobs', [AdminBackJobController::class, 'index'])
+        ->name('admin.backjobs.index');
+
+    Route::get('/backjobs/{backJob}', [AdminBackJobController::class, 'show'])
+        ->name('admin.backjobs.show');
+
+    Route::patch('/backjobs/{backJob}/schedule', [AdminBackJobController::class, 'schedule'])
+        ->middleware('throttle:10,1')
+        ->name('admin.backjobs.schedule');
+
+    Route::patch('/backjobs/{backJob}/start', [AdminBackJobController::class, 'start'])
+        ->middleware('throttle:10,1')
+        ->name('admin.backjobs.start');
+
+    Route::patch('/backjobs/{backJob}/resolve', [AdminBackJobController::class, 'resolve'])
+        ->middleware('throttle:10,1')
+        ->name('admin.backjobs.resolve');
+
+    Route::patch('/backjobs/{backJob}/cancel', [AdminBackJobController::class, 'cancel'])
+        ->middleware('throttle:10,1')
+        ->name('admin.backjobs.cancel');
 
     Route::get('/alerts', [AdminAlertController::class, 'index'])->name('admin.alerts.index');
 

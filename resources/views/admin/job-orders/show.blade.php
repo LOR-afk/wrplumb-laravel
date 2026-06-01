@@ -27,6 +27,33 @@
     $canStart = $status === 'scheduled';
     $canComplete = in_array($status, ['scheduled', 'in_progress']);
     $canCancel = !in_array($status, ['completed', 'cancelled']);
+
+    $warrantyClaims = $jobOrder->warrantyClaims()->with(['backJob', 'client'])->latest()->get();
+    $backJobs = $jobOrder->backJobs()->with(['warrantyClaim', 'worker'])->latest()->get();
+
+    $latestWarrantyClaim = $warrantyClaims->first();
+    $activeWarrantyClaim = $warrantyClaims->firstWhere('status', 'pending')
+        ?? $warrantyClaims->firstWhere('status', 'approved');
+
+    $warrantyExpiresAt = $jobOrder->completed_at
+        ? $jobOrder->completed_at->copy()->addDays(30)
+        : null;
+
+    $isWithinWarranty = $warrantyExpiresAt
+        ? now()->lessThanOrEqualTo($warrantyExpiresAt)
+        : false;
+
+    $warrantyStatusText = match (true) {
+        $status !== 'completed' => 'Available after job completion',
+        $isWithinWarranty => 'Within 30-day warranty',
+        default => 'Warranty period ended',
+    };
+
+    $warrantyStatusClass = match (true) {
+        $status !== 'completed' => 'neutral',
+        $isWithinWarranty => 'eligible',
+        default => 'expired',
+    };
 @endphp
 
 <style>
@@ -250,6 +277,172 @@
         resize: vertical;
     }
 
+
+    .jo-warranty-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+        gap: 20px;
+        align-items: start;
+        margin-bottom: 20px;
+    }
+
+    .jo-warranty-card {
+        padding: 22px;
+    }
+
+    .jo-warranty-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .jo-warranty-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #0f172a;
+        font-size: 1.04rem;
+        font-weight: 900;
+        margin: 0;
+    }
+
+    .jo-warranty-title .icon-pill {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eaf4ff;
+        color: #1d4ed8;
+    }
+
+    .jo-warranty-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .jo-warranty-badge.eligible,
+    .jo-warranty-badge.approved,
+    .jo-warranty-badge.resolved {
+        background: #ecfdf3;
+        color: #15803d;
+    }
+
+    .jo-warranty-badge.pending,
+    .jo-warranty-badge.scheduled,
+    .jo-warranty-badge.in_progress {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .jo-warranty-badge.rejected,
+    .jo-warranty-badge.cancelled,
+    .jo-warranty-badge.expired {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .jo-warranty-badge.neutral {
+        background: #eef2f7;
+        color: #475569;
+    }
+
+    .jo-warranty-note {
+        border: 1px dashed #bfdbfe;
+        background: #f8fbff;
+        color: #475569;
+        border-radius: 16px;
+        padding: 13px 15px;
+        font-size: 0.88rem;
+        font-weight: 650;
+        line-height: 1.45;
+        margin-bottom: 14px;
+    }
+
+    .jo-warranty-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .jo-warranty-meta {
+        border: 1px solid #edf2f7;
+        background: #f8fbff;
+        border-radius: 15px;
+        padding: 12px 14px;
+        min-height: 68px;
+    }
+
+    .jo-warranty-meta span {
+        display: block;
+        color: #64748b;
+        font-size: 0.7rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 5px;
+    }
+
+    .jo-warranty-meta strong {
+        color: #0f172a;
+        font-size: 0.88rem;
+        font-weight: 850;
+    }
+
+    .jo-warranty-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .jo-warranty-list-item {
+        border: 1px solid #edf2f7;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 12px 14px;
+    }
+
+    .jo-warranty-list-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 4px;
+    }
+
+    .jo-warranty-list-title {
+        color: #0f172a;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+
+    .jo-warranty-list-sub {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 650;
+        line-height: 1.35;
+        margin-top: 3px;
+    }
+
+    .jo-warranty-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+
     @media (max-width: 1199.98px) {
         .jo-summary-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -257,7 +450,8 @@
     }
 
     @media (max-width: 991.98px) {
-        .jo-section-grid {
+        .jo-section-grid,
+        .jo-warranty-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -269,6 +463,10 @@
 
         .jo-hero {
             padding: 20px;
+        }
+
+        .jo-warranty-meta-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -378,6 +576,138 @@
                     @endif
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="jo-warranty-grid">
+        <div class="jo-card jo-warranty-card">
+            <div class="jo-warranty-header">
+                <h3 class="jo-warranty-title">
+                    <span class="icon-pill"><i class="fas fa-shield-halved"></i></span>
+                    Warranty Monitoring
+                </h3>
+
+                <span class="jo-warranty-badge {{ $warrantyStatusClass }}">
+                    {{ $warrantyStatusText }}
+                </span>
+            </div>
+
+            @if ($status === 'completed')
+                <div class="jo-warranty-note">
+                    Completed job orders are covered by the 30-day service warranty. If a client reports the same issue within the period, it can be reviewed as a warranty claim and converted into a backjob when approved.
+                </div>
+            @else
+                <div class="jo-warranty-note">
+                    Warranty tracking becomes active once this job order is marked as completed.
+                </div>
+            @endif
+
+            <div class="jo-warranty-meta-grid">
+                <div class="jo-warranty-meta">
+                    <span>Completed Date</span>
+                    <strong>{{ optional($jobOrder->completed_at)->format('Y-m-d h:i A') ?? 'Not completed yet' }}</strong>
+                </div>
+
+                <div class="jo-warranty-meta">
+                    <span>Warranty Until</span>
+                    <strong>{{ $warrantyExpiresAt ? $warrantyExpiresAt->format('Y-m-d h:i A') : 'Not available' }}</strong>
+                </div>
+
+                <div class="jo-warranty-meta">
+                    <span>Total Claims</span>
+                    <strong>{{ $warrantyClaims->count() }}</strong>
+                </div>
+
+                <div class="jo-warranty-meta">
+                    <span>Total Backjobs</span>
+                    <strong>{{ $backJobs->count() }}</strong>
+                </div>
+            </div>
+
+            @if ($latestWarrantyClaim)
+                <div class="jo-warranty-list">
+                    <div class="jo-warranty-list-item">
+                        <div class="jo-warranty-list-top">
+                            <div>
+                                <div class="jo-warranty-list-title">Latest Claim: {{ $latestWarrantyClaim->claim_no }}</div>
+                                <div class="jo-warranty-list-sub">
+                                    {{ \Illuminate\Support\Str::limit($latestWarrantyClaim->issue_description, 120) }}
+                                </div>
+                            </div>
+
+                            <span class="jo-warranty-badge {{ $latestWarrantyClaim->status }}">
+                                {{ ucfirst($latestWarrantyClaim->status) }}
+                            </span>
+                        </div>
+
+                        <div class="jo-warranty-actions">
+                            <a href="{{ route('admin.warranty-claims.show', $latestWarrantyClaim) }}" class="btn btn-sm btn-outline-primary">
+                                Review Claim
+                            </a>
+
+                            @if ($latestWarrantyClaim->backJob)
+                                <a href="{{ route('admin.backjobs.show', $latestWarrantyClaim->backJob) }}" class="btn btn-sm btn-outline-success">
+                                    View Backjob
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="jo-empty-action">
+                    No warranty claim has been submitted for this job order.
+                </div>
+            @endif
+        </div>
+
+        <div class="jo-card jo-warranty-card">
+            <div class="jo-warranty-header">
+                <h3 class="jo-warranty-title">
+                    <span class="icon-pill"><i class="fas fa-rotate-left"></i></span>
+                    Backjob Tracking
+                </h3>
+            </div>
+
+            @if ($backJobs->count())
+                <div class="jo-warranty-list">
+                    @foreach ($backJobs as $backJob)
+                        <div class="jo-warranty-list-item">
+                            <div class="jo-warranty-list-top">
+                                <div>
+                                    <div class="jo-warranty-list-title">{{ $backJob->backjob_no }}</div>
+                                    <div class="jo-warranty-list-sub">
+                                        Assigned to {{ $backJob->worker->name ?? 'Not assigned' }}
+                                        @if ($backJob->scheduled_date)
+                                            • {{ optional($backJob->scheduled_date)->format('Y-m-d') }}
+                                            @if ($backJob->scheduled_time)
+                                                {{ \Carbon\Carbon::parse($backJob->scheduled_time)->format('h:i A') }}
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <span class="jo-warranty-badge {{ $backJob->status }}">
+                                    {{ ucwords(str_replace('_', ' ', $backJob->status)) }}
+                                </span>
+                            </div>
+
+                            <div class="jo-warranty-list-sub">
+                                {{ \Illuminate\Support\Str::limit($backJob->reason, 120) }}
+                            </div>
+
+                            <div class="jo-warranty-actions">
+                                <a href="{{ route('admin.backjobs.show', $backJob) }}" class="btn btn-sm btn-outline-primary">
+                                    Open Backjob
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="jo-empty-action">
+                    No backjob has been created for this job order.
+                </div>
+            @endif
         </div>
     </div>
 

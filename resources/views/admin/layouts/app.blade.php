@@ -35,9 +35,9 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('admin.clients.index') }}" data-title="Manage Clients" class="sidebar-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
-            <i class="fas fa-users"></i>
-            <span>Manage Clients</span>
+        <a href="{{ route('admin.clients.index') }}" data-title="User Management" class="sidebar-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
+            <i class="fas fa-users-gear"></i>
+            <span>User Management</span>
         </a>
 
         <a href="{{ route('admin.quotations.index') }}" data-title="View Quotations" class="sidebar-link {{ request()->routeIs('admin.quotations.*') ? 'active' : '' }}">
@@ -48,6 +48,16 @@
         <a href="{{ route('admin.job-orders.index') }}" data-title="Job Orders" class="sidebar-link {{ request()->routeIs('admin.job-orders.*') ? 'active' : '' }}">
             <i class="fas fa-clipboard-list"></i>
             <span>Job Orders</span>
+        </a>
+
+        <a href="{{ route('admin.warranty-claims.index') }}" data-title="Warranty Claims" class="sidebar-link {{ request()->routeIs('admin.warranty-claims.*') ? 'active' : '' }}">
+            <i class="fas fa-shield-alt"></i>
+            <span>Warranty Claims</span>
+        </a>
+
+        <a href="{{ route('admin.backjobs.index') }}" data-title="Backjobs" class="sidebar-link {{ request()->routeIs('admin.backjobs.*') ? 'active' : '' }}">
+            <i class="fas fa-rotate-left"></i>
+            <span>Backjobs</span>
         </a>
 
         <a href="{{ route('admin.inspectors.availability') }}" data-title="Inspector Availability" class="sidebar-link {{ request()->routeIs('admin.inspectors.availability') ? 'active' : '' }}">

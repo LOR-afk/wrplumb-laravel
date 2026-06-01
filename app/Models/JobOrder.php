@@ -52,4 +52,14 @@ class JobOrder extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function warrantyClaims()
+    {
+        return $this->hasMany(WarrantyClaim::class, 'job_order_id');
+    }
+
+    public function backJobs()
+    {
+        return $this->hasMany(BackJob::class, 'original_job_order_id');
+    }
 }

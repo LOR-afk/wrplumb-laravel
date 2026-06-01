@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'address',
         'role',
         'is_active',
+        'email_verified_at',
         'password',
     ];
 
@@ -54,9 +55,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(\App\Models\InspectorAvailability::class, 'inspector_id');
     }
+
     public function alerts()
     {
-    return $this->hasMany(\App\Models\UserAlert::class)->latest();
+        return $this->hasMany(\App\Models\UserAlert::class)->latest();
     }
 
     public function preparedQuotations()
@@ -96,11 +98,16 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function assignedJobOrders()
     {
-        return $this->hasMany(JobOrder::class, 'worker_id');
+        return $this->hasMany('App\Models\JobOrder', 'worker_id');
     }
 
     public function createdJobOrders()
     {
-        return $this->hasMany(JobOrder::class, 'created_by');
+        return $this->hasMany('App\Models\JobOrder', 'created_by');
+    }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
     }
 }
