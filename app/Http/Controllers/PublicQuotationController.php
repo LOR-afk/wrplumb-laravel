@@ -14,15 +14,29 @@ class PublicQuotationController extends Controller
             'first_name' => ['required', 'string', 'max:100'],
             'middle_initial' => ['nullable', 'string', 'size:1'],
             'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email'],
-            'phone' => ['required', 'string', 'max:30'],
-            'service_category' => ['required', 'string'],
-            'service_type' => ['required', 'string'],
-            'project_type' => ['required', 'string'],
+
+            // ✅ STRICT EMAIL VALIDATION
+            'email' => ['required', 'email:rfc,dns', 'max:255'],
+
+            // ✅ PH PHONE VALIDATION (11 digits starting 09)
+            'phone' => [
+                'required',
+                'regex:/^09[0-9]{9}$/',
+                'max:11'
+            ],
+
+            'service_category' => ['required', 'string', 'max:100'],
+            'service_type' => ['required', 'string', 'max:100'],
+            'project_type' => ['required', 'string', 'max:100'],
+
             'preferred_date' => ['nullable', 'date'],
-            'address' => ['required', 'string'],
-            'details' => ['required', 'string'],
+            'address' => ['required', 'string', 'max:255'],
+            'details' => ['required', 'string', 'max:2000'],
         ]);
+
+        // 🔥 Normalize input (important for clean DB)
+        $validated['email'] = strtolower(trim($validated['email']));
+        $validated['phone'] = preg_replace('/\s+/', '', $validated['phone']);
 
         $quotation = QuotationRequest::create($validated);
 

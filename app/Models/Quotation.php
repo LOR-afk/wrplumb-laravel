@@ -1,10 +1,9 @@
 <?php
 
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Invoice;
-use App\Models\Contract;
 
 class Quotation extends Model
 {
@@ -46,10 +45,10 @@ class Quotation extends Model
             'sent_at' => 'datetime',
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
             'accepted_at' => 'datetime',
             'declined_at' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 
@@ -60,7 +59,7 @@ class Quotation extends Model
 
     public function items()
     {
-        return $this->hasMany(QuotationItem::class);
+        return $this->hasMany(QuotationItem::class, 'quotation_id');
     }
 
     public function preparedBy()
@@ -70,11 +69,21 @@ class Quotation extends Model
 
     public function invoice()
     {
-        return $this->hasOne(Invoice::class);
+        return $this->hasOne(Invoice::class, 'quotation_id');
     }
 
     public function contract()
     {
         return $this->hasOne(Contract::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
     }
 }

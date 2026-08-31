@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'hr' => \App\Http\Middleware\EnsureHr::class,
             'inspector' => \App\Http\Middleware\EnsureInspector::class,
+            'client' => \App\Http\Middleware\EnsureClient::class,
             'admin.otp' => \App\Http\Middleware\EnsureAdminOtpVerified::class,
         ]);
     })

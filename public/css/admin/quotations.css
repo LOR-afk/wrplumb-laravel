@@ -1,30 +1,32 @@
 /* ============================================================
-   Admin Quotations - Clean Guided UI
+   Admin Quotations - WRPlumb KISS UI
    Replace: public/css/admin/quotations.css
    ============================================================ */
 
 :root {
-    --q-blue: #2fa8f5;
+    --q-blue: #1d9bf0;
     --q-blue-dark: #0f4c81;
-    --q-navy: #102a43;
-    --q-text: #172033;
+    --q-navy: #0f172a;
+    --q-text: #1f2a37;
     --q-muted: #64748b;
     --q-border: #dbe7f3;
-    --q-bg: #f5f9fd;
     --q-surface: #ffffff;
-    --q-soft-blue: #eaf6ff;
-    --q-soft-green: #ecfdf3;
-    --q-soft-orange: #fff7ed;
-    --q-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    --q-bg-soft: #f8fbff;
+    --q-shadow: 0 6px 18px rgba(15, 23, 42, 0.055);
+    --q-radius: 16px;
 }
 
 .quotations-page {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 14px;
     color: var(--q-text);
-    font-size: 0.88rem;
+    font-size: 0.86rem;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
+/* Summary cards */
 .q-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -35,9 +37,10 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
     padding: 12px;
     border: 1px solid var(--q-border);
-    border-radius: 16px;
+    border-radius: var(--q-radius);
     background: var(--q-surface);
     box-shadow: var(--q-shadow);
 }
@@ -45,7 +48,7 @@
 .q-stat-icon {
     width: 36px;
     height: 36px;
-    border-radius: 13px;
+    border-radius: 12px;
     display: grid;
     place-items: center;
     flex: 0 0 auto;
@@ -67,23 +70,26 @@
 
 .q-stat-value {
     color: var(--q-navy);
-    font-size: 1.2rem;
+    font-size: 1.18rem;
     font-weight: 950;
     line-height: 1;
 }
 
+/* Panels */
 .q-filter-panel,
 .q-list-panel,
 .quotation-item,
 .q-card,
 .action-card {
     border: 1px solid var(--q-border);
-    border-radius: 18px;
+    border-radius: var(--q-radius);
     background: var(--q-surface);
     box-shadow: var(--q-shadow);
 }
 
-.q-filter-panel {
+.q-filter-panel,
+.q-list-panel,
+.quotation-item {
     overflow: hidden;
 }
 
@@ -94,23 +100,24 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     color: var(--q-navy);
     font-weight: 900;
 }
 
 .q-filter-panel summary::-webkit-details-marker,
 .quotation-item summary::-webkit-details-marker,
-.guided-details summary::-webkit-details-marker,
-.more-details-card summary::-webkit-details-marker {
+.guided-details summary::-webkit-details-marker {
     display: none;
 }
 
 .q-filter-count {
-    padding: 5px 9px;
+    padding: 4px 8px;
     border-radius: 999px;
-    background: var(--q-soft-blue);
+    background: #eaf4ff;
     color: var(--q-blue-dark);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
+    white-space: nowrap;
 }
 
 .q-filter-body {
@@ -118,9 +125,10 @@
     border-top: 1px solid #edf3f8;
 }
 
+/* Forms */
 .form-label {
     color: #344054;
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     font-weight: 900;
     margin-bottom: 5px;
 }
@@ -138,7 +146,7 @@
 .form-control:focus,
 .form-select:focus {
     border-color: #38bdf8;
-    box-shadow: 0 0 0 0.18rem rgba(56, 189, 248, 0.14);
+    box-shadow: 0 0 0 0.16rem rgba(56, 189, 248, 0.14);
 }
 
 textarea.form-control {
@@ -146,13 +154,11 @@ textarea.form-control {
     resize: vertical;
 }
 
-.q-list-panel {
-    overflow: hidden;
-}
-
+/* List header */
 .q-list-head {
-    padding: 14px;
+    padding: 13px 14px;
     border-bottom: 1px solid #edf3f8;
+    background: #ffffff;
 }
 
 .q-list-title {
@@ -163,13 +169,13 @@ textarea.form-control {
 }
 
 .q-list-subtitle {
-    margin-top: 3px;
+    margin-top: 2px;
     color: var(--q-muted);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
 }
 
 .q-list-body {
-    padding: 14px;
+    padding: 12px;
 }
 
 .quotation-list {
@@ -177,22 +183,20 @@ textarea.form-control {
     gap: 10px;
 }
 
-.quotation-item {
-    overflow: hidden;
-}
-
+/* Collapsible quotation row */
 .quotation-summary {
     cursor: pointer;
     list-style: none;
     display: grid;
-    grid-template-columns: minmax(280px, 1fr) 140px 130px 140px 34px;
+    grid-template-columns: minmax(260px, 1fr) 128px 124px 132px 30px;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     padding: 12px 14px;
+    min-width: 0;
 }
 
 .quotation-summary:hover {
-    background: #f8fbff;
+    background: var(--q-bg-soft);
 }
 
 .summary-main {
@@ -201,14 +205,14 @@ textarea.form-control {
 
 .summary-name {
     color: var(--q-navy);
-    font-size: 0.95rem;
+    font-size: 0.94rem;
     font-weight: 950;
 }
 
 .summary-sub {
     margin-top: 3px;
     color: var(--q-muted);
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -217,8 +221,8 @@ textarea.form-control {
 .summary-chip-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 5px;
+    margin-top: 7px;
 }
 
 .service-chip,
@@ -228,20 +232,20 @@ textarea.form-control {
     align-items: center;
     gap: 5px;
     border-radius: 999px;
-    padding: 5px 9px;
-    font-size: 0.68rem;
+    padding: 5px 8px;
+    font-size: 0.66rem;
     font-weight: 900;
     line-height: 1;
 }
 
 .service-chip {
-    background: #eaf6ff;
+    background: #eaf4ff;
     color: #075985;
 }
 
 .flow-chip.direct {
-    background: #dcfce7;
-    color: #166534;
+    background: #ecfdf3;
+    color: #15803d;
 }
 
 .flow-chip.inspect {
@@ -250,14 +254,18 @@ textarea.form-control {
 }
 
 .badge-soft.orange { background: #fff7ed; color: #c2410c; }
-.badge-soft.blue { background: #eaf6ff; color: #075985; }
+.badge-soft.blue { background: #eaf4ff; color: #075985; }
 .badge-soft.green { background: #ecfdf3; color: #15803d; }
-.badge-soft.red { background: #fef2f2; color: #b91c1c; }
+.badge-soft.red { background: #fee2e2; color: #b91c1c; }
 .badge-soft.gray { background: #f1f5f9; color: #475569; }
+
+.summary-meta {
+    min-width: 0;
+}
 
 .summary-meta-label {
     color: var(--q-muted);
-    font-size: 0.65rem;
+    font-size: 0.64rem;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -266,16 +274,17 @@ textarea.form-control {
 .summary-meta-value {
     margin-top: 3px;
     color: var(--q-navy);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 850;
+    overflow-wrap: anywhere;
 }
 
 .summary-arrow {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
     background: #eef7ff;
     color: var(--q-blue-dark);
 }
@@ -284,33 +293,34 @@ textarea.form-control {
     transform: rotate(180deg);
 }
 
-.summary-arrow i,
-.more-details-card summary i.fa-chevron-down {
-    transition: transform 0.2s ease;
+.summary-arrow i {
+    transition: transform 0.18s ease;
 }
 
+/* Body */
 .quotation-body {
-    padding: 14px;
+    padding: 12px;
     border-top: 1px solid #edf3f8;
     background: #fbfdff;
 }
 
 .quotation-body-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-    gap: 14px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(310px, 0.8fr);
+    gap: 12px;
     align-items: start;
 }
 
 .info-column,
 .action-column {
     display: grid;
-    gap: 12px;
+    gap: 10px;
+    min-width: 0;
 }
 
 .q-card,
 .action-card {
-    padding: 14px;
+    padding: 13px;
 }
 
 .q-card-title,
@@ -320,8 +330,8 @@ textarea.form-control {
     gap: 8px;
     color: var(--q-navy);
     font-weight: 950;
-    font-size: 0.95rem;
-    margin-bottom: 12px;
+    font-size: 0.92rem;
+    margin-bottom: 10px;
 }
 
 .q-card-title i,
@@ -329,21 +339,23 @@ textarea.form-control {
     color: var(--q-blue);
 }
 
+/* Progress */
 .simple-progress {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
+    gap: 7px;
 }
 
 .simple-step {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 54px;
-    padding: 9px;
+    min-height: 52px;
+    padding: 8px;
     border: 1px solid var(--q-border);
-    border-radius: 13px;
+    border-radius: 12px;
     background: #f8fafc;
+    min-width: 0;
 }
 
 .simple-step.completed {
@@ -352,19 +364,19 @@ textarea.form-control {
 }
 
 .simple-step.waiting {
-    opacity: 0.8;
+    opacity: 0.78;
 }
 
 .simple-step-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 11px;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
     display: grid;
     place-items: center;
     background: #e8f5ff;
     color: var(--q-blue-dark);
     flex: 0 0 auto;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
 }
 
 .simple-step strong,
@@ -374,7 +386,7 @@ textarea.form-control {
 
 .simple-step strong {
     color: var(--q-navy);
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     font-weight: 950;
     line-height: 1.15;
 }
@@ -382,22 +394,29 @@ textarea.form-control {
 .simple-step span {
     margin-top: 2px;
     color: var(--q-muted);
-    font-size: 0.66rem;
+    font-size: 0.64rem;
     line-height: 1.15;
 }
 
+/* Summary boxes */
 .summary-clean-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 7px;
+    align-items: stretch;
+}
+
+.summary-clean-grid > * {
+    min-width: 0;
 }
 
 .summary-clean-box {
-    min-height: 52px;
-    padding: 9px 11px;
+    min-height: 50px;
+    padding: 9px 10px;
     border: 1px solid var(--q-border);
-    border-radius: 13px;
+    border-radius: 12px;
     background: #f8fafc;
+    overflow-wrap: anywhere;
 }
 
 .summary-clean-box.main {
@@ -412,7 +431,7 @@ textarea.form-control {
 
 .summary-clean-box span {
     color: var(--q-muted);
-    font-size: 0.64rem;
+    font-size: 0.62rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-weight: 950;
@@ -421,19 +440,20 @@ textarea.form-control {
 
 .summary-clean-box strong {
     color: var(--q-navy);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 950;
     line-height: 1.25;
 }
 
+/* Decision cards */
 .system-decision-card,
 .guided-recommendation {
     display: grid;
-    grid-template-columns: 36px 1fr;
-    gap: 10px;
+    grid-template-columns: 34px 1fr;
+    gap: 9px;
     margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 14px;
+    padding: 10px;
+    border-radius: 13px;
 }
 
 .system-decision-card.direct,
@@ -450,15 +470,15 @@ textarea.form-control {
 
 .decision-icon,
 .guided-recommendation-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
     display: grid;
     place-items: center;
     background: #ffffff;
     color: var(--q-blue-dark);
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-    font-size: 0.78rem;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.07);
+    font-size: 0.76rem;
 }
 
 .system-decision-card.direct .decision-icon,
@@ -475,7 +495,7 @@ textarea.form-control {
 .guided-recommendation h5 {
     margin: 0 0 2px;
     color: var(--q-navy);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 950;
 }
 
@@ -483,126 +503,86 @@ textarea.form-control {
 .guided-recommendation p {
     margin: 0;
     color: #52677c;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     line-height: 1.35;
 }
 
-.more-details-card {
-    padding: 0;
-    overflow: hidden;
-}
-
-.more-details-card summary,
-.guided-details summary {
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    color: var(--q-blue-dark);
-    font-weight: 950;
-    font-size: 0.78rem;
-}
-
-.more-details-card[open] summary i.fa-chevron-down {
-    transform: rotate(180deg);
-}
-
-.more-details-body,
-.guided-details-body {
-    padding: 0 12px 12px;
-}
-
-.detail-label,
-.action-label {
-    color: var(--q-muted);
-    font-size: 0.66rem;
-    font-weight: 950;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.notes-box {
-    padding: 10px 12px;
-    border: 1px solid #e5edf5;
-    border-radius: 12px;
-    background: #f8fafc;
-    color: #344054;
-    font-size: 0.8rem;
-    line-height: 1.45;
-}
-
+/* Action panel */
 .guided-action-card {
     display: grid;
-    gap: 12px;
+    gap: 10px;
 }
 
 .next-action-panel {
-    padding: 14px;
+    padding: 13px;
     border: 1px solid var(--q-border);
-    border-radius: 16px;
+    border-radius: 14px;
     background: #ffffff;
 }
 
 .next-action-header {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 9px;
+    margin-bottom: 10px;
 }
 
 .next-action-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
     display: grid;
     place-items: center;
     flex: 0 0 auto;
     background: #e8f5ff;
     color: var(--q-blue-dark);
     font-weight: 950;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
+}
+
+.action-label,
+.detail-label {
+    color: var(--q-muted);
+    font-size: 0.64rem;
+    font-weight: 950;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .next-action-header h4 {
     color: var(--q-navy);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 950;
-    margin: 2px 0 3px;
+    margin: 2px 0 2px;
 }
 
 .next-action-header p {
     color: var(--q-muted);
-    font-size: 0.75rem;
-    line-height: 1.4;
+    font-size: 0.72rem;
+    line-height: 1.35;
     margin: 0;
 }
 
 .next-action-note {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     padding: 8px 10px;
-    border-radius: 12px;
+    border-radius: 11px;
     background: #f8fafc;
     color: var(--q-muted);
-    font-size: 0.72rem;
-    line-height: 1.45;
+    font-size: 0.7rem;
+    line-height: 1.4;
 }
 
 .ready-job-card {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    padding: 12px;
+    gap: 9px;
+    margin-bottom: 10px;
+    padding: 10px;
     border: 1px solid #bbf7d0;
-    border-radius: 14px;
+    border-radius: 13px;
     background: #f0fdf4;
     color: #166534;
-}
-
-.ready-job-card i {
-    font-size: 1.2rem;
 }
 
 .ready-job-card strong,
@@ -612,13 +592,13 @@ textarea.form-control {
 
 .ready-job-card span {
     color: #4b6353;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
 }
 
 .guided-alert-card {
-    padding: 12px;
+    padding: 11px;
     border: 1px solid #fde68a;
-    border-radius: 16px;
+    border-radius: 14px;
     background: #fffbeb;
 }
 
@@ -628,64 +608,53 @@ textarea.form-control {
     gap: 8px;
     color: #92400e;
     font-weight: 950;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
 .guided-alert-card p {
     color: #775a20;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
 }
 
 .guided-details {
     border: 1px dashed #bfd4e8;
-    border-radius: 14px;
+    border-radius: 13px;
     background: #fbfdff;
     overflow: hidden;
 }
 
-.more-options {
-    margin-top: 0;
-}
-
-.mini-status-grid {
-    display: grid;
-    gap: 8px;
-}
-
-.mini-status-grid div {
-    padding: 9px 10px;
-    border: 1px solid #e5edf5;
-    border-radius: 12px;
-    background: #f8fafc;
-}
-
-.mini-status-grid span,
-.mini-status-grid strong {
-    display: block;
-}
-
-.mini-status-grid span {
-    color: var(--q-muted);
-    font-size: 0.64rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+.guided-details summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 9px 11px;
+    color: var(--q-blue-dark);
     font-weight: 950;
+    font-size: 0.78rem;
 }
 
-.mini-status-grid strong {
-    color: var(--q-navy);
-    font-size: 0.8rem;
-    font-weight: 900;
+.guided-details-body {
+    padding: 0 11px 11px;
 }
 
+.notes-box {
+    padding: 10px;
+    border: 1px solid #e5edf5;
+    border-radius: 11px;
+    background: #f8fafc;
+    color: #344054;
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+/* Buttons */
 .btn-action-primary,
 .btn-action-outline,
 .btn-action-success,
 .action-card .btn {
     min-height: 38px;
-    border-radius: 12px;
+    border-radius: 11px;
     padding: 8px 12px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 900;
 }
 
@@ -708,7 +677,7 @@ textarea.form-control {
 }
 
 .btn-action-outline:hover {
-    background: #eaf6ff;
+    background: #eaf4ff;
     color: var(--q-blue-dark);
 }
 
@@ -724,35 +693,142 @@ textarea.form-control {
     color: #ffffff;
 }
 
+/* Modal triggers and modals */
+.details-button-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.q-modal-trigger {
+    width: 100%;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0;
+    background: #ffffff;
+    color: var(--q-blue-dark);
+    font-size: 0.78rem;
+    font-weight: 950;
+    text-align: left;
+}
+
+.q-modal-trigger:hover {
+    background: #f0f9ff;
+}
+
+.q-modal-trigger-muted {
+    border: 1px dashed #bfd4e8;
+    border-radius: 13px;
+    background: #fbfdff;
+}
+
+.wr-admin-modal .modal-content {
+    border: 1px solid var(--q-border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+}
+
+.wr-admin-modal .modal-header {
+    padding: 14px 16px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--q-border);
+}
+
+.wr-admin-modal .modal-title {
+    color: var(--q-navy);
+    font-weight: 950;
+}
+
+.wr-admin-modal .modal-subtitle {
+    color: var(--q-muted);
+    font-size: 0.8rem;
+}
+
+.wr-admin-modal .modal-body {
+    padding: 16px;
+    background: #fcfdff;
+}
+
+.modal-section + .modal-section {
+    margin-top: 12px;
+}
+
+.modal-section-title {
+    margin-bottom: 7px;
+    color: var(--q-muted);
+    font-size: 0.66rem;
+    font-weight: 950;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.modal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mini-status-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.mini-status-grid div {
+    padding: 9px 10px;
+    border: 1px solid #e5edf5;
+    border-radius: 11px;
+    background: #f8fafc;
+}
+
+.mini-status-grid span,
+.mini-status-grid strong {
+    display: block;
+}
+
+.mini-status-grid span {
+    color: var(--q-muted);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 950;
+}
+
+.mini-status-grid strong {
+    color: var(--q-navy);
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+/* Empty */
 .empty-state {
-    padding: 42px 20px;
+    padding: 40px 20px;
     text-align: center;
     color: var(--q-muted);
 }
 
 .empty-icon {
-    width: 52px;
-    height: 52px;
+    width: 50px;
+    height: 50px;
     margin: 0 auto 12px;
     display: grid;
     place-items: center;
-    border-radius: 18px;
+    border-radius: 16px;
     background: #eef7ff;
     color: var(--q-blue-dark);
-    font-size: 1.3rem;
+    font-size: 1.25rem;
 }
 
-/* Compact topbar inside admin layout if inherited styles are too large */
-.admin-main-content .topbar-title,
-.page-title,
-h1 {
-    font-size: 1.75rem;
-    line-height: 1.15;
-}
-
-.admin-main-content .topbar-subtitle,
-.topbar-subtitle {
-    font-size: 0.9rem;
+/* Overflow safety */
+.quotations-page *,
+.q-list-panel,
+.quotation-item,
+.quotation-body,
+.quotation-body-grid,
+.info-column,
+.action-column {
+    max-width: 100%;
 }
 
 @media (max-width: 1200px) {
@@ -761,7 +837,7 @@ h1 {
     }
 
     .quotation-summary {
-        grid-template-columns: minmax(240px, 1fr) 120px 120px 120px 34px;
+        grid-template-columns: minmax(220px, 1fr) 110px 118px 118px 30px;
     }
 }
 
@@ -777,6 +853,10 @@ h1 {
     .summary-arrow {
         justify-self: end;
     }
+
+    .simple-progress {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 767.98px) {
@@ -786,117 +866,228 @@ h1 {
     }
 
     .simple-progress,
-    .summary-clean-grid {
-        grid-template-columns: 1fr;
-    }
-
+    .summary-clean-grid,
+    .modal-grid,
     .q-stats-grid {
         grid-template-columns: 1fr;
     }
-}
-
-
-/* ============================================================
-   Modal popup refinement for Admin Quotations
-   ============================================================ */
-.summary-clean-grid {
-    align-items: stretch;
-}
-
-.summary-clean-grid > * {
-    width: 100%;
-    margin: 0;
-    justify-self: stretch;
-}
-
-.summary-clean-box.main {
-    grid-column: auto;
-}
-
-.details-button-card {
-    padding: 0;
-    overflow: hidden;
-}
-
-.q-modal-trigger {
-    width: 100%;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 11px 13px;
-    border: 0;
-    background: #ffffff;
-    color: var(--q-blue-dark);
-    font-size: 0.8rem;
-    font-weight: 950;
-    text-align: left;
-}
-
-.q-modal-trigger:hover {
-    background: #f0f9ff;
-}
-
-.q-modal-trigger-muted {
-    border: 1px dashed #bfd4e8;
-    border-radius: 14px;
-    background: #fbfdff;
-    margin-top: 2px;
-}
-
-.wr-admin-modal .modal-content {
-    border: 1px solid var(--q-border);
-    border-radius: 22px;
-    overflow: hidden;
-    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);
-}
-
-.wr-admin-modal .modal-header {
-    padding: 16px 18px;
-    background: linear-gradient(135deg, #f8fbff, #ffffff);
-    border-bottom: 1px solid var(--q-border);
-}
-
-.wr-admin-modal .modal-title {
-    color: var(--q-navy);
-    font-weight: 950;
-    letter-spacing: -0.02em;
-}
-
-.wr-admin-modal .modal-subtitle {
-    color: var(--q-muted);
-    font-size: 0.82rem;
-}
-
-.wr-admin-modal .modal-body {
-    padding: 18px;
-    background: #fcfdff;
-}
-
-.modal-section + .modal-section {
-    margin-top: 14px;
-}
-
-.modal-section-title {
-    margin-bottom: 8px;
-    color: var(--q-muted);
-    font-size: 0.68rem;
-    font-weight: 950;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
-
-.modal-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 @media (max-width: 575.98px) {
     .wr-admin-modal .modal-dialog {
         margin: 12px;
     }
+}
 
-    .modal-grid {
+/* ============================================================
+   KISS Fix: Smaller quotation modals + cleaner summary boxes
+   ============================================================ */
+.wr-admin-modal .modal-dialog {
+    max-width: 720px;
+}
+
+.wr-admin-modal .modal-content {
+    border-radius: 16px;
+}
+
+.wr-admin-modal .modal-header {
+    padding: 12px 16px;
+}
+
+.wr-admin-modal .modal-body {
+    padding: 14px 16px;
+}
+
+.wr-admin-modal .modal-title {
+    font-size: 1rem;
+}
+
+.wr-admin-modal .modal-subtitle {
+    font-size: 0.76rem;
+}
+
+.wr-admin-modal textarea.form-control {
+    min-height: 82px;
+}
+
+.wr-admin-modal .summary-clean-box,
+.wr-admin-modal .mini-status-grid div {
+    min-height: auto;
+    padding: 8px 10px;
+}
+
+.wr-admin-modal .modal-section + .modal-section {
+    margin-top: 10px;
+}
+
+.wr-admin-modal .btn {
+    min-height: 36px;
+}
+
+/* Make Request Summary boxes equal and prevent label breaking like SERVI/CE */
+.summary-clean-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.summary-clean-box {
+    min-width: 0;
+}
+
+.summary-clean-box span {
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: nowrap;
+}
+
+.summary-clean-box strong {
+    word-break: normal;
+    overflow-wrap: anywhere;
+}
+
+/* On narrow panels, stack summary boxes instead of squeezing text */
+@media (max-width: 1100px) {
+    .summary-clean-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .wr-admin-modal .modal-dialog {
+        max-width: none;
+        margin: 10px;
+    }
+}
+
+/* ============================================================
+   KISS Fix: Chada Request Summary + visible icons
+   ============================================================ */
+.request-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.request-summary-box {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    min-height: 62px;
+    padding: 10px 11px;
+    border: 1px solid #dbe7f3;
+    border-radius: 14px;
+    background: #f8fbff;
+    overflow: hidden;
+}
+
+.request-summary-box-service {
+    background: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+.request-summary-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eaf4ff;
+    color: #0f4c81;
+    font-size: 0.86rem;
+}
+
+.request-summary-box-service .request-summary-icon {
+    background: #dff3ff;
+    color: #0369a1;
+}
+
+.request-summary-box span {
+    display: block;
+    color: #64748b;
+    font-size: 0.64rem;
+    font-weight: 950;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.request-summary-box strong {
+    display: block;
+    margin-top: 3px;
+    color: #0f172a;
+    font-size: 0.84rem;
+    font-weight: 950;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+/* Make all icon boxes visibly branded, not blank */
+.decision-icon,
+.guided-recommendation-icon,
+.next-action-icon,
+.summary-arrow,
+.simple-step-icon {
+    background: #eaf4ff !important;
+    color: #0f4c81 !important;
+}
+
+.decision-icon i,
+.guided-recommendation-icon i,
+.next-action-icon i,
+.summary-arrow i,
+.simple-step-icon i,
+.q-card-title i,
+.action-title i,
+.q-modal-trigger i {
+    display: inline-block !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    color: inherit !important;
+    opacity: 1 !important;
+    line-height: 1 !important;
+}
+
+.system-decision-card.direct .decision-icon,
+.guided-recommendation.direct .guided-recommendation-icon {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+}
+
+.system-decision-card.inspect .decision-icon,
+.guided-recommendation.inspect .guided-recommendation-icon {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+}
+
+.system-decision-card,
+.guided-recommendation,
+.next-action-panel,
+.ready-job-card {
+    border-radius: 16px;
+}
+
+.system-decision-card {
+    align-items: center;
+}
+
+.q-modal-trigger {
+    border-radius: 14px;
+}
+
+/* Cleaner card spacing for the opened quotation item */
+.quotation-body-grid {
+    gap: 14px;
+}
+
+.q-card,
+.action-card {
+    border-radius: 18px;
+}
+
+@media (max-width: 767.98px) {
+    .request-summary-grid {
         grid-template-columns: 1fr;
     }
 }

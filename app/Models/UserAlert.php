@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserAlert extends Model
 {
@@ -15,14 +16,11 @@ class UserAlert extends Model
         'is_read',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'is_read' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

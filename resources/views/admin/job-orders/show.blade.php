@@ -3,13 +3,17 @@
 @section('title', 'Job Order Details - WRPlumb')
 @section('topbar_title', 'Job Order Details')
 @section('topbar_subtitle', 'Review the service execution record.')
+
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/job-orders.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/job-order-details.css') }}">
 @endpush
+
 @section('content')
 @php
     $status = $jobOrder->status ?? 'scheduled';
     $statusText = ucwords(str_replace('_', ' ', $status));
+
     $statusClass = match ($status) {
         'scheduled' => 'scheduled',
         'in_progress' => 'progressing',
@@ -25,15 +29,15 @@
         ?? trim(($jobOrder->worker->first_name ?? '') . ' ' . ($jobOrder->worker->last_name ?? ''));
 
     $canStart = $status === 'scheduled';
-    $canComplete = in_array($status, ['scheduled', 'in_progress']);
-    $canCancel = !in_array($status, ['completed', 'cancelled']);
+    $canComplete = in_array($status, ['scheduled', 'in_progress'], true);
+
+    $canReschedule = in_array($status, ['scheduled', 'in_progress'], true);
+    $canReassign = in_array($status, ['scheduled', 'in_progress'], true);
 
     $warrantyClaims = $jobOrder->warrantyClaims()->with(['backJob', 'client'])->latest()->get();
     $backJobs = $jobOrder->backJobs()->with(['warrantyClaim', 'worker'])->latest()->get();
 
     $latestWarrantyClaim = $warrantyClaims->first();
-    $activeWarrantyClaim = $warrantyClaims->firstWhere('status', 'pending')
-        ?? $warrantyClaims->firstWhere('status', 'approved');
 
     $warrantyExpiresAt = $jobOrder->completed_at
         ? $jobOrder->completed_at->copy()->addDays(30)
@@ -44,7 +48,7 @@
         : false;
 
     $warrantyStatusText = match (true) {
-        $status !== 'completed' => 'Available after job completion',
+        $status !== 'completed' => 'Available after completion',
         $isWithinWarranty => 'Within 30-day warranty',
         default => 'Warranty period ended',
     };
@@ -54,780 +58,547 @@
         $isWithinWarranty => 'eligible',
         default => 'expired',
     };
+
+    $scheduledLabel = $jobOrder->scheduled_date
+        ? optional($jobOrder->scheduled_date)->format('Y-m-d')
+            . ($jobOrder->scheduled_time
+                ? ' • ' . \Carbon\Carbon::parse($jobOrder->scheduled_time)->format('h:i A')
+                : '')
+        : 'Not scheduled';
+
+    $timelineLabel = match (true) {
+        !empty($jobOrder->completed_at) => 'Completed ' . optional($jobOrder->completed_at)->format('Y-m-d h:i A'),
+        !empty($jobOrder->cancelled_at) => 'Cancelled ' . optional($jobOrder->cancelled_at)->format('Y-m-d h:i A'),
+        !empty($jobOrder->started_at) => 'Started ' . optional($jobOrder->started_at)->format('Y-m-d h:i A'),
+        default => 'Not yet started',
+    };
 @endphp
 
-<style>
-    .job-order-page {
-        max-width: 1240px;
-        margin: 0 auto;
-    }
-
-    .jo-card {
-        background: #ffffff;
-        border: 1px solid var(--wr-border);
-        border-radius: 22px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-    }
-
-    .jo-hero {
-        padding: 24px;
-        margin-bottom: 20px;
-        background:
-            radial-gradient(circle at top right, rgba(29, 155, 240, 0.12), transparent 35%),
-            linear-gradient(135deg, #ffffff, #f8fbff);
-    }
-
-    .jo-hero-title {
-        font-size: 1.45rem;
-        font-weight: 900;
-        color: #0f172a;
-        margin-bottom: 6px;
-    }
-
-    .jo-hero-subtitle {
-        color: #64748b;
-        margin-bottom: 0;
-        font-weight: 600;
-    }
-
-    .jo-status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border-radius: 999px;
-        font-weight: 900;
-        font-size: 0.86rem;
-        white-space: nowrap;
-    }
-
-    .jo-status-badge.scheduled {
-        background: #eaf4ff;
-        color: #1d4ed8;
-    }
-
-    .jo-status-badge.progressing {
-        background: #fff7ed;
-        color: #c2410c;
-    }
-
-    .jo-status-badge.completed {
-        background: #ecfdf3;
-        color: #15803d;
-    }
-
-    .jo-status-badge.cancelled {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-
-    .jo-status-badge.neutral {
-        background: #eef2f7;
-        color: #475569;
-    }
-
-    .jo-summary-card {
-        padding: 22px;
-        margin-bottom: 20px;
-    }
-
-    .jo-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-    }
-
-    .jo-summary-item {
-        min-height: 82px;
-        border: 1px solid #edf2f7;
-        background: #f8fbff;
-        border-radius: 18px;
-        padding: 14px 16px;
-    }
-
-    .jo-summary-label {
-        display: block;
-        color: #64748b;
-        font-size: 0.76rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 6px;
-    }
-
-    .jo-summary-value {
-        color: #0f172a;
-        font-weight: 800;
-        overflow-wrap: anywhere;
-    }
-
-    .jo-section-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
-        gap: 20px;
-        align-items: start;
-    }
-
-    .jo-action-card {
-        padding: 22px;
-        margin-bottom: 20px;
-    }
-
-    .jo-section-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 1.04rem;
-        font-weight: 900;
-        color: #0f172a;
-        margin-bottom: 16px;
-    }
-
-    .jo-section-title .icon-pill {
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #eaf4ff;
-        color: #1d4ed8;
-    }
-
-    .jo-section-title.success .icon-pill {
-        background: #ecfdf3;
-        color: #15803d;
-    }
-
-    .jo-section-title.danger {
-        color: #b91c1c;
-    }
-
-    .jo-section-title.danger .icon-pill {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-
-    .jo-readonly-block {
-        border: 1px solid #edf2f7;
-        background: #f8fbff;
-        border-radius: 16px;
-        padding: 14px 16px;
-        color: #334155;
-        font-weight: 600;
-        line-height: 1.6;
-        min-height: 54px;
-    }
-
-    .jo-readonly-block + .jo-readonly-block {
-        margin-top: 12px;
-    }
-
-    .jo-readonly-label {
-        color: #64748b;
-        display: block;
-        font-size: 0.76rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 6px;
-    }
-
-    .jo-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 18px;
-    }
-
-    .jo-action-button {
-        border-radius: 14px !important;
-        font-weight: 800 !important;
-        padding: 10px 16px !important;
-    }
-
-    .jo-danger-zone {
-        border-color: #fecaca;
-        background: linear-gradient(135deg, #fff7f7, #ffffff);
-    }
-
-    .jo-danger-note {
-        background: #fff1f2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
-        border-radius: 14px;
-        padding: 12px 14px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        margin-bottom: 14px;
-    }
-
-    .jo-empty-action {
-        border: 1px dashed #cbd5e1;
-        background: #f8fafc;
-        color: #64748b;
-        border-radius: 16px;
-        padding: 16px;
-        font-weight: 700;
-        text-align: center;
-    }
-
-    .jo-card textarea.form-control {
-        min-height: 126px;
-        resize: vertical;
-    }
-
-
-    .jo-warranty-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-        gap: 20px;
-        align-items: start;
-        margin-bottom: 20px;
-    }
-
-    .jo-warranty-card {
-        padding: 22px;
-    }
-
-    .jo-warranty-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 14px;
-        margin-bottom: 14px;
-    }
-
-    .jo-warranty-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #0f172a;
-        font-size: 1.04rem;
-        font-weight: 900;
-        margin: 0;
-    }
-
-    .jo-warranty-title .icon-pill {
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #eaf4ff;
-        color: #1d4ed8;
-    }
-
-    .jo-warranty-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 7px 11px;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .jo-warranty-badge.eligible,
-    .jo-warranty-badge.approved,
-    .jo-warranty-badge.resolved {
-        background: #ecfdf3;
-        color: #15803d;
-    }
-
-    .jo-warranty-badge.pending,
-    .jo-warranty-badge.scheduled,
-    .jo-warranty-badge.in_progress {
-        background: #fff7ed;
-        color: #c2410c;
-    }
-
-    .jo-warranty-badge.rejected,
-    .jo-warranty-badge.cancelled,
-    .jo-warranty-badge.expired {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-
-    .jo-warranty-badge.neutral {
-        background: #eef2f7;
-        color: #475569;
-    }
-
-    .jo-warranty-note {
-        border: 1px dashed #bfdbfe;
-        background: #f8fbff;
-        color: #475569;
-        border-radius: 16px;
-        padding: 13px 15px;
-        font-size: 0.88rem;
-        font-weight: 650;
-        line-height: 1.45;
-        margin-bottom: 14px;
-    }
-
-    .jo-warranty-meta-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 14px;
-    }
-
-    .jo-warranty-meta {
-        border: 1px solid #edf2f7;
-        background: #f8fbff;
-        border-radius: 15px;
-        padding: 12px 14px;
-        min-height: 68px;
-    }
-
-    .jo-warranty-meta span {
-        display: block;
-        color: #64748b;
-        font-size: 0.7rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 5px;
-    }
-
-    .jo-warranty-meta strong {
-        color: #0f172a;
-        font-size: 0.88rem;
-        font-weight: 850;
-    }
-
-    .jo-warranty-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .jo-warranty-list-item {
-        border: 1px solid #edf2f7;
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 12px 14px;
-    }
-
-    .jo-warranty-list-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 10px;
-        margin-bottom: 4px;
-    }
-
-    .jo-warranty-list-title {
-        color: #0f172a;
-        font-weight: 900;
-        line-height: 1.2;
-    }
-
-    .jo-warranty-list-sub {
-        color: #64748b;
-        font-size: 0.78rem;
-        font-weight: 650;
-        line-height: 1.35;
-        margin-top: 3px;
-    }
-
-    .jo-warranty-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
-    }
-
-
-    @media (max-width: 1199.98px) {
-        .jo-summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 991.98px) {
-        .jo-section-grid,
-        .jo-warranty-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .jo-summary-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .jo-hero {
-            padding: 20px;
-        }
-
-        .jo-warranty-meta-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<div class="job-order-page">
+<div class="jo-details-page">
     @if (session('info'))
-        <div class="alert alert-info mb-4">{{ session('info') }}</div>
+        <div class="alert alert-info mb-3">{{ session('info') }}</div>
     @endif
 
-    <div class="jo-card jo-hero">
-        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-            <div>
-                <div class="jo-hero-title">
-                    <i class="fas fa-clipboard-check me-2 text-primary"></i>
-                    {{ $jobOrder->job_order_no }}
-                </div>
-                <p class="jo-hero-subtitle">
-                    {{ $jobOrder->service_type ?? 'Service job order' }} for
-                    {{ $clientName ?: 'Unnamed client' }}
-                </p>
+    @if (session('success'))
+        <div class="alert alert-success mb-3">{{ session('success') }}</div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger mb-3">{{ $errors->first() }}</div>
+    @endif
+
+    <section class="jo-details-hero">
+        <div class="jo-details-hero-main">
+            <div class="jo-details-hero-icon">
+                <i class="fas fa-clipboard-check"></i>
             </div>
 
-            <span class="jo-status-badge {{ $statusClass }}">
-                <i class="fas fa-circle"></i>
-                {{ $statusText }}
-            </span>
+            <div class="jo-details-hero-copy">
+                <div class="jo-details-hero-title-row">
+                    <h1>{{ $jobOrder->job_order_no }}</h1>
+                    <span class="jo-status-badge {{ $statusClass }}">
+                        <i class="fas fa-circle-check"></i>
+                        {{ $statusText }}
+                    </span>
+                </div>
+
+                <p>{{ $jobOrder->service_type ?? 'Service job order' }} for {{ $clientName ?: 'Unnamed client' }}</p>
+            </div>
         </div>
 
-        <div class="jo-actions">
-            <a href="{{ route('admin.job-orders.index') }}" class="btn btn-outline-secondary jo-action-button">
-                <i class="fas fa-arrow-left me-1"></i> Back to Job Orders
+        <div class="jo-details-hero-actions">
+            <a href="{{ route('admin.job-orders.index') }}" class="btn btn-outline-primary jo-details-btn">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to Job Orders
             </a>
 
-            <a href="{{ route('admin.quotations.index') }}" class="btn btn-outline-primary jo-action-button">
-                <i class="fas fa-file-signature me-1"></i> Back to Requests
+            <a href="{{ route('admin.quotations.index') }}" class="btn btn-outline-primary jo-details-btn">
+                <i class="fas fa-file-signature me-1"></i>
+                Back to Requests
             </a>
 
             @if ($canStart)
                 <form method="POST" action="{{ route('admin.job-orders.start', $jobOrder) }}">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" class="btn btn-primary jo-action-button">
-                        <i class="fas fa-play me-1"></i> Mark In Progress
+                    <button type="submit" class="btn btn-primary jo-details-btn">
+                        <i class="fas fa-play me-1"></i>
+                        Mark In Progress
                     </button>
                 </form>
             @endif
         </div>
-    </div>
+    </section>
 
-    <div class="jo-card jo-summary-card">
-        <div class="jo-summary-grid">
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Job Order No.</span>
-                <div class="jo-summary-value">{{ $jobOrder->job_order_no }}</div>
+    <div class="jo-details-top-grid">
+        <section class="jo-details-card jo-information-card">
+            <div class="jo-details-card-head">
+                <span class="jo-card-icon blue"><i class="fas fa-circle-info"></i></span>
+                <h2>Job Information</h2>
             </div>
 
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Service Flow</span>
-                <div class="jo-summary-value text-uppercase">{{ str_replace('_', ' ', $jobOrder->service_flow ?? '—') }}</div>
-            </div>
-
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Client</span>
-                <div class="jo-summary-value">{{ $clientName ?: '—' }}</div>
-            </div>
-
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Assigned Worker</span>
-                <div class="jo-summary-value">{{ $workerName ?: 'Not assigned' }}</div>
-            </div>
-
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Service Type</span>
-                <div class="jo-summary-value">{{ $jobOrder->service_type ?? '—' }}</div>
-            </div>
-
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Project Type</span>
-                <div class="jo-summary-value">{{ $jobOrder->project_type ?? '—' }}</div>
-            </div>
-
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Schedule</span>
-                <div class="jo-summary-value">
-                    @if ($jobOrder->scheduled_date)
-                        {{ optional($jobOrder->scheduled_date)->format('Y-m-d') }}
-                        @if ($jobOrder->scheduled_time)
-                            • {{ \Carbon\Carbon::parse($jobOrder->scheduled_time)->format('h:i A') }}
-                        @endif
-                    @else
-                        —
-                    @endif
-                </div>
-            </div>
-
-            <div class="jo-summary-item">
-                <span class="jo-summary-label">Timeline</span>
-                <div class="jo-summary-value">
-                    @if ($jobOrder->completed_at)
-                        Completed {{ optional($jobOrder->completed_at)->format('Y-m-d h:i A') }}
-                    @elseif ($jobOrder->cancelled_at)
-                        Cancelled {{ optional($jobOrder->cancelled_at)->format('Y-m-d h:i A') }}
-                    @elseif ($jobOrder->started_at)
-                        Started {{ optional($jobOrder->started_at)->format('Y-m-d h:i A') }}
-                    @else
-                        Not yet started
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="jo-warranty-grid">
-        <div class="jo-card jo-warranty-card">
-            <div class="jo-warranty-header">
-                <h3 class="jo-warranty-title">
-                    <span class="icon-pill"><i class="fas fa-shield-halved"></i></span>
-                    Warranty Monitoring
-                </h3>
-
-                <span class="jo-warranty-badge {{ $warrantyStatusClass }}">
-                    {{ $warrantyStatusText }}
-                </span>
-            </div>
-
-            @if ($status === 'completed')
-                <div class="jo-warranty-note">
-                    Completed job orders are covered by the 30-day service warranty. If a client reports the same issue within the period, it can be reviewed as a warranty claim and converted into a backjob when approved.
-                </div>
-            @else
-                <div class="jo-warranty-note">
-                    Warranty tracking becomes active once this job order is marked as completed.
-                </div>
-            @endif
-
-            <div class="jo-warranty-meta-grid">
-                <div class="jo-warranty-meta">
-                    <span>Completed Date</span>
-                    <strong>{{ optional($jobOrder->completed_at)->format('Y-m-d h:i A') ?? 'Not completed yet' }}</strong>
-                </div>
-
-                <div class="jo-warranty-meta">
-                    <span>Warranty Until</span>
-                    <strong>{{ $warrantyExpiresAt ? $warrantyExpiresAt->format('Y-m-d h:i A') : 'Not available' }}</strong>
-                </div>
-
-                <div class="jo-warranty-meta">
-                    <span>Total Claims</span>
-                    <strong>{{ $warrantyClaims->count() }}</strong>
-                </div>
-
-                <div class="jo-warranty-meta">
-                    <span>Total Backjobs</span>
-                    <strong>{{ $backJobs->count() }}</strong>
-                </div>
-            </div>
-
-            @if ($latestWarrantyClaim)
-                <div class="jo-warranty-list">
-                    <div class="jo-warranty-list-item">
-                        <div class="jo-warranty-list-top">
-                            <div>
-                                <div class="jo-warranty-list-title">Latest Claim: {{ $latestWarrantyClaim->claim_no }}</div>
-                                <div class="jo-warranty-list-sub">
-                                    {{ \Illuminate\Support\Str::limit($latestWarrantyClaim->issue_description, 120) }}
-                                </div>
-                            </div>
-
-                            <span class="jo-warranty-badge {{ $latestWarrantyClaim->status }}">
-                                {{ ucfirst($latestWarrantyClaim->status) }}
-                            </span>
-                        </div>
-
-                        <div class="jo-warranty-actions">
-                            <a href="{{ route('admin.warranty-claims.show', $latestWarrantyClaim) }}" class="btn btn-sm btn-outline-primary">
-                                Review Claim
-                            </a>
-
-                            @if ($latestWarrantyClaim->backJob)
-                                <a href="{{ route('admin.backjobs.show', $latestWarrantyClaim->backJob) }}" class="btn btn-sm btn-outline-success">
-                                    View Backjob
-                                </a>
-                            @endif
-                        </div>
+            <div class="jo-information-grid">
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-hashtag"></i></span>
+                    <div>
+                        <span>Job Order No.</span>
+                        <strong>{{ $jobOrder->job_order_no }}</strong>
                     </div>
                 </div>
-            @else
-                <div class="jo-empty-action">
-                    No warranty claim has been submitted for this job order.
-                </div>
-            @endif
-        </div>
 
-        <div class="jo-card jo-warranty-card">
-            <div class="jo-warranty-header">
-                <h3 class="jo-warranty-title">
-                    <span class="icon-pill"><i class="fas fa-rotate-left"></i></span>
-                    Backjob Tracking
-                </h3>
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-code-branch"></i></span>
+                    <div>
+                        <span>Service Flow</span>
+                        <strong>{{ ucwords(str_replace('_', ' ', $jobOrder->service_flow ?? '—')) }}</strong>
+                    </div>
+                </div>
+
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-user"></i></span>
+                    <div>
+                        <span>Client</span>
+                        <strong>{{ $clientName ?: '—' }}</strong>
+                    </div>
+                </div>
+
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-user-gear"></i></span>
+                    <div>
+                        <span>Assigned Worker</span>
+                        <strong>{{ $workerName ?: 'Not assigned' }}</strong>
+                    </div>
+                </div>
+
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-screwdriver-wrench"></i></span>
+                    <div>
+                        <span>Service Type</span>
+                        <strong>{{ $jobOrder->service_type ?? '—' }}</strong>
+                    </div>
+                </div>
+
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-house"></i></span>
+                    <div>
+                        <span>Project Type</span>
+                        <strong>{{ $jobOrder->project_type ?? '—' }}</strong>
+                    </div>
+                </div>
+
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-calendar-days"></i></span>
+                    <div>
+                        <span>Schedule</span>
+                        <strong>{{ $scheduledLabel }}</strong>
+                    </div>
+                </div>
+
+                <div class="jo-information-item">
+                    <span class="jo-information-icon"><i class="fas fa-clock"></i></span>
+                    <div>
+                        <span>Timeline</span>
+                        <strong>{{ $timelineLabel }}</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="jo-details-card jo-timeline-card">
+            <div class="jo-details-card-head">
+                <span class="jo-card-icon green"><i class="fas fa-circle-check"></i></span>
+                <h2>Service Timeline</h2>
             </div>
 
-            @if ($backJobs->count())
-                <div class="jo-warranty-list">
-                    @foreach ($backJobs as $backJob)
-                        <div class="jo-warranty-list-item">
-                            <div class="jo-warranty-list-top">
-                                <div>
-                                    <div class="jo-warranty-list-title">{{ $backJob->backjob_no }}</div>
-                                    <div class="jo-warranty-list-sub">
-                                        Assigned to {{ $backJob->worker->name ?? 'Not assigned' }}
-                                        @if ($backJob->scheduled_date)
-                                            • {{ optional($backJob->scheduled_date)->format('Y-m-d') }}
-                                            @if ($backJob->scheduled_time)
-                                                {{ \Carbon\Carbon::parse($backJob->scheduled_time)->format('h:i A') }}
-                                            @endif
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <span class="jo-warranty-badge {{ $backJob->status }}">
-                                    {{ ucwords(str_replace('_', ' ', $backJob->status)) }}
-                                </span>
-                            </div>
-
-                            <div class="jo-warranty-list-sub">
-                                {{ \Illuminate\Support\Str::limit($backJob->reason, 120) }}
-                            </div>
-
-                            <div class="jo-warranty-actions">
-                                <a href="{{ route('admin.backjobs.show', $backJob) }}" class="btn btn-sm btn-outline-primary">
-                                    Open Backjob
-                                </a>
-                            </div>
-                        </div>
-                    @endforeach
+            <div class="jo-service-timeline">
+                <div class="jo-timeline-step done">
+                    <span class="jo-timeline-dot"><i class="fas fa-calendar-check"></i></span>
+                    <div>
+                        <strong>Site Inspection</strong>
+                        <small>{{ $scheduledLabel }}</small>
+                    </div>
                 </div>
-            @else
-                <div class="jo-empty-action">
-                    No backjob has been created for this job order.
+
+                <div class="jo-timeline-step {{ in_array($status, ['in_progress', 'completed'], true) ? 'done' : '' }}">
+                    <span class="jo-timeline-dot"><i class="fas fa-screwdriver-wrench"></i></span>
+                    <div>
+                        <strong>Service Execution</strong>
+                        <small>
+                            {{ $jobOrder->started_at
+                                ? optional($jobOrder->started_at)->format('Y-m-d • h:i A')
+                                : ($status === 'scheduled' ? 'Pending service execution' : 'Service execution underway') }}
+                        </small>
+                    </div>
                 </div>
-            @endif
-        </div>
+
+                <div class="jo-timeline-step {{ $status === 'completed' ? 'done final' : '' }}">
+                    <span class="jo-timeline-dot"><i class="fas fa-check"></i></span>
+                    <div>
+                        <strong>Completed</strong>
+                        <small>{{ $jobOrder->completed_at ? optional($jobOrder->completed_at)->format('Y-m-d • h:i A') : 'Pending completion' }}</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div>
 
-    <div class="jo-section-grid">
-        <div>
-            <div class="jo-card jo-action-card">
-                <h3 class="jo-section-title">
-                    <span class="icon-pill"><i class="fas fa-list-check"></i></span>
-                    Scope and Current Notes
-                </h3>
+    <div class="jo-details-main-grid">
+        <section class="jo-details-card jo-notes-card">
+            <div class="jo-details-card-head">
+                <span class="jo-card-icon blue"><i class="fas fa-list-check"></i></span>
+                <h2>Scope and Current Notes</h2>
+            </div>
 
-                <div class="jo-readonly-block">
-                    <span class="jo-readonly-label">Scope of Work</span>
-                    {{ $jobOrder->scope_of_work ?? 'No scope of work recorded.' }}
+            <div class="jo-notes-layout">
+                <div class="jo-note-stack">
+                    <div class="jo-note-block">
+                        <span>Scope of Work</span>
+                        <p>{{ $jobOrder->scope_of_work ?? 'No scope of work recorded.' }}</p>
+                    </div>
+
+                    <div class="jo-note-block">
+                        <span>Work Remarks</span>
+                        <p>{{ $jobOrder->work_remarks ?? 'No work remarks yet.' }}</p>
+                    </div>
+
+                    <div class="jo-note-block">
+                        <span>Admin Notes</span>
+                        <p>{{ $jobOrder->admin_notes ?? 'No admin notes yet.' }}</p>
+                    </div>
+
+                    @if ($jobOrder->completion_notes)
+                        <div class="jo-note-block">
+                            <span>Completion / Cancellation Notes</span>
+                            <p>{{ $jobOrder->completion_notes }}</p>
+                        </div>
+                    @endif
                 </div>
 
-                <div class="jo-readonly-block">
-                    <span class="jo-readonly-label">Work Remarks</span>
-                    {{ $jobOrder->work_remarks ?? 'No work remarks yet.' }}
+                <div class="jo-remarks-editor">
+                    <div class="jo-subsection-title">
+                        <i class="fas fa-pen-to-square"></i>
+                        <span>Update Remarks</span>
+                    </div>
+
+                    <form method="POST" action="{{ route('admin.job-orders.update-remarks', $jobOrder) }}">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="mb-3">
+                            <label class="form-label">Work Remarks</label>
+                            <textarea
+                                name="work_remarks"
+                                class="form-control"
+                                rows="5"
+                                placeholder="Enter service progress, work updates, or worker remarks."
+                            >{{ old('work_remarks', $jobOrder->work_remarks) }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Admin Notes</label>
+                            <textarea
+                                name="admin_notes"
+                                class="form-control"
+                                rows="4"
+                                placeholder="Enter internal notes or instructions for this job order."
+                            >{{ old('admin_notes', $jobOrder->admin_notes) }}</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary jo-save-remarks">
+                            <i class="fas fa-floppy-disk me-1"></i>
+                            Save Remarks
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <aside class="jo-details-side-stack">
+            <section class="jo-details-card jo-utility-card">
+                <div class="jo-utility-head">
+                    <div class="jo-details-card-head mb-0">
+                        <span class="jo-card-icon blue"><i class="fas fa-shield-halved"></i></span>
+                        <h2>Warranty Monitoring</h2>
+                    </div>
+
+                    <span class="jo-warranty-badge {{ $warrantyStatusClass }}">
+                        {{ $warrantyStatusText }}
+                    </span>
                 </div>
 
-                <div class="jo-readonly-block">
-                    <span class="jo-readonly-label">Admin Notes</span>
-                    {{ $jobOrder->admin_notes ?? 'No admin notes yet.' }}
+                <p class="jo-utility-copy">
+                    @if ($status === 'completed')
+                        Warranty coverage is active based on the 30-day service period.
+                    @else
+                        Warranty tracking becomes available after this job order is completed.
+                    @endif
+                </p>
+
+                <div class="jo-utility-meta-grid">
+                    <div>
+                        <span>Warranty Until</span>
+                        <strong>{{ $warrantyExpiresAt ? $warrantyExpiresAt->format('Y-m-d h:i A') : 'Not available' }}</strong>
+                    </div>
+                    <div>
+                        <span>Total Claims</span>
+                        <strong>{{ $warrantyClaims->count() }}</strong>
+                    </div>
                 </div>
 
-                @if ($jobOrder->completion_notes)
-                    <div class="jo-readonly-block">
-                        <span class="jo-readonly-label">Completion / Cancellation Notes</span>
-                        {{ $jobOrder->completion_notes }}
+                @if ($latestWarrantyClaim)
+                    <div class="jo-mini-record">
+                        <div>
+                            <span>Latest Claim</span>
+                            <strong>{{ $latestWarrantyClaim->claim_no }}</strong>
+                        </div>
+
+                        <a href="{{ route('admin.warranty-claims.show', $latestWarrantyClaim) }}" class="btn btn-sm btn-outline-primary">
+                            Review
+                        </a>
                     </div>
                 @endif
-            </div>
+            </section>
 
-            <div class="jo-card jo-action-card">
-                <h3 class="jo-section-title">
-                    <span class="icon-pill"><i class="fas fa-pen-to-square"></i></span>
-                    Update Remarks
-                </h3>
+            <section class="jo-details-card jo-utility-card">
+                <div class="jo-utility-head">
+                    <div class="jo-details-card-head mb-0">
+                        <span class="jo-card-icon blue"><i class="fas fa-rotate-left"></i></span>
+                        <h2>Backjob Tracking</h2>
+                    </div>
 
-                <form method="POST" action="{{ route('admin.job-orders.update-remarks', $jobOrder) }}">
+                    <span class="jo-count-badge">{{ $backJobs->count() }}</span>
+                </div>
+
+                <p class="jo-utility-copy">Track backjob or follow-up actions related to this job order.</p>
+
+                @if ($backJobs->count())
+                    <div class="jo-mini-list">
+                        @foreach ($backJobs as $backJob)
+                            <div class="jo-mini-record">
+                                <div>
+                                    <span>{{ $backJob->backjob_no }}</span>
+                                    <strong>{{ ucwords(str_replace('_', ' ', $backJob->status)) }}</strong>
+                                </div>
+
+                                <a href="{{ route('admin.backjobs.show', $backJob) }}" class="btn btn-sm btn-outline-primary">
+                                    Open
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="jo-utility-empty">No backjob has been created for this job order.</div>
+                @endif
+            </section>
+
+            @if ($canComplete || $canReschedule || $canReassign)
+                @if ($canComplete)
+                    <section class="jo-details-card jo-action-state jo-action-state-success">
+                        <div class="jo-details-card-head">
+                            <span class="jo-card-icon green"><i class="fas fa-circle-check"></i></span>
+                            <h2>Complete Job Order</h2>
+                        </div>
+
+                        <form method="POST" action="{{ route('admin.job-orders.complete', $jobOrder) }}">
+                            @csrf
+                            @method('PATCH')
+
+                            <div class="mb-3">
+                                <label class="form-label">Completion Notes</label>
+                                <textarea
+                                    name="completion_notes"
+                                    class="form-control"
+                                    rows="4"
+                                    placeholder="Describe the completed work, findings, or final service notes."
+                                >{{ old('completion_notes', $jobOrder->completion_notes) }}</textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-success jo-details-btn">
+                                <i class="fas fa-check me-1"></i>
+                                Mark Completed
+                            </button>
+                        </form>
+                    </section>
+                @endif
+
+                <section class="jo-details-card jo-service-controls">
+                    <div class="jo-details-card-head">
+                        <span class="jo-card-icon blue"><i class="fas fa-sliders"></i></span>
+                        <div>
+                            <h2>Service Controls</h2>
+                            <p class="jo-service-controls-subtitle">
+                                Adjust the active job order without cancelling the issued record.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="jo-service-control-grid">
+                        @if ($canReschedule)
+                            <button
+                                type="button"
+                                class="jo-service-control-item"
+                                data-bs-toggle="modal"
+                                data-bs-target="#rescheduleJobOrderModal"
+                            >
+                                <span class="jo-service-control-icon blue">
+                                    <i class="fas fa-calendar-days"></i>
+                                </span>
+                                <span>
+                                    <strong>Reschedule Service</strong>
+                                    <small>Change the scheduled service date or time.</small>
+                                </span>
+                                <i class="fas fa-chevron-right jo-service-control-arrow"></i>
+                            </button>
+                        @endif
+
+                        @if ($canReassign)
+                            <button
+                                type="button"
+                                class="jo-service-control-item"
+                                data-bs-toggle="modal"
+                                data-bs-target="#reassignJobOrderModal"
+                            >
+                                <span class="jo-service-control-icon purple">
+                                    <i class="fas fa-user-gear"></i>
+                                </span>
+                                <span>
+                                    <strong>Reassign Worker</strong>
+                                    <small>Transfer this job order to another worker.</small>
+                                </span>
+                                <i class="fas fa-chevron-right jo-service-control-arrow"></i>
+                            </button>
+                        @endif
+                    </div>
+                </section>
+            @else
+                <section class="jo-details-card jo-final-status-card {{ $statusClass }}">
+                    <div class="jo-final-status-icon">
+                        @if ($status === 'completed')
+                            <i class="fas fa-circle-check"></i>
+                        @elseif ($status === 'cancelled')
+                            <i class="fas fa-ban"></i>
+                        @else
+                            <i class="fas fa-circle-info"></i>
+                        @endif
+                    </div>
+
+                    <div class="jo-final-status-copy">
+                        <span>Job Order Status</span>
+                        <strong>{{ $statusText }}</strong>
+
+                        <p>
+                            @if ($status === 'completed')
+                                This job order is complete. No further completion or service adjustment is required.
+                            @elseif ($status === 'cancelled')
+                                This job order has been closed and no further service action is available.
+                            @else
+                                No additional status action is currently available.
+                            @endif
+                        </p>
+                    </div>
+                </section>
+            @endif
+
+        </aside>
+    </div>
+
+    <div class="modal fade" id="rescheduleJobOrderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content jo-control-modal">
+                <form method="POST" action="{{ route('admin.job-orders.reschedule', $jobOrder) }}">
                     @csrf
                     @method('PATCH')
 
-                    <div class="mb-3">
-                        <label class="form-label">Work Remarks</label>
-                        <textarea name="work_remarks" class="form-control" rows="4" placeholder="Enter service progress, work updates, or worker remarks.">{{ old('work_remarks', $jobOrder->work_remarks) }}</textarea>
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title">Reschedule Service</h5>
+                            <p class="text-muted mb-0">Update the service date or time while keeping the same job order.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Admin Notes</label>
-                        <textarea name="admin_notes" class="form-control" rows="4" placeholder="Enter internal notes or instructions for this job order.">{{ old('admin_notes', $jobOrder->admin_notes) }}</textarea>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Service Date</label>
+                            <input
+                                type="date"
+                                name="scheduled_date"
+                                class="form-control"
+                                value="{{ old('scheduled_date', optional($jobOrder->scheduled_date)->format('Y-m-d')) }}"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="form-label">Service Time</label>
+                            <input
+                                type="time"
+                                name="scheduled_time"
+                                class="form-control"
+                                value="{{ old('scheduled_time', $jobOrder->scheduled_time ? \Carbon\Carbon::parse($jobOrder->scheduled_time)->format('H:i') : '') }}"
+                            >
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-outline-primary jo-action-button">
-                        <i class="fas fa-save me-1"></i> Save Remarks
-                    </button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check me-1"></i>
+                            Save Schedule
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
+    </div>
 
-        <div>
-            <div class="jo-card jo-action-card">
-                <h3 class="jo-section-title success">
-                    <span class="icon-pill"><i class="fas fa-circle-check"></i></span>
-                    Complete Job Order
-                </h3>
+    <div class="modal fade" id="reassignJobOrderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content jo-control-modal">
+                <form method="POST" action="{{ route('admin.job-orders.reassign', $jobOrder) }}">
+                    @csrf
+                    @method('PATCH')
 
-                @if ($canComplete)
-                    <form method="POST" action="{{ route('admin.job-orders.complete', $jobOrder) }}">
-                        @csrf
-                        @method('PATCH')
-
-                        <div class="mb-3">
-                            <label class="form-label">Completion Notes</label>
-                            <textarea name="completion_notes" class="form-control" rows="4" placeholder="Describe the completed work, findings, or final service notes.">{{ old('completion_notes', $jobOrder->completion_notes) }}</textarea>
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title">Reassign Worker</h5>
+                            <p class="text-muted mb-0">Transfer this active job order to another worker or inspector.</p>
                         </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
 
-                        <button type="submit" class="btn btn-success jo-action-button">
-                            <i class="fas fa-check me-1"></i> Mark Completed
+                    <div class="modal-body">
+                        <label class="form-label">Assigned Worker</label>
+                        <select name="worker_id" class="form-select" required>
+                            <option value="">Select worker</option>
+
+                            @foreach (($availableWorkers ?? collect()) as $worker)
+                                @php
+                                    $workerLabel = $worker->name
+                                        ?? trim(($worker->first_name ?? '') . ' ' . ($worker->last_name ?? ''))
+                                        ?: $worker->email;
+                                @endphp
+
+                                <option
+                                    value="{{ $worker->id }}"
+                                    @selected((string) old('worker_id', $jobOrder->worker_id) === (string) $worker->id)
+                                >
+                                    {{ $workerLabel }} — {{ ucfirst($worker->role) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-check me-1"></i>
+                            Reassign Worker
                         </button>
-                    </form>
-                @else
-                    <div class="jo-empty-action">
-                        This job order cannot be marked completed while its current status is {{ $statusText }}.
                     </div>
-                @endif
-            </div>
-
-            <div class="jo-card jo-action-card jo-danger-zone">
-                <h3 class="jo-section-title danger">
-                    <span class="icon-pill"><i class="fas fa-triangle-exclamation"></i></span>
-                    Danger Zone
-                </h3>
-
-                @if ($canCancel)
-                    <div class="jo-danger-note">
-                        Cancelling this job order will update the service record and should only be done when the work will no longer proceed.
-                    </div>
-
-                    <form method="POST" action="{{ route('admin.job-orders.cancel', $jobOrder) }}">
-                        @csrf
-                        @method('PATCH')
-
-                        <div class="mb-3">
-                            <label class="form-label">Cancellation Notes</label>
-                            <textarea name="completion_notes" class="form-control" rows="4" placeholder="State the reason for cancellation.">{{ old('completion_notes') }}</textarea>
-                        </div>
-
-                        <button type="submit" class="btn btn-danger jo-action-button">
-                            <i class="fas fa-ban me-1"></i> Cancel Job Order
-                        </button>
-                    </form>
-                @else
-                    <div class="jo-empty-action">
-                        Cancellation is no longer available because this job order is already {{ $statusText }}.
-                    </div>
-                @endif
+                </form>
             </div>
         </div>
     </div>
-</div>
+
 @endsection

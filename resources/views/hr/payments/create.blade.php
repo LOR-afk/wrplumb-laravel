@@ -2,154 +2,11 @@
 
 @section('title', 'Record Payment')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/hr/payment-create.css') }}?v=payment-create-01">
+@endpush
+
 @section('content')
-<style>
-    .payment-form-page {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    .payment-hero,
-    .payment-card,
-    .payment-balance-card {
-        background: #ffffff;
-        border: 1px solid #e3ebf3;
-        border-radius: 22px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-    }
-
-    .payment-hero {
-        padding: 24px;
-        background: linear-gradient(135deg, #ffffff, #f8fbff);
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 14px;
-        flex-wrap: wrap;
-    }
-
-    .payment-title {
-        margin: 0 0 6px;
-        font-weight: 900;
-        color: #0f172a;
-        font-size: 2rem;
-    }
-
-    .payment-subtitle {
-        color: #64748b;
-        margin: 0;
-    }
-
-    .payment-card {
-        padding: 22px;
-    }
-
-    .section-title {
-        font-size: 1.05rem;
-        font-weight: 900;
-        color: #0f172a;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-    }
-
-    .summary-item {
-        background: #f8fbff;
-        border: 1px solid #e8f0f8;
-        border-radius: 16px;
-        padding: 14px;
-    }
-
-    .summary-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #64748b;
-        font-weight: 900;
-        margin-bottom: 4px;
-    }
-
-    .summary-value {
-        color: #0f172a;
-        font-weight: 900;
-    }
-
-    .money-value {
-        color: #0f172a;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .balance-line {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 12px 0;
-        border-bottom: 1px solid #edf2f7;
-    }
-
-    .balance-line:last-child {
-        border-bottom: 0;
-    }
-
-    .balance-label {
-        color: #64748b;
-        font-weight: 700;
-    }
-
-    .balance-total {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        border-radius: 16px;
-        padding: 14px;
-        margin-top: 14px;
-    }
-
-    .schedule-table th,
-    .schedule-table td {
-        white-space: nowrap;
-    }
-
-    .status-chip {
-        display: inline-flex;
-        padding: 7px 11px;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 900;
-        text-transform: capitalize;
-    }
-
-    .status-chip.paid { background: #dcfce7; color: #166534; }
-    .status-chip.partial { background: #e0f2fe; color: #075985; }
-    .status-chip.pending,
-    .status-chip.unpaid { background: #fff7ed; color: #c2410c; }
-    .status-chip.default { background: #eef2f7; color: #475569; }
-
-    .sticky-balance {
-        position: sticky;
-        top: 110px;
-    }
-
-    @media (max-width: 1199.98px) {
-        .summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .summary-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 
 <div class="payment-form-page">
     <div class="payment-hero">
@@ -224,16 +81,6 @@
                             </select>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Payment Type</label>
-                            <input
-                                type="text"
-                                name="payment_type"
-                                class="form-control"
-                                value="{{ old('payment_type') }}"
-                                placeholder="e.g. Downpayment, Final Payment"
-                            >
-                        </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Payment Method</label>

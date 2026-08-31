@@ -12,10 +12,54 @@ class DashboardController extends Controller
     {
         $userId = Auth::id();
 
-        return view('inspector.dashboard', [
-            'assignedCount' => QuotationRequest::where('worker_id', $userId)->where('status', 'assigned')->count(),
-            'inProgressCount' => QuotationRequest::where('worker_id', $userId)->where('status', 'in_progress')->count(),
-            'completedCount' => QuotationRequest::where('worker_id', $userId)->where('status', 'completed')->count(),
-        ]);
+        $baseQuery = QuotationRequest::query()
+            ->where('worker_id', $userId);
+
+        $assignedCount = (clone $baseQuery)
+            ->where('status', 'assigned')
+            ->count();
+
+        $inProgressCount = (clone $baseQuery)
+            ->where('status', 'in_progress')
+            ->count();
+
+        $completedCount = (clone $baseQuery)
+            ->where('status', 'completed')
+            ->count();
+
+        $todayVisits = (clone $baseQuery)
+            ->whereDate('appointment_date', today())
+            ->whereIn('appointment_status', ['approved', 'rescheduled'])
+            ->orderBy('appointment_time')
+            ->take(6)
+            ->get();
+
+        $todayScheduleCount = $todayVisits->count();
+
+        $recentActivities = (clone $baseQuery)
+            ->latest('updated_at')
+            ->take(5)
+            ->get();
+
+        $hasActiveWork = $inProgressCount > 0 || $todayScheduleCount > 0;
+
+        $availabilityStatus = $hasActiveWork
+            ? 'On Duty'
+            : 'Available';
+
+        $availabilityMessage = $hasActiveWork
+            ? 'You currently have scheduled or active field work.'
+            : 'You are available for new assignments today.';
+
+        return view('inspector.dashboard', compact(
+            'assignedCount',
+            'inProgressCount',
+            'completedCount',
+            'todayVisits',
+            'todayScheduleCount',
+            'recentActivities',
+            'availabilityStatus',
+            'availabilityMessage'
+        ));
     }
 }

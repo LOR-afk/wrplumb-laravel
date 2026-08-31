@@ -1,99 +1,208 @@
 @extends('client.layouts.app')
 
 @section('title', 'Invoice Details')
+@section('topbar_title', 'Invoice Details')
+@section('topbar_subtitle', 'Review invoice charges, due dates, and payment status.')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/client/invoice-show.css') }}?v=20260818a">
+@endpush
 
 @section('content')
-<div class="page-header-card mb-4">
-    <h2 class="mb-1">Invoice Details</h2>
-    <p class="text-muted mb-0">Review your invoice and billing details.</p>
-</div>
+@php
+    $statusKey = strtolower((string) ($invoice->status ?? 'pending'));
 
-<div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <div class="small text-muted">Invoice No.</div>
-                <div class="fw-semibold">{{ $invoice->invoice_no }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="small text-muted">Status</div>
-                <div class="fw-semibold text-uppercase">{{ $invoice->status }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="small text-muted">Invoice Date</div>
-                <div class="fw-semibold">{{ optional($invoice->invoice_date)->format('M d, Y') }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="small text-muted">Due Date</div>
-                <div class="fw-semibold">{{ optional($invoice->due_date)->format('M d, Y') ?? '—' }}</div>
+    $statusClass = match ($statusKey) {
+        'paid' => 'green',
+        'partially_paid', 'partial' => 'orange',
+        'unpaid', 'pending' => 'blue',
+        'overdue' => 'red',
+        'cancelled', 'canceled', 'void' => 'gray',
+        default => 'gray',
+    };
+
+    $statusLabel = match ($statusKey) {
+        'partially_paid' => 'Partially Paid',
+        'cancelled', 'canceled' => 'Cancelled',
+        default => ucfirst(str_replace('_', ' ', $statusKey)),
+    };
+
+    $serviceType = $invoice->quotation->request->service_type ?? 'Service';
+    $serviceAddress = $invoice->quotation->request->address ?? '—';
+@endphp
+
+<div class="client-invoice-show-page">
+    <section class="invoice-show-hero">
+        <div class="invoice-show-hero-copy">
+            <span>Invoice</span>
+
+            <div class="invoice-show-title-row">
+                <h2>{{ $invoice->invoice_no }}</h2>
+                <em class="invoice-show-status {{ $statusClass }}">
+                    {{ $statusLabel }}
+                </em>
             </div>
 
-            <div class="col-md-6">
-                <div class="small text-muted">Service Type</div>
-                <div class="fw-semibold">{{ $invoice->quotation->request->service_type ?? '—' }}</div>
-            </div>
-            <div class="col-md-6">
-                <div class="small text-muted">Address</div>
-                <div class="fw-semibold">{{ $invoice->quotation->request->address ?? '—' }}</div>
-            </div>
+            <p>{{ $serviceType }}</p>
+        </div>
 
-            @if (!empty($invoice->description))
-                <div class="col-12">
-                    <div class="small text-muted">Description</div>
-                    <div class="fw-semibold">{{ $invoice->description }}</div>
-                </div>
+        <div class="invoice-show-actions">
+            <a href="{{ route('client.invoices.index') }}" class="invoice-show-btn secondary">
+                <i class="fas fa-arrow-left"></i>
+                My Invoices
+            </a>
+
+            @if ($statusKey !== 'paid')
+                <a href="{{ route('client.payments.create', $invoice) }}" class="invoice-show-btn primary">
+                    <i class="fas fa-credit-card"></i>
+                    Submit Payment
+                </a>
             @endif
         </div>
+    </section>
+
+    <section class="invoice-show-summary">
+        <article>
+            <span>Invoice Date</span>
+            <strong>{{ optional($invoice->invoice_date)->format('M d, Y') ?? '—' }}</strong>
+        </article>
+
+        <article>
+            <span>Due Date</span>
+            <strong>{{ optional($invoice->due_date)->format('M d, Y') ?? '—' }}</strong>
+        </article>
+
+        <article>
+            <span>Status</span>
+            <strong>{{ $statusLabel }}</strong>
+        </article>
+
+        <article>
+            <span>Total Amount</span>
+            <strong>PHP {{ number_format((float) $invoice->total_amount, 2) }}</strong>
+        </article>
+    </section>
+
+    <div class="invoice-show-grid">
+        <section class="invoice-show-card">
+            <div class="invoice-show-card-head">
+                <span class="invoice-show-card-icon blue">
+                    <i class="fas fa-circle-info"></i>
+                </span>
+
+                <div>
+                    <h3>Billing Information</h3>
+                    <p>Service and invoice reference details.</p>
+                </div>
+            </div>
+
+            <div class="invoice-show-card-body">
+                <div class="invoice-info-grid">
+                    <div>
+                        <span>Invoice No.</span>
+                        <strong>{{ $invoice->invoice_no }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Service Type</span>
+                        <strong>{{ $serviceType }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Address</span>
+                        <strong>{{ $serviceAddress }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Invoice Date</span>
+                        <strong>{{ optional($invoice->invoice_date)->format('M d, Y') ?? '—' }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Due Date</span>
+                        <strong>{{ optional($invoice->due_date)->format('M d, Y') ?? '—' }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Payment Status</span>
+                        <strong>{{ $statusLabel }}</strong>
+                    </div>
+                </div>
+
+                @if (!empty($invoice->description))
+                    <div class="invoice-description-box">
+                        <span>Description</span>
+                        <p>{{ $invoice->description }}</p>
+                    </div>
+                @endif
+            </div>
+        </section>
+
+        <aside class="invoice-total-card">
+            <div class="invoice-total-card-head">
+                <span class="invoice-show-card-icon green">
+                    <i class="fas fa-receipt"></i>
+                </span>
+
+                <div>
+                    <h3>Amount Due</h3>
+                    <p>Invoice billing total.</p>
+                </div>
+            </div>
+
+            <div class="invoice-total-card-body">
+                <span>Total Invoice</span>
+                <strong>PHP {{ number_format((float) $invoice->total_amount, 2) }}</strong>
+
+                <em class="invoice-total-status {{ $statusClass }}">
+                    {{ $statusLabel }}
+                </em>
+            </div>
+        </aside>
     </div>
-</div>
 
-<div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body">
-        <h5 class="mb-3">Invoice Items</h5>
+    <section class="invoice-show-card">
+        <div class="invoice-show-card-head">
+            <span class="invoice-show-card-icon violet">
+                <i class="fas fa-list"></i>
+            </span>
 
-        <div class="table-responsive">
-            <table class="table align-middle">
+            <div>
+                <h3>Invoice Items</h3>
+                <p>Charges included in this billing record.</p>
+            </div>
+        </div>
+
+        <div class="invoice-items-wrap">
+            <table class="invoice-items-table">
                 <thead>
                     <tr>
                         <th>Description</th>
                         <th>Qty</th>
                         <th>Unit Price</th>
-                        <th>Total</th>
+                        <th class="text-end">Total</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @foreach ($invoice->items as $item)
                         <tr>
                             <td>{{ $item->description }}</td>
                             <td>{{ number_format((float) $item->quantity, 2) }}</td>
                             <td>PHP {{ number_format((float) $item->unit_price, 2) }}</td>
-                            <td>PHP {{ number_format((float) $item->total_price, 2) }}</td>
+                            <td class="text-end">
+                                <strong>PHP {{ number_format((float) $item->total_price, 2) }}</strong>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
 
-        <div class="row justify-content-end">
-            <div class="col-md-4">
-                <div class="d-flex justify-content-between">
-                    <span>Total Amount</span>
-                    <strong>PHP {{ number_format((float) $invoice->total_amount, 2) }}</strong>
-                </div>
-            </div>
+        <div class="invoice-grand-total">
+            <span>Total Amount</span>
+            <strong>PHP {{ number_format((float) $invoice->total_amount, 2) }}</strong>
         </div>
-    </div>
+    </section>
 </div>
-
-    <div class="d-flex gap-2">
-        <a href="{{ route('client.invoices.index') }}" class="btn btn-outline-secondary">
-            Back to My Invoices
-        </a>
-
-        @if ($invoice->status !== 'paid')
-            <a href="{{ route('client.payments.create', $invoice) }}" class="btn btn-outline-primary">
-                Submit Payment
-            </a>
-        @endif
-    </div>
 @endsection

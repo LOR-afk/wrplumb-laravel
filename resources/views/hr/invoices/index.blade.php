@@ -345,10 +345,12 @@
                 <tbody>
                     @foreach ($invoices as $invoice)
                         @php
-                            $totalAmount = (float) $invoice->total_amount;
-                            $paidAmount = (float) $invoice->paymentSchedules->sum('amount_paid');
-                            $remainingAmount = max($totalAmount - $paidAmount, 0);
-                            $progress = $totalAmount > 0 ? min(100, round(($paidAmount / $totalAmount) * 100, 2)) : 0;
+                            $invoice = $invoice ?? null;
+
+                            $totalAmount = $invoice?->total_amount ?? 0;
+                            $paidAmount = $invoice?->paid_amount ?? 0;
+                            $remainingBalance = $invoice?->remaining_balance ?? $totalAmount;
+                            $progress = $invoice?->payment_progress ?? 0;
                             $rawStatus = strtolower((string) $invoice->status);
                             $statusClass = in_array($rawStatus, ['paid', 'unpaid', 'partial', 'partially_paid', 'overdue', 'cancelled']) ? $rawStatus : 'default';
                             $statusLabel = str_replace('_', ' ', $invoice->status);
@@ -369,7 +371,7 @@
                             </td>
                             <td>
                                 <div class="invoice-money">PHP {{ number_format($totalAmount, 2) }}</div>
-                                <div class="invoice-money-muted">Balance: PHP {{ number_format($remainingAmount, 2) }}</div>
+                                {{-- <div class="invoice-money-muted">Balance: PHP {{ number_format($remainingAmount, 2) }}</div> --}}
                             </td>
                             <td>
                                 <div class="invoice-progress-wrap">

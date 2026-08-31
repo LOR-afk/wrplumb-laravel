@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +10,7 @@ class QuotationItem extends Model
         'description',
         'item_category',
         'quantity',
+        'unit',
         'unit_price',
         'total_price',
     ];

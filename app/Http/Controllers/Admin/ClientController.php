@@ -59,6 +59,12 @@ class ClientController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.clients.partials.user-list', compact('users'))->render(),
+            ]);
+        }
+
         $stats = [
             'total' => User::count(),
             'active' => User::where('is_active', true)->count(),
@@ -83,7 +89,7 @@ class ClientController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
+                'min:16',
                 'regex:/[A-Z]/',
                 'regex:/[a-z]/',
                 'regex:/[0-9]/',
@@ -92,6 +98,7 @@ class ClientController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'email_verified' => ['nullable', 'boolean'],
         ], [
+            'password.min' => 'Password must be at least 16 characters.',
             'password.regex' => 'Password must contain uppercase, lowercase, number, and special character.',
         ]);
 
@@ -191,11 +198,13 @@ class ClientController extends Controller
             $oldValues,
             $this->userAuditSnapshot($user),
             $user->is_active
-                ? "Admin activated {$user->name}'s account."
+                ? "Admin reactivated {$user->name}'s account."
                 : "Admin deactivated {$user->name}'s account."
         );
 
-        return back()->with('success', 'User account status updated.');
+        return back()->with('success', $user->is_active
+            ? 'User account reactivated successfully.'
+            : 'User account deactivated successfully.');
     }
 
     public function verifyEmail(User $user)
@@ -230,13 +239,14 @@ class ClientController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
+                'min:16',
                 'regex:/[A-Z]/',
                 'regex:/[a-z]/',
                 'regex:/[0-9]/',
                 'regex:/[\W_]/',
             ],
         ], [
+            'password.min' => 'Password must be at least 16 characters.',
             'password.regex' => 'Password must contain uppercase, lowercase, number, and special character.',
         ]);
 

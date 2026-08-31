@@ -1,0 +1,684 @@
+.client-project-payments-page {
+    display: grid;
+    gap: 14px;
+}
+
+.project-payment-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.5fr;
+    gap: 10px;
+}
+
+.project-payment-stats article {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #dbe7f3;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .035);
+}
+
+.project-payment-stat-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    font-size: .78rem;
+}
+
+.project-payment-stat-icon.blue { background: #eaf4ff; color: #0b63f6; }
+.project-payment-stat-icon.green { background: #ecfdf3; color: #16a34a; }
+.project-payment-stat-icon.violet { background: #f3e8ff; color: #7c3aed; }
+
+.project-payment-stats small,
+.project-payment-money span {
+    display: block;
+    margin-bottom: 3px;
+    color: #64748b;
+    font-size: .5rem;
+    font-weight: 950;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.project-payment-stats strong {
+    display: block;
+    color: #0f172a;
+    font-size: 1.02rem;
+    font-weight: 950;
+    line-height: 1.1;
+}
+
+.project-payment-stats strong.money {
+    overflow: hidden;
+    font-size: .76rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-payment-list {
+    overflow: hidden;
+    border: 1px solid #dbe7f3;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .035);
+}
+
+.project-payment-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 16px;
+    border-bottom: 1px solid #e6edf5;
+    background: #fbfdff;
+}
+
+.project-payment-list-head > div > span {
+    display: block;
+    margin-bottom: 4px;
+    color: #0b63f6;
+    font-size: .57rem;
+    font-weight: 950;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.project-payment-list-head h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: .85rem;
+    font-weight: 950;
+}
+
+.project-payment-list-head > small {
+    color: #64748b;
+    font-size: .62rem;
+    font-weight: 800;
+}
+
+.project-payment-card {
+    margin: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    background: #fff;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.project-payment-card + .project-payment-card {
+    margin-top: 0;
+}
+
+.project-payment-card:hover,
+.project-payment-card.is-open {
+    border-color: #bfdbfe;
+    box-shadow: 0 8px 22px rgba(37, 99, 235, .06);
+}
+
+.project-payment-summary {
+    display: grid;
+    grid-template-columns: 1.45fr 1.4fr .65fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 15px;
+}
+
+.project-payment-project {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+}
+
+.project-payment-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #eaf4ff;
+    color: #0b63f6;
+}
+
+.project-payment-project h4 {
+    overflow: hidden;
+    margin: 0;
+    color: #0f172a;
+    font-size: .76rem;
+    font-weight: 950;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-payment-project p {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: .58rem;
+}
+
+.project-payment-project small {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: .54rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-payment-money {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.project-payment-money strong {
+    display: block;
+    color: #0f172a;
+    font-size: .65rem;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.project-payment-money strong.paid {
+    color: #15803d;
+}
+
+.project-payment-money strong.remaining {
+    color: #dc2626;
+}
+
+.project-payment-state {
+    display: grid;
+    justify-items: start;
+    gap: 5px;
+}
+
+.project-payment-state > strong {
+    color: #475569;
+    font-size: .58rem;
+    font-weight: 900;
+}
+
+.project-invoice-status,
+.project-payment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: .5rem;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.project-invoice-status::before,
+.project-payment-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.project-invoice-status.green,
+.project-payment-status.green { background: #ecfdf3; color: #15803d; }
+
+.project-invoice-status.orange,
+.project-payment-status.orange { background: #fff7ed; color: #c2410c; }
+
+.project-invoice-status.blue,
+.project-payment-status.blue { background: #eaf4ff; color: #1d4ed8; }
+
+.project-invoice-status.red,
+.project-payment-status.red { background: #fee2e2; color: #b91c1c; }
+
+.project-invoice-status.gray,
+.project-payment-status.gray { background: #f1f5f9; color: #475569; }
+
+.project-payment-toggle {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border: 1px solid #bfdbfe;
+    border-radius: 9px;
+    background: #fff;
+    color: #0b63f6;
+    font-size: .6rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.project-payment-toggle i {
+    transition: transform .16s ease;
+}
+
+.project-payment-card.is-open .project-payment-toggle i {
+    transform: rotate(180deg);
+}
+
+.project-payment-progress {
+    height: 5px;
+    overflow: hidden;
+    background: #e2e8f0;
+}
+
+.project-payment-progress i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0b63f6, #22c55e);
+}
+
+.project-payment-transactions {
+    border-top: 1px solid #edf2f7;
+    background: #fbfdff;
+}
+
+.project-payment-transactions-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 14px;
+}
+
+.project-payment-transactions-head strong {
+    color: #0f172a;
+    font-size: .68rem;
+    font-weight: 950;
+}
+
+.project-payment-transactions-head span {
+    color: #64748b;
+    font-size: .56rem;
+    font-weight: 800;
+}
+
+.project-payment-table-wrap {
+    overflow-x: auto;
+}
+
+.project-payment-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+}
+
+.project-payment-table th,
+.project-payment-table td {
+    padding: 10px 14px;
+    border-top: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+.project-payment-table th {
+    color: #64748b;
+    font-size: .5rem;
+    font-weight: 950;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.project-payment-table td {
+    color: #334155;
+    font-size: .62rem;
+}
+
+.project-payment-table td strong {
+    color: #0f172a;
+    font-weight: 950;
+}
+
+.project-payment-number {
+    color: #0b4f8a;
+    font-size: .64rem;
+    font-weight: 950;
+    text-decoration: none;
+}
+
+.project-payment-number:hover {
+    color: #0b63f6;
+    text-decoration: underline;
+}
+
+.project-payment-view,
+.project-invoice-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 6px 9px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #fff;
+    color: #0b63f6;
+    font-size: .56rem;
+    font-weight: 900;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.project-payment-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 14px 12px;
+    border-top: 1px solid #edf2f7;
+}
+
+.project-payment-empty {
+    padding: 18px 14px;
+    color: #64748b;
+    font-size: .62rem;
+    text-align: center;
+}
+
+.project-payments-empty {
+    padding: 46px 20px;
+    text-align: center;
+}
+
+.project-payments-empty > span {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 10px;
+    border-radius: 16px;
+    background: #eef6ff;
+    color: #0b63f6;
+}
+
+.project-payments-empty strong {
+    display: block;
+    color: #0f172a;
+    font-size: .8rem;
+    font-weight: 900;
+}
+
+.project-payments-empty p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: .67rem;
+}
+
+.project-payment-pagination {
+    padding: 0 12px 12px;
+}
+
+@media (max-width: 1100px) {
+    .project-payment-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .project-payment-toggle {
+        justify-self: start;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .project-payment-stats,
+    .project-payment-summary,
+    .project-payment-money {
+        grid-template-columns: 1fr;
+    }
+
+    .project-payment-toggle {
+        width: 100%;
+    }
+
+    .project-payment-state {
+        justify-items: start;
+    }
+}
+
+
+/* =========================================================
+   PAYMENT DETAILS MODAL
+   ========================================================= */
+body.payment-modal-open {
+    overflow: hidden;
+}
+
+.project-payment-view {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.project-payment-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+}
+
+.project-payment-modal.is-open {
+    display: flex;
+}
+
+.project-payment-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, .55);
+    backdrop-filter: blur(3px);
+}
+
+.project-payment-modal-dialog {
+    position: relative;
+    z-index: 2;
+    width: min(760px, 100%);
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
+    border: 1px solid #dbe7f3;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, .28);
+}
+
+.project-payment-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e6edf5;
+    background: #fbfdff;
+}
+
+.project-payment-modal-head > div > span {
+    display: block;
+    margin-bottom: 3px;
+    color: #0b63f6;
+    font-size: .55rem;
+    font-weight: 950;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.project-payment-modal-head h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 950;
+}
+
+.project-payment-modal-head p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: .62rem;
+}
+
+.project-payment-modal-close {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 34px;
+    border: 1px solid #dbe7f3;
+    border-radius: 10px;
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.project-payment-modal-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-bottom: 1px solid #edf2f7;
+}
+
+.project-payment-modal-summary article {
+    min-width: 0;
+    padding: 12px 14px;
+    border-right: 1px solid #edf2f7;
+}
+
+.project-payment-modal-summary article:last-child {
+    border-right: 0;
+}
+
+.project-payment-modal-summary span,
+.project-payment-modal-grid span,
+.project-payment-modal-note > span {
+    display: block;
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: .49rem;
+    font-weight: 950;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.project-payment-modal-summary strong,
+.project-payment-modal-grid strong {
+    display: block;
+    color: #0f172a;
+    font-size: .67rem;
+    font-weight: 900;
+}
+
+.project-payment-modal-status {
+    display: inline-flex !important;
+    width: fit-content;
+    padding: 5px 8px;
+    border-radius: 999px;
+}
+
+.project-payment-modal-status.green { background: #ecfdf3; color: #15803d; }
+.project-payment-modal-status.orange { background: #fff7ed; color: #c2410c; }
+.project-payment-modal-status.blue { background: #eaf4ff; color: #1d4ed8; }
+.project-payment-modal-status.red { background: #fee2e2; color: #b91c1c; }
+.project-payment-modal-status.gray { background: #f1f5f9; color: #475569; }
+
+.project-payment-modal-body {
+    padding: 14px;
+}
+
+.project-payment-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.project-payment-modal-grid > div {
+    min-width: 0;
+    padding: 10px 11px;
+    border: 1px solid #edf2f7;
+    border-radius: 11px;
+    background: #fbfdff;
+}
+
+.project-payment-modal-note {
+    margin-top: 10px;
+    padding: 11px 12px;
+    border: 1px solid #edf2f7;
+    border-radius: 11px;
+    background: #f8fbff;
+}
+
+.project-payment-modal-note p {
+    margin: 0;
+    color: #334155;
+    font-size: .64rem;
+    line-height: 1.5;
+}
+
+.project-payment-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid #edf2f7;
+    background: #fbfdff;
+}
+
+.project-payment-modal-btn {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: .6rem;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.project-payment-modal-btn.secondary {
+    border: 1px solid #dbe7f3;
+    background: #fff;
+    color: #334155;
+}
+
+.project-payment-modal-btn.outline {
+    border: 1px solid #bfdbfe;
+    background: #fff;
+    color: #0b63f6;
+}
+
+.project-payment-modal-btn.primary {
+    border: 1px solid #0b63f6;
+    background: #0b63f6;
+    color: #fff;
+}
+
+@media (max-width: 767.98px) {
+    .project-payment-modal-summary,
+    .project-payment-modal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-payment-modal-summary article {
+        border-right: 0;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .project-payment-modal-actions {
+        flex-direction: column;
+    }
+
+    .project-payment-modal-btn {
+        width: 100%;
+    }
+}

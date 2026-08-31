@@ -4,75 +4,38 @@
 @section('topbar_title', 'My Requests')
 @section('topbar_subtitle', 'Track your quotation requests and service progress.')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/client/requests-index.css') }}?v=20260818a">
+@endpush
+
 @section('content')
-<style>
-    .request-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
+<div class="client-requests-page">
+    <section class="requests-overview">
+        <div class="requests-overview-copy">
+            <span>Service Tracking</span>
+            <h2>Your service requests</h2>
+            <p>Review request details, assigned personnel, current status, and available job orders.</p>
+        </div>
 
-    .request-item {
-        border: 1px solid var(--wr-border);
-        border-radius: 18px;
-        background: #fff;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
-        padding: 18px 20px;
-    }
+        <a href="{{ route('client.requests.create') }}" class="requests-overview-action">
+            <i class="fas fa-plus"></i>
+            Book a Service
+        </a>
+    </section>
 
-    .request-top {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr 120px;
-        gap: 14px;
-        align-items: center;
-    }
+    <section class="requests-panel">
+        <div class="requests-panel-head">
+            <h3>
+                <i class="fas fa-clipboard-list text-primary me-2"></i>
+                Submitted Requests
+            </h3>
 
-    .request-title {
-        font-weight: 800;
-        color: #0f172a;
-        margin-bottom: 4px;
-    }
+            <span>
+                {{ method_exists($requests, 'total') ? $requests->total() : $requests->count() }}
+                {{ (method_exists($requests, 'total') ? $requests->total() : $requests->count()) === 1 ? 'request' : 'requests' }}
+            </span>
+        </div>
 
-    .request-sub {
-        color: #6b7280;
-        font-size: 0.92rem;
-    }
-
-    .meta-label {
-        font-size: 0.76rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        color: #6b7280;
-        margin-bottom: 4px;
-    }
-
-    .meta-value {
-        font-weight: 700;
-    }
-
-    @media (max-width: 991.98px) {
-        .request-top {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .request-top {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<div class="page-header">
-    <h1>My Requests</h1>
-    <p>Track your requests, assigned personnel/inspector, and current progress status.</p>
-</div>
-
-<div class="panel">
-    <div class="panel-header">
-        <h5><i class="fas fa-file-signature me-2 text-primary"></i>Submitted Requests</h5>
-    </div>
-    <div class="panel-body">
         @if ($requests->count())
             <div class="request-list">
                 @foreach ($requests as $request)
@@ -101,60 +64,82 @@
                             };
 
                         $displayStatusClass = match ($displayStatusKey) {
-                            'pending' => 'orange',
+                            'pending' => 'gray',
                             'approved', 'accepted', 'assigned', 'scheduled', 'rescheduled' => 'blue',
-                            'ongoing', 'in_progress', 'in-progress' => 'green',
-                            'completed', 'done', 'cancelled', 'canceled', 'rejected', 'declined' => 'gray',
+                            'ongoing', 'in_progress', 'in-progress' => 'orange',
+                            'completed', 'done' => 'green',
+                            'cancelled', 'canceled', 'rejected', 'declined' => 'red',
                             default => 'gray',
                         };
                     @endphp
 
-                    <div class="request-item">
-                        <div class="request-top">
-                            <div>
-                                <div class="request-title">{{ $request->service_type }}</div>
-                                <div class="request-sub">{{ $request->address }}</div>
-                            </div>
-
-                            <div>
-                                <div class="meta-label">Preferred Date</div>
-                                <div class="meta-value">{{ optional($request->preferred_date)->format('Y-m-d') ?? '—' }}</div>
-                            </div>
-
-                            <div>
-                                <div class="meta-label">{{ $displayStatusLabel }}</div>
-                                <div class="meta-value">
-                                    <span class="badge-soft {{ $displayStatusClass }}">{{ $displayStatusText }}</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="meta-label">Assigned {{ $assignedLabel }}</div>
-                                <div class="meta-value">{{ $request->worker?->name ?? 'Not assigned yet' }}</div>
-                            </div>
-
-                            <div class="d-grid gap-2">
-                                <a href="{{ route('client.requests.show', $request) }}" class="btn btn-primary w-100">Open</a>
-
-                                @if ($request->jobOrder)
-                                    <a href="{{ route('client.job-orders.show', $request->jobOrder) }}" class="btn btn-outline-dark w-100">
-                                        Job Order
-                                    </a>
-                                @endif
+                    <article class="request-card status-{{ $displayStatusClass }}">
+                        <div class="request-main">
+                            <div class="request-service">{{ $request->service_type }}</div>
+                            <div class="request-address">
+                                <i class="fas fa-location-dot"></i>
+                                <span>{{ $request->address ?: 'No address provided' }}</span>
                             </div>
                         </div>
-                    </div>
+
+                        <div>
+                            <span class="request-meta-label">Preferred Date</span>
+                            <div class="request-meta-value">
+                                {{ optional($request->preferred_date)->format('M d, Y') ?? '—' }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="request-meta-label">{{ $displayStatusLabel }}</span>
+                            <span class="request-status {{ $displayStatusClass }}">
+                                {{ $displayStatusText }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <span class="request-meta-label">Assigned {{ $assignedLabel }}</span>
+
+                            <div class="request-assignee">
+                                <span class="request-assignee-icon">
+                                    <i class="fas fa-user"></i>
+                                </span>
+
+                                <span class="request-assignee-copy">
+                                    <strong>{{ $request->worker?->name ?? 'Not assigned yet' }}</strong>
+                                    <small>{{ $assignedLabel }}</small>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="request-actions">
+                            <a href="{{ route('client.requests.show', $request) }}" class="request-action primary">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </a>
+
+                            @if ($request->jobOrder)
+                                <a href="{{ route('client.job-orders.show', $request->jobOrder) }}" class="request-action secondary">
+                                    <i class="fas fa-clipboard-check"></i>
+                                    Job Order
+                                </a>
+                            @endif
+                        </div>
+                    </article>
                 @endforeach
             </div>
 
-            <div class="mt-3">
+            <div class="request-pagination">
                 {{ $requests->links() }}
             </div>
         @else
-            <div class="text-center py-5 text-muted">
-                You do not have any requests yet.
+            <div class="requests-empty">
+                <div class="requests-empty-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <strong>No service requests yet</strong>
+                <p>Book a service to create your first request.</p>
             </div>
         @endif
-    </div>
+    </section>
 </div>
 @endsection

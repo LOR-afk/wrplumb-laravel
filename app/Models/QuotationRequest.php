@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Quotation;
 use App\Models\JobOrder;
+use App\Models\InspectionReport;
+use App\Models\InspectionStatusLog;
 
 class QuotationRequest extends Model
 {
@@ -48,6 +50,11 @@ class QuotationRequest extends Model
             'visit_purpose',
             'flow_source',
             'flow_override_reason',
+            'ready_for_quotation_at',
+            'forwarded_to_hr_by',
+            'quotation_handoff_notes',
+            'latitude',
+            'longitude',
         ];
 
             protected function casts(): array
@@ -68,6 +75,9 @@ class QuotationRequest extends Model
                     'updated_at' => 'datetime',
                     'client_requested_at' => 'datetime',
                     'client_request_reviewed_at' => 'datetime',
+                    'ready_for_quotation_at' => 'datetime',
+                    'latitude' => 'decimal:10,7',
+                    'longitude' => 'decimal:10,7',
                 ];
             }
 
@@ -102,4 +112,35 @@ class QuotationRequest extends Model
     {
         return $this->hasOne(JobOrder::class, 'quotation_request_id');
     }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function forwardedToHrBy()
+    {
+        return $this->belongsTo(User::class, 'forwarded_to_hr_by');
+    }
+
+    public function inspectionReport()
+{
+    return $this->hasOne(
+        InspectionReport::class,
+        'quotation_request_id'
+    );
+}
+
+public function inspectionStatusLogs()
+{
+    return $this->hasMany(
+        InspectionStatusLog::class,
+        'quotation_request_id'
+    )->latest('recorded_at');
+}
 }

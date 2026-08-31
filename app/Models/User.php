@@ -12,6 +12,8 @@ use App\Models\Contract;
 use App\Models\Receipt;
 use App\Models\JobOrder;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\InspectionPhoto;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -58,7 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function alerts()
     {
-        return $this->hasMany(\App\Models\UserAlert::class)->latest();
+        return $this->hasMany(\App\Models\UserAlert::class, 'user_id');
     }
 
     public function preparedQuotations()
@@ -110,4 +112,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function uploadedInspectionPhotos()
+        {
+            return $this->hasMany(
+                InspectionPhoto::class,
+                'uploaded_by'
+            );
+        }
+
+    public function completedInspectionChecklistItems()
+        {
+            return $this->hasMany(
+                InspectionChecklistItem::class,
+                'completed_by'
+            );
+        }
 }

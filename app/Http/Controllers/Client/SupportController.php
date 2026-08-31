@@ -7,6 +7,7 @@ use App\Models\SupportConversation;
 use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SupportController extends Controller
 {
@@ -28,15 +29,19 @@ class SupportController extends Controller
     public function sendMessage(Request $request)
     {
         $validated = $request->validate([
-            'message' => ['required', 'string', 'max:2000'],
+            'message' => ['nullable', 'string', 'max:2000'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        /*
-         * IMPORTANT:
-         * Do not use firstOrCreate with ['client_id' => ..., 'status' => 'open'].
-         * Once a conversation becomes "routed", the next client message would create
-         * a new conversation, making the previous chat look like it disappeared.
-         */
+        if (
+            blank($validated['message'] ?? null) &&
+            !$request->hasFile('image')
+        ) {
+            return back()
+                ->withErrors(['message' => 'Type a message or attach an image.'])
+                ->withInput();
+        }
+
         $conversation = SupportConversation::where('client_id', Auth::id())
             ->whereIn('status', ['open', 'routed', 'escalated'])
             ->latest()
@@ -53,17 +58,31 @@ class SupportController extends Controller
             ]);
         }
 
+        $attachmentPath = null;
+        $attachmentOriginalName = null;
+        $attachmentMime = null;
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+
+            $attachmentPath = $image->store('support-images', 'public');
+            $attachmentOriginalName = $image->getClientOriginalName();
+            $attachmentMime = $image->getMimeType();
+        }
+
         SupportMessage::create([
             'conversation_id' => $conversation->id,
             'sender_type' => 'client',
             'sender_id' => Auth::id(),
-            'message' => $validated['message'],
+            'message' => $validated['message'] ?? null,
+            'attachment_path' => $attachmentPath,
+            'attachment_original_name' => $attachmentOriginalName,
+            'attachment_mime' => $attachmentMime,
         ]);
 
         /*
          * If the conversation is already handled by HR/Admin,
-         * do not let the bot answer again. Just append the client's message
-         * to the same conversation thread.
+         * append the message/image to the same thread without bot intervention.
          */
         if (in_array($conversation->current_queue, ['hr', 'admin'], true)) {
             $conversation->update([
@@ -71,6 +90,14 @@ class SupportController extends Controller
                 'current_queue' => $conversation->current_queue,
             ]);
 
+            return $this->redirectBackToSupport($request);
+        }
+
+        /*
+         * Images by themselves do not need an automated text response.
+         * Keep the conversation open with the bot unless there is text to classify.
+         */
+        if (blank($validated['message'] ?? null)) {
             return $this->redirectBackToSupport($request);
         }
 
@@ -109,6 +136,35 @@ class SupportController extends Controller
                 'current_queue' => 'bot',
                 'routed_to' => null,
                 'routed_at' => null,
+            ]);
+        }
+
+        return $this->redirectBackToSupport($request);
+    }
+
+    public function clearChat(Request $request)
+    {
+        $conversation = SupportConversation::with('messages')
+            ->where('client_id', Auth::id())
+            ->whereIn('status', ['open', 'routed', 'escalated'])
+            ->latest()
+            ->first();
+
+        if ($conversation) {
+            foreach ($conversation->messages as $message) {
+                if (!empty($message->attachment_path)) {
+                    Storage::disk('public')->delete($message->attachment_path);
+                }
+            }
+
+            $conversation->messages()->delete();
+
+            $conversation->update([
+                'status' => 'open',
+                'current_queue' => 'bot',
+                'routed_to' => null,
+                'routed_at' => null,
+                'resolved_at' => null,
             ]);
         }
 

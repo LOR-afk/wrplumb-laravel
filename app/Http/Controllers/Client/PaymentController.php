@@ -15,21 +15,40 @@ class PaymentController extends Controller
     {
         $user = Auth::user();
 
-        $payments = Payment::with(['invoice.quotation.request', 'paymentSchedule', 'receipt'])
-            ->whereHas('invoice.quotation.request', function ($query) use ($user) {
+        /*
+         * Paginate by invoice/project instead of individual payments.
+         * This keeps the client payment history grouped and easier to scan.
+         */
+        $projectInvoices = Invoice::with([
+                'quotation.request',
+                'payments' => function ($query) {
+                    $query->with(['paymentSchedule', 'receipt'])
+                        ->orderByDesc('payment_date')
+                        ->orderByDesc('id');
+                },
+            ])
+            ->whereHas('quotation.request', function ($query) use ($user) {
                 $query->where('email', $user->email);
             })
-            ->latest('payment_date')
-            ->paginate(10);
+            ->whereHas('payments')
+            ->latest('invoice_date')
+            ->paginate(6);
 
-        return view('client.payments.index', compact('payments'));
+        return view('client.payments.index', compact('projectInvoices'));
     }
 
     public function show(Payment $payment)
     {
         $user = Auth::user();
 
-       $payment->load(['invoice.quotation.request', 'paymentSchedule', 'receiver', 'submitter', 'verifier', 'receipt']);
+        $payment->load([
+            'invoice.quotation.request',
+            'paymentSchedule',
+            'receiver',
+            'submitter',
+            'verifier',
+            'receipt',
+        ]);
 
         abort_if($payment->invoice->quotation->request->email !== $user->email, 403);
 
@@ -62,7 +81,8 @@ class PaymentController extends Controller
 
         $user = Auth::user();
 
-        $invoice = Invoice::with(['quotation.request', 'paymentSchedules'])->findOrFail($validated['invoice_id']);
+        $invoice = Invoice::with(['quotation.request', 'paymentSchedules'])
+            ->findOrFail($validated['invoice_id']);
 
         abort_if($invoice->quotation->request->email !== $user->email, 403);
 
@@ -71,7 +91,7 @@ class PaymentController extends Controller
 
         if (in_array($schedule->status, ['paid'])) {
             return back()->withErrors([
-                'payment_schedule_id' => 'This payment schedule is already fully paid.'
+                'payment_schedule_id' => 'This payment schedule is already fully paid.',
             ])->withInput();
         }
 

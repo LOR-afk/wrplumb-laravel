@@ -11,6 +11,9 @@ class SupportMessage extends Model
         'sender_type',
         'sender_id',
         'message',
+        'attachment_path',
+        'attachment_original_name',
+        'attachment_mime',
     ];
 
     public function conversation()

@@ -1,241 +1,1289 @@
-    .job-order-page {
-        max-width: 1240px;
-        margin: 0 auto;
+:root {
+    --job-primary: #0b5ed7;
+    --job-primary-soft: #eaf3ff;
+    --job-navy: #0f172a;
+    --job-text: #1f2937;
+    --job-muted: #64748b;
+    --job-border: #dbe7f3;
+    --job-surface: #ffffff;
+    --job-shadow: 0 14px 38px rgba(15, 23, 42, 0.07);
+    --job-radius: 20px;
+}
+
+.job-orders-page {
+    display: grid;
+    gap: 14px;
+    color: var(--job-text);
+}
+
+.job-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.job-stat-card,
+.job-filter-bar,
+.job-main-panel,
+.job-tracker-drawer,
+.job-progress-card,
+.job-stepper-card,
+.job-details-card,
+.job-actions-card,
+.job-related-card {
+    background: var(--job-surface);
+    border: 1px solid var(--job-border);
+    border-radius: var(--job-radius);
+    box-shadow: var(--job-shadow);
+}
+
+.job-stat-card {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+}
+
+.job-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 15px;
+    display: grid;
+    place-items: center;
+}
+
+.job-stat-icon.blue { background: #eaf3ff; color: #0b5ed7; }
+.job-stat-icon.amber { background: #fff7ed; color: #c2410c; }
+.job-stat-icon.green { background: #ecfdf3; color: #15803d; }
+.job-stat-icon.gray { background: #f1f5f9; color: #475569; }
+
+.job-stat-card span:not(.job-stat-icon) {
+    display: block;
+    color: var(--job-muted);
+    font-size: 0.66rem;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.job-stat-card strong {
+    display: block;
+    color: var(--job-navy);
+    font-size: 1.35rem;
+    font-weight: 950;
+    line-height: 1.15;
+}
+
+.job-filter-bar {
+    padding: 14px;
+}
+
+.job-filter-form {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 160px 180px 190px auto auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.job-search-control {
+    position: relative;
+}
+
+.job-search-control i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.job-search-control .form-control {
+    min-height: 42px;
+    border-radius: 14px;
+    border-color: var(--job-border);
+    padding-left: 40px;
+}
+
+.job-filter-select,
+.job-filter-submit,
+.job-filter-reset {
+    min-height: 42px;
+    border-radius: 14px;
+    font-weight: 850;
+}
+
+.job-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 14px;
+    align-items: start;
+}
+
+.job-main-panel,
+.job-tracker-drawer {
+    overflow: hidden;
+}
+
+.job-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #edf3f8;
+}
+
+.job-panel-head h5 {
+    margin: 0;
+    color: var(--job-navy);
+    font-weight: 950;
+}
+
+.job-panel-head p {
+    margin: 3px 0 0;
+    color: var(--job-muted);
+    font-size: 0.84rem;
+}
+
+.job-table-wrap {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.job-orders-table {
+    margin: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.job-orders-table thead th {
+    color: #475569;
+    font-size: 0.66rem;
+    font-weight: 950;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 13px 12px;
+    background: #f8fbff;
+    border-bottom: 1px solid #edf3f8;
+    white-space: nowrap;
+}
+
+.job-orders-table thead th:nth-child(1) { width: 15%; }
+.job-orders-table thead th:nth-child(2) { width: 17%; }
+.job-orders-table thead th:nth-child(3) { width: 15%; }
+.job-orders-table thead th:nth-child(4) { width: 15%; }
+.job-orders-table thead th:nth-child(5) { width: 14%; }
+.job-orders-table thead th:nth-child(6) { width: 12%; }
+.job-orders-table thead th:nth-child(7) { width: 12%; }
+
+.job-orders-table tbody td {
+    padding: 13px 12px;
+    border-bottom: 1px solid #edf3f8;
+    font-size: 0.82rem;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+.job-row {
+    cursor: pointer;
+    transition: background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.job-row:hover,
+.job-row.active {
+    background: #f7fbff;
+}
+
+.job-row.active {
+    box-shadow: inset 3px 0 0 var(--job-primary);
+}
+
+.job-order-code {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.job-order-code strong,
+.job-table-primary {
+    display: block;
+    color: var(--job-navy);
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-table-muted {
+    color: var(--job-muted);
+    font-size: 0.72rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-row-radio {
+    width: 13px;
+    height: 13px;
+    display: inline-block;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    flex: 0 0 auto;
+}
+
+.job-row-radio.active {
+    border: 4px solid var(--job-primary);
+}
+
+.job-status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 6px 9px;
+    font-size: 0.62rem;
+    font-weight: 950;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.job-status.scheduled { background: #fff7ed; color: #c2410c; }
+.job-status.in_progress,
+.job-status.progressing { background: #eaf3ff; color: #0b5ed7; }
+.job-status.completed { background: #ecfdf3; color: #15803d; }
+.job-status.cancelled { background: #f1f5f9; color: #475569; }
+.job-status.default,
+.job-status.neutral { background: #eef2f7; color: #475569; }
+
+.job-progress-inline {
+    display: grid;
+    grid-template-columns: 38px minmax(52px, 1fr);
+    align-items: center;
+    gap: 8px;
+}
+
+.job-progress-inline span {
+    color: #334155;
+    font-size: 0.74rem;
+    font-weight: 900;
+}
+
+.job-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: #e5edf6;
+    overflow: hidden;
+}
+
+.job-progress-track.large {
+    height: 7px;
+    margin: 8px 0 5px;
+}
+
+.job-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--job-primary);
+}
+
+.job-progress-fill.completed { background: #16a34a; }
+.job-progress-fill.cancelled { background: #94a3b8; }
+.job-progress-fill.scheduled,
+.job-progress-fill.in_progress { background: var(--job-primary); }
+
+.job-pagination-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-top: 1px solid #edf3f8;
+    color: var(--job-muted);
+    font-size: 0.82rem;
+}
+
+.job-tracker-drawer {
+    position: sticky;
+    top: 88px;
+    max-height: calc(100vh - 108px);
+    overflow-y: auto;
+    padding: 16px;
+    display: grid;
+    gap: 12px;
+}
+
+.job-drawer-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.job-drawer-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.job-drawer-head h3 {
+    margin: 0;
+    color: var(--job-navy);
+    font-size: 1.25rem;
+    font-weight: 950;
+}
+
+.job-drawer-head p {
+    margin: 5px 0 0;
+    color: var(--job-muted);
+    font-size: 0.84rem;
+}
+
+.job-progress-card {
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+}
+
+.job-progress-circle {
+    width: 74px;
+    height: 74px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(var(--job-primary) calc(var(--value) * 1%), #e5edf6 0);
+    position: relative;
+}
+
+.job-progress-circle::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 999px;
+    background: #ffffff;
+}
+
+.job-progress-circle span {
+    position: relative;
+    z-index: 1;
+    color: var(--job-navy);
+    font-weight: 950;
+}
+
+.job-mini-label {
+    color: var(--job-muted);
+    font-size: 0.7rem;
+    font-weight: 900;
+}
+
+.job-progress-card strong {
+    display: block;
+    color: var(--job-navy);
+    font-weight: 950;
+    margin-top: 2px;
+}
+
+.job-progress-card small {
+    color: var(--job-muted);
+    font-size: 0.72rem;
+}
+
+.job-stepper-card {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px;
+}
+
+.job-step {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 5px;
+    color: #94a3b8;
+}
+
+.job-step span {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.job-step.done span,
+.job-step.active span {
+    background: var(--job-primary);
+    color: #ffffff;
+}
+
+.job-step.done:first-child span {
+    background: #16a34a;
+}
+
+.job-step strong {
+    color: var(--job-navy);
+    font-size: 0.7rem;
+    font-weight: 950;
+}
+
+.job-step small {
+    color: var(--job-muted);
+    font-size: 0.66rem;
+}
+
+.job-details-card,
+.job-actions-card,
+.job-related-card {
+    padding: 14px;
+}
+
+.job-card-head,
+.job-related-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.job-card-head h5,
+.job-actions-card h5,
+.job-related-head h6 {
+    margin: 0;
+    color: var(--job-navy);
+    font-weight: 950;
+}
+
+.job-card-head a,
+.job-related-card a {
+    color: var(--job-primary);
+    text-decoration: none;
+    font-size: 0.76rem;
+    font-weight: 900;
+}
+
+.job-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.job-detail-grid .wide {
+    grid-column: 1 / -1;
+}
+
+.job-detail-grid span {
+    display: block;
+    color: var(--job-muted);
+    font-size: 0.68rem;
+    font-weight: 950;
+}
+
+.job-detail-grid strong {
+    display: block;
+    color: var(--job-navy);
+    font-size: 0.82rem;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+    margin-top: 2px;
+}
+
+.job-actions-card {
+    display: grid;
+    gap: 9px;
+}
+
+.job-actions-card .btn {
+    min-height: 40px;
+    border-radius: 12px;
+    font-weight: 900;
+}
+
+.job-related-head span {
+    border-radius: 999px;
+    padding: 5px 8px;
+    font-size: 0.62rem;
+    font-weight: 950;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.job-related-head span.available { background: #ecfdf3; color: #15803d; }
+.job-related-head span.pending { background: #fff7ed; color: #c2410c; }
+.job-related-head span.none { background: #f1f5f9; color: #475569; }
+
+.job-related-card p {
+    margin: 0 0 9px;
+    color: var(--job-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+.job-empty-state,
+.job-empty-drawer {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 8px;
+    color: var(--job-muted);
+    padding: 48px 18px;
+}
+
+.job-empty-state div,
+.job-empty-drawer div {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: #eaf3ff;
+    color: var(--job-primary);
+    font-size: 1.2rem;
+}
+
+.job-empty-state strong,
+.job-empty-drawer strong {
+    color: var(--job-navy);
+    font-weight: 950;
+}
+
+/* Existing Job Order full-page styles still supported */
+.job-order-page {
+    max-width: 1240px;
+    margin: 0 auto;
+}
+
+.jo-card {
+    background: #ffffff;
+    border: 1px solid var(--wr-border, #e3ebf3);
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 1500px) {
+    .job-stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .jo-card {
-        background: #ffffff;
-        border: 1px solid var(--wr-border);
-        border-radius: 22px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    .job-layout {
+        grid-template-columns: minmax(0, 1fr) 340px;
     }
 
-    .jo-hero {
-        padding: 24px;
-        margin-bottom: 20px;
-        background:
-            radial-gradient(circle at top right, rgba(29, 155, 240, 0.12), transparent 35%),
-            linear-gradient(135deg, #ffffff, #f8fbff);
+    .job-filter-form {
+        grid-template-columns: minmax(240px, 1fr) 145px 165px 165px auto auto;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .job-filter-form,
+    .job-layout {
+        grid-template-columns: 1fr;
     }
 
-    .jo-hero-title {
-        font-size: 1.45rem;
-        font-weight: 900;
-        color: #0f172a;
-        margin-bottom: 6px;
+    .job-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .jo-hero-subtitle {
-        color: #64748b;
-        margin-bottom: 0;
-        font-weight: 600;
+    .job-tracker-drawer {
+        position: static;
+        max-height: none;
     }
 
-    .jo-status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border-radius: 999px;
-        font-weight: 900;
-        font-size: 0.86rem;
-        white-space: nowrap;
+    .job-table-wrap {
+        overflow-x: auto;
     }
 
-    .jo-status-badge.scheduled {
-        background: #eaf4ff;
-        color: #1d4ed8;
+    .job-orders-table {
+        min-width: 780px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .job-panel-head,
+    .job-pagination-row {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .jo-status-badge.progressing {
-        background: #fff7ed;
-        color: #c2410c;
+    .job-stats-grid,
+    .job-detail-grid,
+    .job-progress-card,
+    .job-stepper-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   Job Orders table fit + no cut-off patch
+   Append to: public/css/admin/job-orders.css
+   ============================================================ */
+
+/* Make the main layout respect laptop width better */
+.job-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+    align-items: start;
+}
+
+.job-main-panel {
+    min-width: 0;
+}
+
+/* Remove horizontal overflow and let columns fit inside the card */
+.job-table-wrap {
+    width: 100%;
+    overflow-x: hidden !important;
+}
+
+.job-orders-table {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: fixed;
+}
+
+.job-orders-table thead th,
+.job-orders-table tbody td {
+    padding: 12px 10px;
+    vertical-align: middle;
+}
+
+/* Column sizing */
+.job-orders-table .job-radio-col {
+    width: 26px;
+}
+
+.job-orders-table th:nth-child(2),
+.job-orders-table td:nth-child(2) {
+    width: 112px;
+}
+
+.job-orders-table th:nth-child(3),
+.job-orders-table td:nth-child(3) {
+    width: 150px;
+}
+
+.job-orders-table th:nth-child(4),
+.job-orders-table td:nth-child(4) {
+    width: 130px;
+}
+
+.job-orders-table th:nth-child(5),
+.job-orders-table td:nth-child(5) {
+    width: 120px;
+}
+
+.job-orders-table th:nth-child(6),
+.job-orders-table td:nth-child(6) {
+    width: 120px;
+}
+
+.job-orders-table th:nth-child(7),
+.job-orders-table td:nth-child(7) {
+    width: 106px;
+}
+
+.job-orders-table th:nth-child(8),
+.job-orders-table td:nth-child(8) {
+    width: 104px;
+}
+
+/* Prevent ugly cut-off; allow cleaner wrapping instead */
+.job-orders-table td,
+.job-orders-table th {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+}
+
+.job-orders-table td.fw-bold,
+.job-orders-table .job-number {
+    white-space: nowrap !important;
+    font-size: 0.82rem;
+}
+
+.job-orders-table .client-name,
+.job-orders-table .client-email,
+.job-orders-table .service-name,
+.job-orders-table .worker-name {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-orders-table .client-email {
+    color: #64748b;
+    font-size: 0.72rem;
+    margin-top: 2px;
+}
+
+.job-schedule-cell strong,
+.job-schedule-cell span {
+    display: block;
+    line-height: 1.25;
+}
+
+.job-progress-inline {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    gap: 7px;
+}
+
+.job-progress-track {
+    min-width: 42px;
+}
+
+/* Stack tracker below table on narrower laptop widths to avoid squeezing */
+@media (max-width: 1280px) {
+    .job-layout {
+        grid-template-columns: 1fr;
     }
 
-    .jo-status-badge.completed {
-        background: #ecfdf3;
-        color: #15803d;
+    .job-tracker-drawer {
+        position: static;
+        max-height: none;
+    }
+}
+
+@media (max-width: 992px) {
+    .job-table-wrap {
+        overflow-x: auto !important;
     }
 
-    .jo-status-badge.cancelled {
-        background: #fee2e2;
-        color: #b91c1c;
+    .job-orders-table {
+        min-width: 760px !important;
     }
+}
 
-    .jo-status-badge.neutral {
-        background: #eef2f7;
-        color: #475569;
+
+/* ============================================================
+   Full-width Job Orders Table
+   Right-side tracker drawer removed from index page.
+   Each row now has a View action that opens the full JO page.
+   ============================================================ */
+
+.job-layout {
+    display: block !important;
+}
+
+.job-main-panel {
+    width: 100% !important;
+}
+
+.job-tracker-drawer {
+    display: none !important;
+}
+
+.job-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.job-orders-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Full-width table column proportions */
+.job-orders-table thead th:nth-child(1) { width: 14% !important; }
+.job-orders-table thead th:nth-child(2) { width: 17% !important; }
+.job-orders-table thead th:nth-child(3) { width: 15% !important; }
+.job-orders-table thead th:nth-child(4) { width: 13% !important; }
+.job-orders-table thead th:nth-child(5) { width: 14% !important; }
+.job-orders-table thead th:nth-child(6) { width: 11% !important; }
+.job-orders-table thead th:nth-child(7) { width: 10% !important; }
+.job-orders-table thead th:nth-child(8) { width: 6% !important; }
+
+.job-row {
+    cursor: default !important;
+}
+
+.job-row:hover {
+    background: #f8fbff;
+}
+
+.job-order-code {
+    gap: 0 !important;
+}
+
+.job-row-radio {
+    display: none !important;
+}
+
+.job-action-cell {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.job-view-btn {
+    min-width: 72px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 6px 10px;
+}
+
+@media (max-width: 1200px) {
+    .job-orders-table {
+        min-width: 1050px;
     }
+}
 
-    .jo-summary-card {
-        padding: 22px;
-        margin-bottom: 20px;
+@media (max-width: 767.98px) {
+    .job-orders-table {
+        min-width: 980px;
     }
+}
 
-    .jo-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
+
+/* ============================================================
+   Full-table fit + sortable headers
+   ============================================================ */
+
+.job-main-panel {
+    overflow: hidden !important;
+}
+
+.job-table-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: thin;
+}
+
+.job-orders-table {
+    width: 100% !important;
+    min-width: 940px !important;
+    table-layout: fixed !important;
+}
+
+/* Balanced widths so the Action button is never clipped. */
+.job-orders-table thead th:nth-child(1),
+.job-orders-table tbody td:nth-child(1) { width: 14% !important; }
+
+.job-orders-table thead th:nth-child(2),
+.job-orders-table tbody td:nth-child(2) { width: 17% !important; }
+
+.job-orders-table thead th:nth-child(3),
+.job-orders-table tbody td:nth-child(3) { width: 15% !important; }
+
+.job-orders-table thead th:nth-child(4),
+.job-orders-table tbody td:nth-child(4) { width: 13% !important; }
+
+.job-orders-table thead th:nth-child(5),
+.job-orders-table tbody td:nth-child(5) { width: 13% !important; }
+
+.job-orders-table thead th:nth-child(6),
+.job-orders-table tbody td:nth-child(6) { width: 11% !important; }
+
+.job-orders-table thead th:nth-child(7),
+.job-orders-table tbody td:nth-child(7) { width: 9% !important; }
+
+.job-orders-table thead th:nth-child(8),
+.job-orders-table tbody td:nth-child(8) {
+    width: 8% !important;
+    min-width: 86px !important;
+}
+
+.job-orders-table thead th,
+.job-orders-table tbody td {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+.job-action-cell {
+    padding-right: 12px !important;
+    text-align: right !important;
+    overflow: visible !important;
+}
+
+.job-view-btn {
+    min-width: 66px !important;
+    padding: 6px 9px !important;
+    white-space: nowrap !important;
+}
+
+.job-sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.job-sort-link:hover {
+    color: var(--job-primary);
+}
+
+.job-sort-link i {
+    color: #94a3b8;
+    font-size: 0.68rem;
+}
+
+.job-sort-link .fa-sort-up,
+.job-sort-link .fa-sort-down {
+    color: var(--job-primary);
+}
+
+@media (max-width: 1100px) {
+    .job-orders-table {
+        min-width: 980px !important;
     }
+}
 
-    .jo-summary-item {
-        min-height: 82px;
-        border: 1px solid #edf2f7;
-        background: #f8fbff;
-        border-radius: 18px;
-        padding: 14px 16px;
-    }
 
-    .jo-summary-label {
-        display: block;
-        color: #64748b;
-        font-size: 0.76rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 6px;
-    }
+/* ============================================================
+   AJAX loading state
+   ============================================================ */
 
-    .jo-summary-value {
-        color: #0f172a;
-        font-weight: 800;
-        overflow-wrap: anywhere;
-    }
+#jobListContainer,
+#jobStatsContainer {
+    transition: opacity 0.16s ease;
+}
 
-    .jo-section-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
-        gap: 20px;
-        align-items: start;
-    }
+#jobListContainer.is-loading,
+#jobStatsContainer.is-loading {
+    opacity: 0.52;
+    pointer-events: none;
+}
 
-    .jo-action-card {
-        padding: 22px;
-        margin-bottom: 20px;
-    }
 
-    .jo-section-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 1.04rem;
-        font-weight: 900;
-        color: #0f172a;
-        margin-bottom: 16px;
-    }
+/* Search input: no leading search icon. */
+.job-search-control i {
+    display: none !important;
+}
 
-    .jo-section-title .icon-pill {
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #eaf4ff;
-        color: #1d4ed8;
-    }
+.job-search-control .form-control {
+    padding-left: 14px !important;
+}
 
-    .jo-section-title.success .icon-pill {
-        background: #ecfdf3;
-        color: #15803d;
-    }
 
-    .jo-section-title.danger {
-        color: #b91c1c;
-    }
+/* ============================================================
+   Job Orders row hover effect
+   ============================================================ */
 
-    .jo-section-title.danger .icon-pill {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
+.job-orders-table tbody tr.job-row {
+    transition:
+        background-color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
 
-    .jo-readonly-block {
-        border: 1px solid #edf2f7;
-        background: #f8fbff;
-        border-radius: 16px;
-        padding: 14px 16px;
-        color: #334155;
-        font-weight: 600;
-        line-height: 1.6;
-        min-height: 54px;
-    }
+.job-orders-table tbody tr.job-row:hover {
+    background: #f4f9ff !important;
+    box-shadow: inset 4px 0 0 var(--job-primary);
+}
 
-    .jo-readonly-block + .jo-readonly-block {
-        margin-top: 12px;
-    }
+.job-orders-table tbody tr.job-row:hover td {
+    background: transparent;
+}
 
-    .jo-readonly-label {
-        color: #64748b;
-        display: block;
-        font-size: 0.76rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 6px;
-    }
+.job-orders-table tbody tr.job-row:hover .job-order-code strong,
+.job-orders-table tbody tr.job-row:hover .job-table-primary {
+    color: var(--job-primary);
+}
 
-    .jo-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 18px;
-    }
+.job-orders-table tbody tr.job-row:hover .job-view-btn {
+    background: var(--job-primary);
+    border-color: var(--job-primary);
+    color: #ffffff;
+    box-shadow: 0 6px 14px rgba(11, 94, 215, 0.14);
+    transform: translateY(-1px);
+}
 
-    .jo-action-button {
-        border-radius: 14px !important;
-        font-weight: 800 !important;
-        padding: 10px 16px !important;
-    }
+.job-orders-table tbody tr.job-row:hover .job-progress-track {
+    background: #dbe8f7;
+}
 
-    .jo-danger-zone {
-        border-color: #fecaca;
-        background: linear-gradient(135deg, #fff7f7, #ffffff);
-    }
+/* Sort controls are buttons, not links, so they cannot trigger page navigation. */
+.job-sort-button {
+    appearance: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
 
-    .jo-danger-note {
-        background: #fff1f2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
-        border-radius: 14px;
-        padding: 12px 14px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        margin-bottom: 14px;
-    }
+.job-sort-button:focus-visible {
+    outline: 2px solid rgba(11, 94, 215, 0.35);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
 
-    .jo-empty-action {
-        border: 1px dashed #cbd5e1;
-        background: #f8fafc;
-        color: #64748b;
-        border-radius: 16px;
-        padding: 16px;
-        font-weight: 700;
-        text-align: center;
-    }
 
-    .jo-card textarea.form-control {
-        min-height: 126px;
-        resize: vertical;
-    }
+/* ============================================================
+   Visible ASC / DESC indicators
+   ============================================================ */
 
-    @media (max-width: 1199.98px) {
-        .jo-summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
+.job-sort-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #334155;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
 
-    @media (max-width: 991.98px) {
-        .jo-section-grid {
-            grid-template-columns: 1fr;
-        }
-    }
+.job-sort-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 12px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 950;
+    line-height: 1;
+}
 
-    @media (max-width: 575.98px) {
-        .jo-summary-grid {
-            grid-template-columns: 1fr;
-        }
+.job-sort-button:hover {
+    color: var(--job-primary);
+}
 
-        .jo-hero {
-            padding: 20px;
-        }
-    }
+.job-sort-button:hover .job-sort-arrow {
+    color: var(--job-primary);
+}
+
+/* ============================================================
+   Job Order Final Status Card Fix
+   Append to: public/css/admin/job-order-details.css
+   ============================================================ */
+
+.jo-final-status-card {
+    display: flex !important;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px !important;
+    border-radius: 18px !important;
+    min-height: 96px;
+}
+
+.jo-final-status-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: grid !important;
+    place-items: center;
+    border-radius: 13px;
+    font-size: 1rem;
+}
+
+.jo-final-status-copy {
+    min-width: 0;
+}
+
+.jo-final-status-copy > span {
+    display: block;
+    margin-bottom: 2px;
+    color: #64748b;
+    font-size: 0.62rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.jo-final-status-copy > strong {
+    display: block;
+    color: #0f172a;
+    font-size: 0.98rem;
+    font-weight: 950;
+    line-height: 1.25;
+}
+
+.jo-final-status-copy > p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+.jo-final-status-card.completed {
+    border: 1px solid #bbf7d0 !important;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%) !important;
+}
+
+.jo-final-status-card.completed .jo-final-status-icon {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.jo-final-status-card.completed .jo-final-status-copy > strong {
+    color: #15803d;
+}
+
+.jo-final-status-card.cancelled {
+    border: 1px solid #fecaca !important;
+    background: linear-gradient(135deg, #fff7f7 0%, #ffffff 100%) !important;
+}
+
+.jo-final-status-card.cancelled .jo-final-status-icon {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.jo-final-status-card.cancelled .jo-final-status-copy > strong {
+    color: #b91c1c;
+}
+
+.jo-service-controls {
+    padding: 16px;
+}
+
+.jo-service-controls .jo-details-card-head {
+    align-items: flex-start;
+}
+
+.jo-service-controls-subtitle {
+    margin: 2px 0 0;
+    color: #64748b;
+    font-size: 0.68rem;
+    line-height: 1.4;
+}
+
+.jo-service-control-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.jo-service-control-item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) 16px;
+    gap: 10px;
+    align-items: center;
+    padding: 11px 12px;
+    border: 1px solid #e3ebf4;
+    border-radius: 13px;
+    background: #ffffff;
+    color: #334155;
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color 0.16s ease,
+        background-color 0.16s ease,
+        transform 0.16s ease,
+        box-shadow 0.16s ease;
+}
+
+button.jo-service-control-item {
+    font: inherit;
+}
+
+.jo-service-control-item:hover {
+    border-color: #bfdbfe;
+    background: #f8fbff;
+    color: #334155;
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(15, 23, 42, 0.055);
+}
+
+.jo-service-control-icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    font-size: 0.78rem;
+}
+
+.jo-service-control-icon.blue {
+    background: #eaf3ff;
+    color: #0b5ed7;
+}
+
+.jo-service-control-icon.purple {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.jo-service-control-icon.amber {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.jo-service-control-icon.red {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.jo-service-control-item strong {
+    display: block;
+    color: #0f172a;
+    font-size: 0.75rem;
+    font-weight: 900;
+}
+
+.jo-service-control-item small {
+    display: block;
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 0.64rem;
+    line-height: 1.35;
+}
+
+.jo-service-control-arrow {
+    color: #94a3b8;
+    font-size: 0.68rem;
+}
+
+.jo-service-control-item-danger {
+    border-color: #fecaca;
+    background: #fffafa;
+}
+
+.jo-service-control-item-danger:hover {
+    border-color: #fca5a5;
+    background: #fff5f5;
+}
+
+.jo-control-modal {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.jo-control-modal .modal-header {
+    padding: 15px 18px 12px;
+}
+
+.jo-control-modal .modal-title {
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 900;
+}
+
+.jo-control-modal .modal-header p {
+    margin-top: 3px;
+    font-size: 0.69rem;
+}
+
+.jo-control-modal .modal-body {
+    padding: 15px 18px;
+}
+
+.jo-control-modal .modal-footer {
+    padding: 10px 18px;
+}
+
+.jo-control-modal .form-label {
+    color: #334155;
+    font-size: 0.68rem;
+    font-weight: 850;
+}
+
+.jo-control-modal .form-control,
+.jo-control-modal .form-select {
+    border-color: #d7e3ef;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}

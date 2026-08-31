@@ -2,8 +2,8 @@
     $editing = !empty($userRecord);
 @endphp
 
-<div class="row g-3">
-    <div class="col-md-4">
+<div class="user-form-grid">
+    <div class="user-form-field user-form-first">
         <label class="form-label">First Name</label>
         <input
             type="text"
@@ -14,7 +14,7 @@
         >
     </div>
 
-    <div class="col-md-2">
+    <div class="user-form-field user-form-mi">
         <label class="form-label">M.I.</label>
         <input
             type="text"
@@ -25,7 +25,7 @@
         >
     </div>
 
-    <div class="col-md-6">
+    <div class="user-form-field user-form-last">
         <label class="form-label">Last Name</label>
         <input
             type="text"
@@ -36,7 +36,7 @@
         >
     </div>
 
-    <div class="col-md-6">
+    <div class="user-form-field">
         <label class="form-label">Username</label>
         <input
             type="text"
@@ -47,7 +47,7 @@
         >
     </div>
 
-    <div class="col-md-6">
+    <div class="user-form-field">
         <label class="form-label">Email</label>
         <input
             type="email"
@@ -58,7 +58,7 @@
         >
     </div>
 
-    <div class="col-md-6">
+    <div class="user-form-field">
         <label class="form-label">Phone</label>
         <input
             type="text"
@@ -68,7 +68,7 @@
         >
     </div>
 
-    <div class="col-md-6">
+    <div class="user-form-field">
         <label class="form-label">Role</label>
         <select name="role" class="form-select" required>
             @foreach ($roleOptions as $value => $label)
@@ -79,24 +79,60 @@
         </select>
     </div>
 
-    <div class="col-12">
+    <div class="user-form-field user-form-full">
         <label class="form-label">Address</label>
-        <textarea name="address" class="form-control" rows="2">{{ old('address', $userRecord->address ?? '') }}</textarea>
+        <textarea
+            name="address"
+            class="form-control user-address"
+            rows="2"
+            placeholder="House no., street, barangay, city"
+        >{{ old('address', $userRecord->address ?? '') }}</textarea>
     </div>
 
     @if ($includePassword)
-        <div class="col-12">
-            <label class="form-label">Temporary Password</label>
-            <input
-                type="text"
-                name="password"
-                class="form-control"
-                placeholder="Example: TempPass.123"
-                required
-            >
-            <small class="text-muted">
-                Must contain uppercase, lowercase, number, and special character.
-            </small>
+        <div class="user-form-field user-form-full">
+            <div class="password-label-row">
+                <label class="form-label mb-0">Temporary Password</label>
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary generate-password-btn"
+                    data-password-target="createTemporaryPassword"
+                >
+                    <i class="fas fa-wand-magic-sparkles me-1"></i>
+                    Generate Password
+                </button>
+            </div>
+
+            <div class="password-field-wrap">
+                <input
+                    type="password"
+                    id="createTemporaryPassword"
+                    name="password"
+                    class="form-control password-input"
+                    minlength="16"
+                    autocomplete="new-password"
+                    placeholder="Generate or enter a strong password"
+                    required
+                >
+
+                <button
+                    type="button"
+                    class="password-toggle"
+                    data-password-target="createTemporaryPassword"
+                    aria-label="Show password"
+                    title="Show password"
+                >
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+
+            <div class="password-policy">
+                <span><i class="fas fa-shield-halved me-1"></i>At least 16 characters</span>
+                <span>Uppercase & lowercase</span>
+                <span>Number</span>
+                <span>Symbol</span>
+            </div>
         </div>
     @endif
 </div>

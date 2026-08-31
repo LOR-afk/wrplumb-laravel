@@ -4,280 +4,13 @@
 @section('topbar_title', 'Request Details')
 @section('topbar_subtitle', 'View the current status and service details of your request.')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/client/request-show.css') }}?v=20260818a">
+@endpush
+
 @section('content')
-<style>
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-        margin-bottom: 18px;
-    }
-
-    .detail-label {
-        font-size: 0.76rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        color: #6b7280;
-        margin-bottom: 4px;
-    }
-
-    .detail-value {
-        font-weight: 700;
-    }
-
-    .notes-box {
-        background: #f8fbff;
-        border: 1px solid #edf2f7;
-        border-radius: 14px;
-        padding: 12px 14px;
-        color: #334155;
-        font-size: 0.94rem;
-        line-height: 1.5;
-    }
-
-    .reschedule-calendar-wrap {
-        border: 1px solid var(--wr-border);
-        border-radius: 18px;
-        background: #fff;
-        padding: 16px;
-    }
-
-    .calendar-toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 14px;
-    }
-
-    .calendar-toolbar button {
-        border: 1px solid var(--wr-border);
-        background: #fff;
-        border-radius: 12px;
-        padding: 8px 12px;
-        font-weight: 700;
-    }
-
-    .calendar-month-label {
-        font-weight: 800;
-        color: #0f172a;
-    }
-
-    .calendar-weekdays,
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
-    }
-
-    .calendar-weekday {
-        text-align: center;
-        font-size: 0.78rem;
-        font-weight: 800;
-        color: #6b7280;
-        padding: 6px 0;
-    }
-
-    .calendar-day {
-        min-height: 52px;
-        border-radius: 14px;
-        border: 1px solid #e5edf5;
-        background: #fff;
-        font-weight: 700;
-        cursor: pointer;
-        position: relative;
-    }
-
-    .calendar-day.empty {
-        visibility: hidden;
-    }
-
-    .calendar-day.past {
-        background: #f8fafc;
-        color: #94a3b8;
-        cursor: not-allowed;
-    }
-
-    .calendar-day.available {
-        background: #ecfdf3;
-        border-color: #bbf7d0;
-        color: #166534;
-    }
-
-    .calendar-day.unavailable {
-        background: #fef2f2;
-        border-color: #fecaca;
-        color: #b91c1c;
-        cursor: not-allowed;
-    }
-
-    .calendar-day.selected {
-        outline: 2px solid #1d9bf0;
-        outline-offset: 2px;
-    }
-
-    .calendar-count {
-        display: block;
-        font-size: 0.68rem;
-        font-weight: 600;
-        margin-top: 2px;
-    }
-
-    .calendar-legend {
-        display: flex;
-        gap: 14px;
-        flex-wrap: wrap;
-        margin-top: 14px;
-        font-size: 0.82rem;
-        color: #475569;
-    }
-
-    .legend-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        display: inline-block;
-        margin-right: 6px;
-    }
-
-    .legend-green { background: #22c55e; }
-    .legend-red { background: #ef4444; }
-    .legend-gray { background: #94a3b8; }
-
-    .selected-date-box {
-        margin-top: 14px;
-        background: #f8fbff;
-        border: 1px solid #e6eef8;
-        border-radius: 14px;
-        padding: 12px 14px;
-        font-size: 0.92rem;
-        line-height: 1.5;
-    }
-
-    .request-action-card {
-        background: #fff;
-        border: 1px solid var(--wr-border);
-        border-radius: 18px;
-        padding: 18px;
-        margin-top: 16px;
-    }
-
-    .request-action-title {
-        font-size: 1rem;
-        font-weight: 800;
-        color: #0f172a;
-        margin-bottom: 4px;
-    }
-
-    .request-action-subtitle {
-        font-size: 0.9rem;
-        color: #64748b;
-        margin-bottom: 14px;
-    }
-
-    .current-appointment-box {
-        background: #f8fbff;
-        border: 1px solid #dbeafe;
-        border-radius: 14px;
-        padding: 12px 14px;
-        margin-bottom: 14px;
-        color: #1e293b;
-        font-size: 0.92rem;
-        line-height: 1.5;
-    }
-
-    .reschedule-submit-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .cancel-warning-box {
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        border-radius: 14px;
-        padding: 12px 14px;
-        color: #9a3412;
-        font-size: 0.9rem;
-        margin-bottom: 14px;
-    }
-
-    @media (max-width: 767.98px) {
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .calendar-day.current-appointment {
-        border: 2px solid #1d4ed8;
-        background: #eef6ff;
-        color: #1e3a8a;
-        position: relative;
-    }
-
-    .calendar-day.current-appointment::after {
-        content: 'Current';
-        position: absolute;
-        bottom: 4px;
-        right: 6px;
-        font-size: 0.6rem;
-        font-weight: 700;
-        color: #1d4ed8;
-    }
-
-    .calendar-day.current-appointment.selected {
-        outline: 2px solid #1d9bf0;
-        outline-offset: 2px;
-    }
-
-    .pending-request-banner {
-        background: #fff7ed;
-        border: 1px solid #fdba74;
-        color: #9a3412;
-        border-radius: 14px;
-        padding: 12px 14px;
-        font-size: 0.9rem;
-        margin-bottom: 14px;
-    }
-
-    .calendar-toolbar button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .calendar-day.selected {
-        outline: 3px solid #22c55e;
-        outline-offset: 2px;
-    }
-
-    .calendar-day.current-appointment {
-        border: 2px solid #2563eb;
-        background: #eff6ff;
-        color: #1d4ed8;
-        position: relative;
-    }
-
-    .calendar-day.current-appointment.has-badge::after {
-        color: #1d4ed8;
-    }
-
-    .calendar-day.pending-requested {
-        border: 2px solid #f59e0b !important;
-        background: #fff7ed !important;
-        color: #b45309 !important;
-        position: relative;
-    }
-
-    .calendar-day.pending-requested .calendar-count {
-        color: #b45309 !important;
-    }
-
-    .calendar-day.pending-requested.has-badge::after {
-        color: #b45309 !important;
-    }
-</style>
-
 @php
-    $hasJobOrder = (bool) $quotation->jobOrder;
+$hasJobOrder = (bool) $quotation->jobOrder;
     $jobOrderStatus = $quotation->jobOrder->status ?? null;
 
     $primaryStatus = $hasJobOrder ? $quotation->jobOrder->status : $quotation->status;
@@ -295,510 +28,498 @@
     $showExecutionLockedNotice = $hasJobOrder && in_array($jobOrderStatus, ['in_progress', 'completed', 'cancelled']);
 @endphp
 
-<div class="page-header">
-    <h1>Request Details</h1>
-    <p>Check your request status, assigned personnel/inspector, and service notes.</p>
-</div>
+@php
+    $requestStatusKey = strtolower((string) ($primaryStatus ?? 'pending'));
 
-<div class="panel mb-4">
-    <div class="panel-header">
-        <h5><i class="fas fa-timeline me-2 text-primary"></i>Request Timeline</h5>
-    </div>
-    <div class="panel-body">
-        @include('partials.request-timeline', ['quotation' => $quotation])
-    </div>
-</div>
+    $requestStatusText = $hasJobOrder
+        ? match ($requestStatusKey) {
+            'scheduled' => 'Job Scheduled',
+            'in_progress' => 'Job In Progress',
+            'completed' => 'Job Completed',
+            'cancelled', 'canceled' => 'Job Cancelled',
+            default => ucfirst(str_replace('_', ' ', $requestStatusKey)),
+        }
+        : match ($requestStatusKey) {
+            'pending' => 'Pending Review',
+            'assigned' => 'Assigned',
+            'in_progress' => 'In Progress',
+            'completed' => 'Completed',
+            'cancelled', 'canceled' => 'Cancelled',
+            default => ucfirst(str_replace('_', ' ', $requestStatusKey)),
+        };
 
-<div class="panel">
-    <div class="panel-header">
-        <h5><i class="fas fa-circle-info me-2 text-primary"></i>Service Request Information</h5>
-    </div>
+    $requestStatusClass = match ($requestStatusKey) {
+        'pending' => 'orange',
+        'approved', 'accepted', 'assigned', 'scheduled', 'rescheduled' => 'blue',
+        'ongoing', 'in_progress', 'in-progress' => 'green',
+        'completed', 'done' => 'green',
+        'cancelled', 'canceled', 'rejected', 'declined' => 'gray',
+        default => 'gray',
+    };
 
-    <div class="panel-body">
-        <div class="detail-grid">
-            <div>
-                <div class="detail-label">Service Type</div>
-                <div class="detail-value">{{ $quotation->service_type }}</div>
+    $assignedRole = ($quotation->service_flow ?? null) === 'direct_service'
+        ? 'Personnel'
+        : 'Inspector';
+@endphp
+
+<div class="request-show-page">
+    <section class="request-show-hero">
+        <div class="request-show-hero-copy">
+            <span>Service Request</span>
+
+            <div class="request-show-title-row">
+                <h2>{{ $quotation->service_type }}</h2>
+                <em class="request-show-status {{ $requestStatusClass }}">
+                    {{ $requestStatusText }}
+                </em>
             </div>
 
-            <div>
-                <div class="detail-label">Category</div>
-                <div class="detail-value">{{ ucfirst($quotation->service_category) }}</div>
-            </div>
+            <p>
+                <i class="fas fa-location-dot"></i>
+                {{ $quotation->address ?: 'No service address provided' }}
+            </p>
+        </div>
+
+        <div class="request-show-actions">
+            <a href="{{ route('client.requests.index') }}" class="request-show-btn secondary">
+                <i class="fas fa-arrow-left"></i>
+                My Requests
+            </a>
+
+            @if ($quotation->jobOrder)
+                <a href="{{ route('client.job-orders.show', $quotation->jobOrder) }}" class="request-show-btn primary">
+                    <i class="fas fa-clipboard-check"></i>
+                    View Job Order
+                </a>
+            @endif
+        </div>
+    </section>
+
+    <section class="request-show-summary">
+        <article>
+            <span>Category</span>
+            <strong>{{ ucfirst($quotation->service_category) }}</strong>
+        </article>
+
+        <article>
+            <span>Project Type</span>
+            <strong>{{ $quotation->project_type ?? '—' }}</strong>
+        </article>
+
+        <article>
+            <span>Preferred Date</span>
+            <strong>{{ optional($quotation->preferred_date)->format('M d, Y') ?? '—' }}</strong>
+        </article>
+
+        <article>
+            <span>Preferred Time</span>
+            <strong>{{ $quotation->preferred_time ? date('h:i A', strtotime($quotation->preferred_time)) : 'Not specified' }}</strong>
+        </article>
+
+        <article>
+            <span>Assigned {{ $assignedRole }}</span>
+            <strong>{{ $quotation->worker?->name ?? 'Not assigned yet' }}</strong>
+        </article>
+    </section>
+
+    <section class="request-show-card timeline-card">
+        <div class="request-show-card-head">
+            <span class="request-show-card-icon blue">
+                <i class="fas fa-timeline"></i>
+            </span>
 
             <div>
-                <div class="detail-label">Preferred Date</div>
-                <div class="detail-value">{{ optional($quotation->preferred_date)->format('Y-m-d') ?? '—' }}</div>
+                <h3>Request Timeline</h3>
+                <p>Follow your request from submission to service completion.</p>
+            </div>
+        </div>
+
+        <div class="request-show-card-body timeline-body">
+            @include('partials.request-timeline', ['quotation' => $quotation])
+        </div>
+    </section>
+
+    <div class="request-show-grid">
+        <section class="request-show-card">
+            <div class="request-show-card-head">
+                <span class="request-show-card-icon violet">
+                    <i class="fas fa-circle-info"></i>
+                </span>
+
+                <div>
+                    <h3>Request Information</h3>
+                    <p>Service and assignment details for this request.</p>
+                </div>
             </div>
 
-            <div>
-                <div class="detail-label">{{ $hasJobOrder ? 'Job Order Status' : 'Status' }}</div>
-                <div class="detail-value">
+            <div class="request-show-card-body">
+                <div class="request-info-grid">
+                    <div>
+                        <span>Service Type</span>
+                        <strong>{{ $quotation->service_type }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Service Category</span>
+                        <strong>{{ ucfirst($quotation->service_category) }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Status</span>
+                        <strong>{{ $requestStatusText }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Assigned {{ $assignedRole }}</span>
+                        <strong>{{ $quotation->worker?->name ?? 'Not assigned yet' }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Assigned At</span>
+                        <strong>{{ optional($quotation->assigned_at)->format('M d, Y · h:i A') ?? '—' }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Project Type</span>
+                        <strong>{{ $quotation->project_type ?? '—' }}</strong>
+                    </div>
+
                     @if ($hasJobOrder)
-                        @if ($quotation->jobOrder->status === 'scheduled')
-                            <span class="badge-soft blue">Job Scheduled</span>
-                        @elseif ($quotation->jobOrder->status === 'in_progress')
-                            <span class="badge-soft green">Job In Progress</span>
-                        @elseif ($quotation->jobOrder->status === 'completed')
-                            <span class="badge-soft gray">Job Completed</span>
-                        @elseif ($quotation->jobOrder->status === 'cancelled')
-                            <span class="badge-soft gray">Job Cancelled</span>
-                        @else
-                            <span class="badge-soft gray">{{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->status)) }}</span>
-                        @endif
-                    @else
-                        @if ($quotation->status === 'pending')
-                            <span class="badge-soft orange">Pending</span>
-                        @elseif ($quotation->status === 'assigned')
-                            <span class="badge-soft blue">Assigned</span>
-                        @elseif ($quotation->status === 'in_progress')
-                            <span class="badge-soft green">In Progress</span>
-                        @elseif ($quotation->status === 'completed')
-                            <span class="badge-soft gray">Completed</span>
-                        @else
-                            <span class="badge-soft gray">{{ ucfirst(str_replace('_', ' ', $quotation->status)) }}</span>
-                        @endif
+                        <div>
+                            <span>Job Order No.</span>
+                            <strong>{{ $quotation->jobOrder->job_order_no }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Service Flow</span>
+                            <strong>{{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->service_flow ?? $quotation->service_flow ?? '—')) }}</strong>
+                        </div>
                     @endif
                 </div>
             </div>
+        </section>
 
-            <div>
-                <div class="detail-label">
-                    {{ ($quotation->service_flow ?? null) === 'direct_service' ? 'Assigned Personnel' : 'Assigned Inspector' }}
-                </div>
-                <div class="detail-value">{{ $quotation->worker?->name ?? 'Not assigned yet' }}</div>
-            </div>
-
-            <div>
-                <div class="detail-label">Assigned At</div>
-                <div class="detail-value">{{ optional($quotation->assigned_at)->format('Y-m-d h:i A') ?? '—' }}</div>
-            </div>
-
-            <div>
-                <div class="detail-label">Address</div>
-                <div class="detail-value">{{ $quotation->address }}</div>
-            </div>
-
-            <div>
-                <div class="detail-label">Project Type</div>
-                <div class="detail-value">{{ $quotation->project_type ?? '—' }}</div>
-            </div>
-
-            @if ($hasJobOrder)
-                <div>
-                    <div class="detail-label">Job Order No.</div>
-                    <div class="detail-value">{{ $quotation->jobOrder->job_order_no }}</div>
-                </div>
+        <section class="request-show-card">
+            <div class="request-show-card-head">
+                <span class="request-show-card-icon green">
+                    <i class="fas fa-calendar-check"></i>
+                </span>
 
                 <div>
-                    <div class="detail-label">Service Flow</div>
-                    <div class="detail-value text-uppercase">{{ str_replace('_', ' ', $quotation->jobOrder->service_flow ?? $quotation->service_flow ?? '—') }}</div>
+                    <h3>{{ $hasJobOrder ? 'Service Schedule' : 'Appointment' }}</h3>
+                    <p>Current confirmed date and time for this request.</p>
                 </div>
-            @endif
-        </div>
+            </div>
 
-        <div class="mb-3">
-            <div class="detail-label mb-2">Problem Details</div>
-            <div class="notes-box">{{ $quotation->details }}</div>
-        </div>
-
-        <div class="mb-4">
-            <div class="detail-label mb-2">{{ $hasJobOrder ? 'Job Order Information' : 'Appointment Information' }}</div>
-
-            <div class="detail-grid">
-                <div>
-                    <div class="detail-label">{{ $hasJobOrder ? '' : 'Appointment Status' }}</div>
-                        @if (!$hasJobOrder)
+            <div class="request-show-card-body">
+                <div class="schedule-display">
                     <div>
-        <div class="detail-value">
-            @if ($quotation->appointment_status === 'pending')
-                <span class="badge-soft orange">Pending</span>
-            @elseif ($quotation->appointment_status === 'approved')
-                <span class="badge-soft green">Approved</span>
-            @elseif ($quotation->appointment_status === 'rescheduled')
-                <span class="badge-soft blue">Rescheduled</span>
-            @elseif ($quotation->appointment_status === 'cancelled')
-                <span class="badge-soft gray">Cancelled</span>
-            @else
-                <span class="badge-soft gray">{{ ucfirst(str_replace('_', ' ', $quotation->appointment_status ?? 'pending')) }}</span>
-            @endif
-        </div>
-    </div>
-@endif
-                <div>
-                    <div class="detail-label">{{ $hasJobOrder ? 'Job Order Date' : 'Appointment Date' }}</div>
-                    <div class="detail-value">
-                        {{ optional($primaryScheduleDate)->format('Y-m-d') ?? 'Not yet scheduled' }}
+                        <span>{{ $hasJobOrder ? 'Job Order Date' : 'Appointment Date' }}</span>
+                        <strong>
+                            {{ optional($primaryScheduleDate)->format('M d, Y') ?? 'Not yet scheduled' }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>{{ $hasJobOrder ? 'Job Order Time' : 'Appointment Time' }}</span>
+                        <strong>
+                            {{ $primaryScheduleTime ? date('h:i A', strtotime($primaryScheduleTime)) : 'Not yet scheduled' }}
+                        </strong>
                     </div>
                 </div>
 
-                <div>
-                    <div class="detail-label">{{ $hasJobOrder ? 'Job Order Time' : 'Appointment Time' }}</div>
-                    <div class="detail-value">
-                        {{ $primaryScheduleTime ? date('h:i A', strtotime($primaryScheduleTime)) : 'Not yet scheduled' }}
-                    </div>
-                </div>
+                @if (!$hasJobOrder)
+                    <div class="appointment-state">
+                        <span>Appointment Status</span>
 
-                <div>
-                    <div class="detail-label">Preferred Time</div>
-                    <div class="detail-value">
-                        {{ $quotation->preferred_time ? date('h:i A', strtotime($quotation->preferred_time)) : 'Not specified' }}
+                        @php
+                            $appointmentStatusKey = strtolower((string) ($quotation->appointment_status ?? 'pending'));
+                        @endphp
+
+                        <strong>
+                            {{ ucfirst(str_replace('_', ' ', $appointmentStatusKey)) }}
+                        </strong>
                     </div>
-                </div>
+                @endif
+
+                @if (!$hasJobOrder && $quotation->appointment_status === 'cancelled' && $quotation->cancel_reason)
+                    <div class="request-note-box warning">
+                        <span>Cancellation Reason</span>
+                        <p>{{ $quotation->cancel_reason }}</p>
+                    </div>
+                @endif
             </div>
+        </section>
+    </div>
 
-            @if (!$hasJobOrder && $quotation->appointment_status === 'cancelled' && $quotation->cancel_reason)
-                <div class="mt-3">
-                    <div class="detail-label mb-2">Cancellation Reason</div>
-                    <div class="notes-box">{{ $quotation->cancel_reason }}</div>
-                </div>
-            @endif
+    <section class="request-show-card">
+        <div class="request-show-card-head">
+            <span class="request-show-card-icon orange">
+                <i class="fas fa-message"></i>
+            </span>
+
+            <div>
+                <h3>Service Notes</h3>
+                <p>Problem description and updates from the WRPlumb team.</p>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <div class="detail-label mb-2">Admin Notes</div>
-            <div class="notes-box">{{ $quotation->admin_notes ?? 'No admin notes yet.' }}</div>
-        </div>
+        <div class="request-show-card-body">
+            <div class="request-notes-grid">
+                <article>
+                    <span>Problem Details</span>
+                    <p>{{ $quotation->details ?: 'No problem details provided.' }}</p>
+                </article>
 
-        <div class="mb-3">
-            <div class="detail-label mb-2">Inspector Notes</div>
-            <div class="notes-box">{{ $quotation->inspector_notes ?? 'No inspector notes yet.' }}</div>
+                <article>
+                    <span>Admin Notes</span>
+                    <p>{{ $quotation->admin_notes ?? 'No admin notes yet.' }}</p>
+                </article>
+
+                <article>
+                    <span>Inspector Notes</span>
+                    <p>{{ $quotation->inspector_notes ?? 'No inspector notes yet.' }}</p>
+                </article>
+            </div>
         </div>
-                @if ($showExecutionLockedNotice)
-            <div class="request-action-card">
-                <div class="request-action-title">Service Execution Notice</div>
-                <div class="request-action-subtitle">
+    </section>
+
+    @if ($showExecutionLockedNotice)
+        <section class="request-status-notice locked">
+            <span><i class="fas fa-lock"></i></span>
+            <div>
+                <strong>Service actions are locked</strong>
+
+                <p>
                     @if ($jobOrderStatus === 'in_progress')
-                        This service is already in progress. Schedule change and cancellation requests are no longer available from this page.
+                        This service is already in progress. Schedule change and cancellation requests are no longer available.
                     @elseif ($jobOrderStatus === 'completed')
                         This service has already been completed. No further schedule change or cancellation request is available.
                     @elseif ($jobOrderStatus === 'cancelled')
                         This job order has already been cancelled. No further schedule change or cancellation request is available.
                     @endif
-                </div>
+                </p>
 
-                <div class="notes-box">
-                    For urgent concerns, please contact support directly.
-                </div>
+                <small>For urgent concerns, please contact customer support.</small>
             </div>
-        @endif
+        </section>
+    @endif
 
-        @if ($quotation->client_action_status === 'pending')
-            <div class="request-action-card">
-                <div class="request-action-title">Pending Client Request</div>
-                <div class="request-action-subtitle">Your request is waiting for admin review.</div>
+    @if ($quotation->client_action_status === 'pending')
+        <section class="request-status-notice pending">
+            <span><i class="fas fa-clock"></i></span>
 
-                <div class="notes-box">
-                    <strong>Type:</strong> {{ ucfirst($quotation->client_action_request) }}<br>
+            <div>
+                <strong>Request awaiting admin review</strong>
+
+                <p>
+                    {{ ucfirst(str_replace('_', ' ', $quotation->client_action_request ?? 'request')) }}
                     @if ($quotation->client_requested_date)
-                        <strong>Requested Date:</strong> {{ optional($quotation->client_requested_date)->format('Y-m-d') }}<br>
+                        · {{ optional($quotation->client_requested_date)->format('M d, Y') }}
                     @endif
                     @if ($quotation->client_requested_time)
-                        <strong>Requested Time:</strong> {{ date('h:i A', strtotime($quotation->client_requested_time)) }}<br>
+                        · {{ date('h:i A', strtotime($quotation->client_requested_time)) }}
                     @endif
-                    <strong>Reason:</strong> {{ $quotation->client_request_reason }}
+                </p>
+
+                @if ($quotation->client_request_reason)
+                    <small>{{ $quotation->client_request_reason }}</small>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    @if ($canRequestScheduleChange)
+        <section class="request-show-card request-action-section">
+            <div class="request-show-card-head">
+                <span class="request-show-card-icon blue">
+                    <i class="fas fa-calendar-days"></i>
+                </span>
+
+                <div>
+                    <h3>{{ $hasJobOrder ? 'Request Schedule Change' : 'Request Reschedule' }}</h3>
+                    <p>
+                        Choose an available date and submit your preferred time for admin review.
+                    </p>
                 </div>
             </div>
-        @endif
 
-@if ($canRequestScheduleChange)
-    <div class="request-action-card">
-        <div class="request-action-title">
-            {{ $hasJobOrder ? 'Request Schedule Change' : 'Request Reschedule' }}
-        </div>
+            <div class="request-show-card-body">
+                @if ($quotation->client_action_status === 'pending')
+                    <div class="pending-request-banner">
+                        You already have a pending schedule change request. You may browse availability, but a second request cannot be submitted yet.
+                    </div>
+                @endif
 
-        <div class="request-action-subtitle">
-            @if ($hasJobOrder)
-                Request a change to the scheduled service date/time. This still requires admin review.
-            @else
-                Choose a date with available inspectors, then enter your preferred time and reason.
-            @endif
-        </div>
-
-        @if ($quotation->client_action_status === 'pending')
-            <div class="pending-request-banner">
-                You already have a pending schedule change request under admin review. You may still browse the calendar, but you cannot submit another request yet.
-            </div>
-        @endif
-
-        <div class="current-appointment-box">
-            <strong>Current {{ $hasJobOrder ? 'Service Schedule' : 'Appointment' }}:</strong>
-            @if ($primaryScheduleDate && $primaryScheduleTime)
-                {{ optional($primaryScheduleDate)->format('M d, Y') }} • {{ date('h:i A', strtotime($primaryScheduleTime)) }}
-            @else
-                Not yet scheduled
-            @endif
-        </div>
+                <div class="current-schedule-box">
+                    <span>Current {{ $hasJobOrder ? 'Service Schedule' : 'Appointment' }}</span>
+                    <strong>
+                        @if ($primaryScheduleDate && $primaryScheduleTime)
+                            {{ optional($primaryScheduleDate)->format('M d, Y') }}
+                            ·
+                            {{ date('h:i A', strtotime($primaryScheduleTime)) }}
+                        @else
+                            Not yet scheduled
+                        @endif
+                    </strong>
+                </div>
 
                 <form method="POST" action="{{ route('client.requests.request-reschedule', $quotation) }}">
                     @csrf
 
-                    <div class="mb-3">
-                        <label class="form-label">Requested Date</label>
+                    <div class="reschedule-calendar-wrap" id="rescheduleCalendarWrap">
+                        <div class="calendar-toolbar">
+                            <button type="button" id="calendarPrevBtn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
 
-                        <div class="reschedule-calendar-wrap" id="rescheduleCalendarWrap">
-                            <div class="calendar-toolbar">
-                                <button type="button" id="calendarPrevBtn">&larr;</button>
-                                <div class="calendar-month-label" id="calendarMonthLabel">Month</div>
-                                <button type="button" id="calendarNextBtn">&rarr;</button>
-                            </div>
+                            <div class="calendar-month-label" id="calendarMonthLabel">Month</div>
 
-                            <div class="calendar-weekdays">
-                                <div class="calendar-weekday">Sun</div>
-                                <div class="calendar-weekday">Mon</div>
-                                <div class="calendar-weekday">Tue</div>
-                                <div class="calendar-weekday">Wed</div>
-                                <div class="calendar-weekday">Thu</div>
-                                <div class="calendar-weekday">Fri</div>
-                                <div class="calendar-weekday">Sat</div>
-                            </div>
-
-                            <div
-                                class="calendar-grid"
-                                id="rescheduleCalendar"
-                                data-endpoint="{{ route('client.requests.calendar-availability') }}">
-                            </div>
-
-                            <div class="calendar-legend">
-                                <div><span class="legend-dot legend-green"></span>Available</div>
-                                <div><span class="legend-dot legend-red"></span>No inspector</div>
-                                <div><span class="legend-dot legend-gray"></span>Past date</div>
-                                <div><span class="legend-dot" style="background:#2563eb;"></span>Current appointment</div>
-                                <div><span class="legend-dot" style="background:#f59e0b;"></span>Pending requested date</div>
-                                <div><span class="legend-dot" style="background:#22c55e;"></span>Selected date</div>
-                            </div>
-
-                            <div class="selected-date-box" id="selectedAvailabilityText">
-                                Select a green date to continue.
-                            </div>
+                            <button type="button" id="calendarNextBtn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
                         </div>
 
-                        <input
-                            type="hidden"
-                            name="client_requested_date"
-                            id="client_requested_date"
-                            value="{{ old('client_requested_date') }}"
-                            required
-                        >
+                        <div class="calendar-weekdays">
+                            <div class="calendar-weekday">Sun</div>
+                            <div class="calendar-weekday">Mon</div>
+                            <div class="calendar-weekday">Tue</div>
+                            <div class="calendar-weekday">Wed</div>
+                            <div class="calendar-weekday">Thu</div>
+                            <div class="calendar-weekday">Fri</div>
+                            <div class="calendar-weekday">Sat</div>
+                        </div>
+
+                        <div
+                            class="calendar-grid"
+                            id="rescheduleCalendar"
+                            data-endpoint="{{ route('client.requests.calendar-availability') }}">
+                        </div>
+
+                        <div class="calendar-legend">
+                            <div><span class="legend-dot legend-green"></span>Available</div>
+                            <div><span class="legend-dot legend-red"></span>No inspector</div>
+                            <div><span class="legend-dot legend-gray"></span>Past date</div>
+                            <div><span class="legend-dot legend-blue"></span>Current schedule</div>
+                            <div><span class="legend-dot legend-orange"></span>Pending request</div>
+                        </div>
+
+                        <div class="selected-date-box" id="selectedAvailabilityText">
+                            Select an available date to continue.
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Requested Time</label>
-                        <input
-                            type="time"
-                            name="client_requested_time"
-                            class="form-control"
-                            value="{{ old('client_requested_time') }}"
-                            required
-                        >
-                    </div>
+                    <input
+                        type="hidden"
+                        name="client_requested_date"
+                        id="client_requested_date"
+                        value="{{ old('client_requested_date') }}"
+                        required
+                    >
 
-                    <div class="mb-3">
-                        <label class="form-label">Reason</label>
-                        <textarea
-                            name="client_request_reason"
-                            class="form-control"
-                            rows="3"
-                            required
-                        >{{ old('client_request_reason') }}</textarea>
+                    <div class="request-action-fields">
+                        <div>
+                            <label for="client_requested_time">Requested Time</label>
+                            <input
+                                type="time"
+                                id="client_requested_time"
+                                name="client_requested_time"
+                                class="form-control"
+                                value="{{ old('client_requested_time') }}"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label for="client_request_reason">Reason</label>
+                            <textarea
+                                id="client_request_reason"
+                                name="client_request_reason"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Briefly explain why you need to change the schedule."
+                                required
+                            >{{ old('client_request_reason') }}</textarea>
+                        </div>
                     </div>
 
                     @error('client_reschedule')
-                        <small class="text-danger d-block mb-2">{{ $message }}</small>
+                        <small class="text-danger d-block mt-2">{{ $message }}</small>
                     @enderror
 
                     @error('client_requested_date')
-                        <small class="text-danger d-block mb-2">{{ $message }}</small>
+                        <small class="text-danger d-block mt-2">{{ $message }}</small>
                     @enderror
 
                     @error('client_requested_time')
-                        <small class="text-danger d-block mb-2">{{ $message }}</small>
+                        <small class="text-danger d-block mt-2">{{ $message }}</small>
                     @enderror
 
                     @error('client_request_reason')
-                        <small class="text-danger d-block mb-2">{{ $message }}</small>
+                        <small class="text-danger d-block mt-2">{{ $message }}</small>
                     @enderror
 
-                    <button type="submit" class="btn btn-outline-primary w-100 reschedule-submit-btn" id="rescheduleSubmitBtn" disabled>
-                        Send Reschedule Request
+                    <button
+                        type="submit"
+                        class="request-action-submit"
+                        id="rescheduleSubmitBtn"
+                        disabled
+                    >
+                        <i class="fas fa-paper-plane"></i>
+                        {{ $hasJobOrder ? 'Send Schedule Change Request' : 'Send Reschedule Request' }}
                     </button>
                 </form>
             </div>
-        @endif
+        </section>
+    @endif
 
-@if ($canRequestScheduleChange)
-    <div class="request-action-card">
-        <div class="request-action-title">
-            {{ $hasJobOrder ? 'Request Schedule Change' : 'Request Reschedule' }}
-        </div>
+    @if ($canRequestCancellation)
+        <section class="request-show-card request-action-section danger">
+            <div class="request-show-card-head">
+                <span class="request-show-card-icon red">
+                    <i class="fas fa-ban"></i>
+                </span>
 
-        <div class="request-action-subtitle">
-            @if ($hasJobOrder)
-                Request a change to the scheduled service date/time. This still requires admin review.
-            @else
-                Choose a date with available inspectors, then enter your preferred time and reason.
-            @endif
-        </div>
-
-        @if ($quotation->client_action_status === 'pending')
-            <div class="pending-request-banner">
-                You already have a pending schedule change request under admin review. You may still browse the calendar, but you cannot submit another request yet.
+                <div>
+                    <h3>Request Cancellation</h3>
+                    <p>Use this only when the scheduled service should no longer proceed.</p>
+                </div>
             </div>
-        @endif
 
-        <div class="current-appointment-box">
-            <strong>Current {{ $hasJobOrder ? 'Service Schedule' : 'Appointment' }}:</strong>
-            @if ($primaryScheduleDate && $primaryScheduleTime)
-                {{ optional($primaryScheduleDate)->format('M d, Y') }} • {{ date('h:i A', strtotime($primaryScheduleTime)) }}
-            @else
-                Not yet scheduled
-            @endif
-        </div>
-
-        <form method="POST" action="{{ route('client.requests.request-reschedule', $quotation) }}">
-            @csrf
-
-            <div class="mb-3">
-                <label class="form-label">Requested Date</label>
-
-                <div class="reschedule-calendar-wrap" id="rescheduleCalendarWrap">
-                    <div class="calendar-toolbar">
-                        <button type="button" id="calendarPrevBtn">&larr;</button>
-                        <div class="calendar-month-label" id="calendarMonthLabel">Month</div>
-                        <button type="button" id="calendarNextBtn">&rarr;</button>
-                    </div>
-
-                    <div class="calendar-weekdays">
-                        <div class="calendar-weekday">Sun</div>
-                        <div class="calendar-weekday">Mon</div>
-                        <div class="calendar-weekday">Tue</div>
-                        <div class="calendar-weekday">Wed</div>
-                        <div class="calendar-weekday">Thu</div>
-                        <div class="calendar-weekday">Fri</div>
-                        <div class="calendar-weekday">Sat</div>
-                    </div>
-
-                    <div
-                        class="calendar-grid"
-                        id="rescheduleCalendar"
-                        data-endpoint="{{ route('client.requests.calendar-availability') }}">
-                    </div>
-
-                    <div class="calendar-legend">
-                        <div><span class="legend-dot legend-green"></span>Available</div>
-                        <div><span class="legend-dot legend-red"></span>No inspector</div>
-                        <div><span class="legend-dot legend-gray"></span>Past date</div>
-                        <div><span class="legend-dot" style="background:#2563eb;"></span>Current appointment</div>
-                        <div><span class="legend-dot" style="background:#f59e0b;"></span>Pending requested date</div>
-                        <div><span class="legend-dot" style="background:#22c55e;"></span>Selected date</div>
-                    </div>
-
-                    <div class="selected-date-box" id="selectedAvailabilityText">
-                        Select a green date to continue.
-                    </div>
+            <div class="request-show-card-body">
+                <div class="cancel-warning-box">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    Cancellation is not immediate. Your request will still require admin review.
                 </div>
 
-                <input
-                    type="hidden"
-                    name="client_requested_date"
-                    id="client_requested_date"
-                    value="{{ old('client_requested_date') }}"
-                    required
-                >
+                <form method="POST" action="{{ route('client.requests.request-cancel', $quotation) }}">
+                    @csrf
+
+                    <label for="cancel_reason" class="request-action-label">Reason for cancellation</label>
+
+                    <textarea
+                        id="cancel_reason"
+                        name="client_request_reason"
+                        class="form-control"
+                        rows="4"
+                        placeholder="Please explain why you need to cancel this service."
+                        required
+                    >{{ old('client_request_reason') }}</textarea>
+
+                    @error('client_cancel')
+                        <small class="text-danger d-block mt-2">{{ $message }}</small>
+                    @enderror
+
+                    <button class="request-cancel-submit">
+                        <i class="fas fa-ban"></i>
+                        Send Cancellation Request
+                    </button>
+                </form>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label">Requested Time</label>
-                <input
-                    type="time"
-                    name="client_requested_time"
-                    class="form-control"
-                    value="{{ old('client_requested_time') }}"
-                    required
-                >
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Reason</label>
-                <textarea
-                    name="client_request_reason"
-                    class="form-control"
-                    rows="3"
-                    required
-                >{{ old('client_request_reason') }}</textarea>
-            </div>
-
-            @error('client_reschedule')
-                <small class="text-danger d-block mb-2">{{ $message }}</small>
-            @enderror
-
-            @error('client_requested_date')
-                <small class="text-danger d-block mb-2">{{ $message }}</small>
-            @enderror
-
-            @error('client_requested_time')
-                <small class="text-danger d-block mb-2">{{ $message }}</small>
-            @enderror
-
-            @error('client_request_reason')
-                <small class="text-danger d-block mb-2">{{ $message }}</small>
-            @enderror
-
-            <button type="submit" class="btn btn-outline-primary w-100 reschedule-submit-btn" id="rescheduleSubmitBtn" disabled>
-                {{ $hasJobOrder ? 'Send Schedule Change Request' : 'Send Reschedule Request' }}
-            </button>
-        </form>
-    </div>
-@endif
-
-@if ($canRequestCancellation)
-    <div class="request-action-card">
-        <div class="request-action-title">Request Cancellation</div>
-        <div class="request-action-subtitle">
-            @if ($hasJobOrder)
-                Use this only if you really need to cancel the scheduled service. This still requires admin review.
-            @else
-                Use this only if you really need to cancel the appointment or service request.
-            @endif
-        </div>
-
-        <div class="cancel-warning-box">
-            Cancellation requests still require admin review before they take effect.
-        </div>
-
-        <form method="POST" action="{{ route('client.requests.request-cancel', $quotation) }}">
-            @csrf
-
-            <div class="mb-3">
-                <label class="form-label">Reason</label>
-                <textarea
-                    name="client_request_reason"
-                    class="form-control"
-                    rows="4"
-                    required
-                >{{ old('client_request_reason') }}</textarea>
-            </div>
-
-            @error('client_cancel')
-                <small class="text-danger d-block mb-2">{{ $message }}</small>
-            @enderror
-
-            <button class="btn btn-outline-danger w-100">Send Cancellation Request</button>
-        </form>
-    </div>
-@endif
-
-<div class="d-flex gap-2 flex-wrap">
-    <a href="{{ route('client.requests.index') }}" class="btn btn-outline-secondary">
-        Back to My Requests
-    </a>
-
-    @if ($quotation->jobOrder)
-        <a href="{{ route('client.job-orders.show', $quotation->jobOrder) }}" class="btn btn-dark">
-            View Job Order
-        </a>
+        </section>
     @endif
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const calendar = document.getElementById('rescheduleCalendar');

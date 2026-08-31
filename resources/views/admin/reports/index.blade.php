@@ -2,357 +2,402 @@
 
 @section('title', 'Reports - WRPlumb')
 @section('topbar_title', 'Reports')
-@section('topbar_subtitle', 'Generate operational reports and export project records.')
+@section('topbar_subtitle', 'Generate monthly operations reports across service workflows.')
+
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/admin/reports.css') }}">
 @endpush
+
 @section('content')
+@php
+    $monthName = $month ? DateTime::createFromFormat('!m', (int) $month)->format('F') : 'All Months';
+    $statusTotal = array_sum($statusChart['values'] ?? []);
+    $statusColors = [
+        'Scheduled' => 'scheduled',
+        'Ongoing' => 'in_progress',
+        'Completed' => 'completed',
+        'Cancelled' => 'cancelled',
+    ];
 
+    $statusBreakdown = collect($statusChart['labels'] ?? [])->map(function ($label, $index) use ($statusChart, $statusTotal, $statusColors) {
+        $count = (int) (($statusChart['values'][$index] ?? 0));
+        return [
+            'label' => $label,
+            'count' => $count,
+            'percent' => $statusTotal > 0 ? round(($count / $statusTotal) * 100) : 0,
+            'class' => $statusColors[$label] ?? 'default',
+        ];
+    });
 
-<div class="report-hero">
-    <div class="report-hero-badge">
-        <i class="fas fa-chart-column"></i>
-        Operational Reporting Center
-    </div>
-    <h1>Admin Reports</h1>
-    <p>Monitor project status, income performance, and export filtered project records.</p>
-</div>
+    $reportTypeLabels = [
+        'all' => 'All Reports',
+        'job_orders' => 'Job Orders',
+        'quotations' => 'Quotations',
+        'warranty_claims' => 'Warranty Claims',
+        'backjobs' => 'Backjobs',
+        'inspector_availability' => 'Inspector Availability',
+    ];
 
-<div class="report-filter-card">
-    <form method="GET" action="{{ route('admin.reports.index') }}" class="row g-3 align-items-end">
-        <div class="col-lg-2 col-md-4">
-            <label class="form-label fw-bold">Year</label>
-            <input type="number" name="year" class="form-control" value="{{ $year }}" min="2020" max="2100">
+    $statusBadgeClass = function ($value) {
+        $value = strtolower((string) $value);
+        return match ($value) {
+            'scheduled', 'pending', 'routed' => 'scheduled',
+            'in_progress', 'on_duty', 'approved' => 'in_progress',
+            'completed', 'resolved', 'available' => 'completed',
+            'cancelled', 'rejected', 'off_duty', 'on_leave' => 'cancelled',
+            default => 'default',
+        };
+    };
+@endphp
+
+<div class="reports-page">
+    <section class="reports-hero-card">
+        <div class="reports-hero-copy">
+            <div class="reports-hero-kicker"><i class="fas fa-chart-column me-2"></i>Monthly Operations Report</div>
+            <h2>{{ $monthName }} {{ $year }} Operational Summary</h2>
+            <p>Monitor job orders, quotations, warranty claims, backjobs, inspector availability, and confirmed income in one report center.</p>
         </div>
-
-        <div class="col-lg-3 col-md-4">
-            <label class="form-label fw-bold">Month</label>
-            <select name="month" class="form-select">
-                <option value="">All Months</option>
-                @foreach (range(1, 12) as $m)
-                    <option value="{{ $m }}" @selected((string) $month === (string) $m)>
-                        {{ DateTime::createFromFormat('!m', $m)->format('F') }}
-                    </option>
-                @endforeach
-            </select>
+        <div class="reports-hero-meta">
+            <span>Report Type</span>
+            <strong>{{ $reportTypeLabels[$reportType] ?? 'All Reports' }}</strong>
+            <small>Generated {{ now()->format('M d, Y h:i A') }}</small>
         </div>
+    </section>
 
-        <div class="col-lg-3 col-md-4">
-            <label class="form-label fw-bold">Project Status</label>
-            <select name="status" class="form-select">
-                <option value="">All Status</option>
-                <option value="scheduled" @selected($status === 'scheduled')>Scheduled</option>
-                <option value="in_progress" @selected($status === 'in_progress')>Ongoing / In Progress</option>
-                <option value="completed" @selected($status === 'completed')>Completed</option>
-                <option value="cancelled" @selected($status === 'cancelled')>Cancelled</option>
-            </select>
-        </div>
-
-        <div class="col-lg-2 col-md-6">
-            <button class="btn btn-primary w-100">
-                <i class="fas fa-filter me-2"></i>Apply Filter
-            </button>
-        </div>
-
-        <div class="col-lg-2 col-md-6">
-            <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-secondary w-100">
-                Reset
-            </a>
-        </div>
-    </form>
-</div>
-
-<div class="report-grid">
-    <div class="report-stat-card">
-        <div class="report-stat-top">
+    <section class="reports-filter-card">
+        <form method="GET" action="{{ route('admin.reports.index') }}" class="reports-filter-grid reports-filter-grid-extended">
             <div>
-                <div class="report-stat-label">Completed Projects</div>
-                <div class="report-stat-value">{{ $summary['completed'] }}</div>
+                <label class="form-label">Year</label>
+                <input type="number" name="year" class="form-control" value="{{ $year }}" min="2020" max="2100">
             </div>
-            <div class="report-stat-icon green">
-                <i class="fas fa-circle-check"></i>
-            </div>
-        </div>
-        <div class="report-stat-helper">Projects fully completed within the selected period.</div>
-    </div>
 
-    <div class="report-stat-card">
-        <div class="report-stat-top">
             <div>
-                <div class="report-stat-label">Ongoing Projects</div>
-                <div class="report-stat-value">{{ $summary['ongoing'] }}</div>
+                <label class="form-label">Month</label>
+                <select name="month" class="form-select">
+                    <option value="">All Months</option>
+                    @foreach (range(1, 12) as $m)
+                        <option value="{{ $m }}" @selected((string) $month === (string) $m)>
+                            {{ DateTime::createFromFormat('!m', $m)->format('F') }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
-            <div class="report-stat-icon orange">
-                <i class="fas fa-person-digging"></i>
-            </div>
-        </div>
-        <div class="report-stat-helper">Projects currently marked as in progress.</div>
-    </div>
 
-    <div class="report-stat-card">
-        <div class="report-stat-top">
             <div>
-                <div class="report-stat-label">Scheduled Projects</div>
-                <div class="report-stat-value">{{ $summary['scheduled'] }}</div>
+                <label class="form-label">Report Type</label>
+                <select name="report_type" class="form-select">
+                    @foreach ($reportTypeLabels as $value => $label)
+                        <option value="{{ $value }}" @selected($reportType === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div class="report-stat-icon blue">
-                <i class="fas fa-calendar-check"></i>
-            </div>
-        </div>
-        <div class="report-stat-helper">Projects already scheduled for service.</div>
-    </div>
 
-    <div class="report-stat-card">
-        <div class="report-stat-top">
             <div>
-                <div class="report-stat-label">Cancelled Projects</div>
-                <div class="report-stat-value">{{ $summary['cancelled'] }}</div>
+                <label class="form-label">Status / Focus</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="scheduled" @selected($status === 'scheduled')>Scheduled</option>
+                    <option value="in_progress" @selected($status === 'in_progress')>In Progress</option>
+                    <option value="completed" @selected($status === 'completed')>Completed</option>
+                    <option value="cancelled" @selected($status === 'cancelled')>Cancelled</option>
+                    <option value="pending" @selected($status === 'pending')>Pending</option>
+                    <option value="approved" @selected($status === 'approved')>Approved</option>
+                    <option value="resolved" @selected($status === 'resolved')>Resolved</option>
+                    <option value="available" @selected($status === 'available')>Inspector Available</option>
+                    <option value="on_duty" @selected($status === 'on_duty')>Inspector On Duty</option>
+                    <option value="off_duty" @selected($status === 'off_duty')>Inspector Off Duty</option>
+                    <option value="on_leave" @selected($status === 'on_leave')>Inspector On Leave</option>
+                </select>
             </div>
-            <div class="report-stat-icon red">
-                <i class="fas fa-ban"></i>
-            </div>
-        </div>
-        <div class="report-stat-helper">Projects cancelled during the selected period.</div>
-    </div>
 
-    <div class="report-stat-card">
-        <div class="report-stat-top">
+            <div class="reports-filter-actions">
+                <button class="btn btn-primary">
+                    <i class="fas fa-filter me-1"></i> Apply Filter
+                </button>
+                <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-rotate-left me-1"></i> Reset
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <section class="reports-module-grid">
+        <article class="reports-module-card job">
+            <span><i class="fas fa-clipboard-check"></i></span>
+            <div><small>Job Orders</small><strong>{{ $moduleStats['job_orders'] ?? 0 }}</strong></div>
+        </article>
+        <article class="reports-module-card quotation">
+            <span><i class="fas fa-file-signature"></i></span>
+            <div><small>Quotations</small><strong>{{ $moduleStats['quotations'] ?? 0 }}</strong></div>
+        </article>
+        <article class="reports-module-card warranty">
+            <span><i class="fas fa-shield-halved"></i></span>
+            <div><small>Warranty Claims</small><strong>{{ $moduleStats['warranty_claims'] ?? 0 }}</strong></div>
+        </article>
+        <article class="reports-module-card backjob">
+            <span><i class="fas fa-rotate-left"></i></span>
+            <div><small>Backjobs</small><strong>{{ $moduleStats['backjobs'] ?? 0 }}</strong></div>
+        </article>
+        <article class="reports-module-card availability">
+            <span><i class="fas fa-calendar-check"></i></span>
+            <div><small>Availability Records</small><strong>{{ $moduleStats['inspector_availability'] ?? 0 }}</strong></div>
+        </article>
+    </section>
+
+    <section class="reports-kpi-grid">
+        <article class="reports-kpi-card completed">
+            <div class="reports-kpi-icon"><i class="fas fa-circle-check"></i></div>
             <div>
-                <div class="report-stat-label">Confirmed Income</div>
-                <div class="report-stat-value money">PHP {{ number_format((float) $incomeSummary['confirmed_income'], 2) }}</div>
+                <span>Completed Jobs</span>
+                <strong>{{ $summary['completed'] }}</strong>
+                <p>Fully completed within the selected period.</p>
             </div>
-            <div class="report-stat-icon violet">
-                <i class="fas fa-peso-sign"></i>
+        </article>
+
+        <article class="reports-kpi-card ongoing">
+            <div class="reports-kpi-icon"><i class="fas fa-person-digging"></i></div>
+            <div>
+                <span>Ongoing Jobs</span>
+                <strong>{{ $summary['ongoing'] }}</strong>
+                <p>Currently marked as in progress.</p>
+            </div>
+        </article>
+
+        <article class="reports-kpi-card scheduled">
+            <div class="reports-kpi-icon"><i class="fas fa-calendar-check"></i></div>
+            <div>
+                <span>Scheduled Jobs</span>
+                <strong>{{ $summary['scheduled'] }}</strong>
+                <p>Already scheduled for service.</p>
+            </div>
+        </article>
+
+        <article class="reports-kpi-card cancelled">
+            <div class="reports-kpi-icon"><i class="fas fa-ban"></i></div>
+            <div>
+                <span>Cancelled Jobs</span>
+                <strong>{{ $summary['cancelled'] }}</strong>
+                <p>Cancelled during the selected period.</p>
+            </div>
+        </article>
+
+        <article class="reports-kpi-card income">
+            <div class="reports-kpi-icon"><i class="fas fa-peso-sign"></i></div>
+            <div>
+                <span>Confirmed Income</span>
+                <strong class="money">PHP {{ number_format((float) $incomeSummary['confirmed_income'], 2) }}</strong>
+                <p>Confirmed payments for this filter.</p>
+            </div>
+        </article>
+    </section>
+
+    <section class="reports-chart-grid reports-chart-grid-extended">
+        <div class="reports-panel reports-performance-panel">
+            <div class="reports-panel-head">
+                <div>
+                    <h5><i class="fas fa-chart-line me-2 text-primary"></i>Monthly Operations Trend</h5>
+                    <p>Job orders, quotations, warranty claims, backjobs, and income trend by month.</p>
+                </div>
+            </div>
+            <div class="reports-chart-box">
+                <canvas id="monthlyOperationsChart"></canvas>
             </div>
         </div>
-        <div class="report-stat-helper">Confirmed payments recorded for the selected period.</div>
-    </div>
-</div>
 
-<div class="report-chart-grid">
-    <div class="panel">
-        <div class="panel-header">
-            <h5><i class="fas fa-chart-line me-2 text-primary"></i>Monthly Projects and Income</h5>
-        </div>
-        <div class="panel-body chart-box">
-            <canvas id="monthlyProjectsIncomeChart"></canvas>
-        </div>
-    </div>
+        <div class="reports-panel reports-status-panel">
+            <div class="reports-panel-head">
+                <div>
+                    <h5><i class="fas fa-chart-pie me-2 text-primary"></i>Job Status Breakdown</h5>
+                    <p>Distribution of job orders by current status.</p>
+                </div>
+            </div>
 
-    <div class="panel">
-        <div class="panel-header">
-            <h5><i class="fas fa-chart-pie me-2 text-primary"></i>Project Status Distribution</h5>
-        </div>
-        <div class="panel-body chart-box small">
-            <canvas id="projectStatusChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="panel mb-4">
-    <div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5><i class="fas fa-file-excel me-2 text-success"></i>Export Project Report</h5>
-        <span class="project-table-meta">
-            Uses the selected filters above
-        </span>
-    </div>
-
-    <div class="panel-body">
-        <div class="export-callout">
-            <div class="row g-3 align-items-center">
-                <div class="col-lg-8">
-                    <div class="export-title">Download Excel Report</div>
-                    <p class="export-text mb-lg-0">
-                        This exports the same filtered project records shown in the preview table.
-                    </p>
+            <div class="reports-status-content compact">
+                <div class="reports-donut-wrap">
+                    <canvas id="projectStatusChart"></canvas>
                 </div>
 
-                <div class="col-lg-4">
-                    <form method="GET" action="{{ route('admin.reports.projects.export') }}">
-                        <input type="hidden" name="year" value="{{ $year }}">
-                        <input type="hidden" name="month" value="{{ $month }}">
-                        <input type="hidden" name="status" value="{{ $status }}">
-
-                        <button class="btn btn-primary w-100">
-                            <i class="fas fa-download me-2"></i>Export Excel Report
-                        </button>
-                    </form>
+                <div class="reports-status-table">
+                    <div class="reports-status-row reports-status-heading">
+                        <span>Status</span><span>Count</span><span>%</span>
+                    </div>
+                    @foreach ($statusBreakdown as $item)
+                        <div class="reports-status-row">
+                            <span><i class="reports-status-dot {{ $item['class'] }}"></i>{{ $item['label'] }}</span>
+                            <strong>{{ $item['count'] }}</strong>
+                            <strong>{{ $item['percent'] }}%</strong>
+                        </div>
+                    @endforeach
+                    <div class="reports-status-row reports-status-total">
+                        <span>Total</span><strong>{{ $statusTotal }}</strong><strong>{{ $statusTotal > 0 ? '100%' : '0%' }}</strong>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<div class="panel">
-    <div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5><i class="fas fa-list-check me-2 text-primary"></i>Project Records Preview</h5>
-        <div class="project-table-meta">
-            Showing {{ $jobOrders->count() }} of {{ $jobOrders->total() }} filtered records
+    <section class="reports-panel reports-inspector-panel">
+        <div class="reports-panel-head reports-records-head">
+            <div>
+                <h5><i class="fas fa-user-clock me-2 text-primary"></i>Inspector Availability Summary</h5>
+                <p>Monthly attendance-style overview based on availability records.</p>
+            </div>
         </div>
-    </div>
+        <div class="reports-inspector-grid">
+            <div class="reports-inspector-pill available"><span>Available</span><strong>{{ $inspectorSummary['available'] ?? 0 }}</strong></div>
+            <div class="reports-inspector-pill duty"><span>On Duty</span><strong>{{ $inspectorSummary['on_duty'] ?? 0 }}</strong></div>
+            <div class="reports-inspector-pill off"><span>Off Duty</span><strong>{{ $inspectorSummary['off_duty'] ?? 0 }}</strong></div>
+            <div class="reports-inspector-pill leave"><span>On Leave</span><strong>{{ $inspectorSummary['on_leave'] ?? 0 }}</strong></div>
+        </div>
+    </section>
 
-    <div class="panel-body p-0">
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead>
-                    <tr>
-                        <th>Job Order</th>
-                        <th>Client</th>
-                        <th>Service</th>
-                        <th>Personnel</th>
-                        <th>Status</th>
-                        <th>Schedule</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($jobOrders as $jobOrder)
-                        @php
-                            $statusKey = $jobOrder->status ?? 'default';
-                            $statusClass = in_array($statusKey, ['scheduled', 'in_progress', 'completed', 'cancelled'])
-                                ? $statusKey
-                                : 'default';
+    <section class="reports-panel reports-records-panel">
+        <div class="reports-panel-head reports-records-head">
+            <div>
+                <h5><i class="fas fa-table-list me-2 text-primary"></i>{{ $reportTypeLabels[$reportType] ?? 'All Reports' }} Preview</h5>
+                <p>Showing {{ $records->count() }} of {{ $records->total() }} filtered record(s).</p>
+            </div>
 
-                            $clientName = $jobOrder->quotationRequest?->full_name
-                                ?? trim(($jobOrder->quotationRequest?->first_name ?? '') . ' ' . ($jobOrder->quotationRequest?->last_name ?? ''));
-                        @endphp
+            <div class="reports-record-actions">
+                <div class="reports-search-control">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="search" id="reportRecordSearch" class="form-control" placeholder="Search records...">
+                </div>
 
-                        <tr>
-                            <td class="fw-bold">
-                                {{ $jobOrder->job_order_no ?? '—' }}
-                            </td>
-                            <td>
-                                <div class="fw-semibold">{{ $clientName ?: '—' }}</div>
-                                <div class="project-table-meta">{{ $jobOrder->quotationRequest?->email ?? '' }}</div>
-                            </td>
-                            <td>{{ $jobOrder->service_type ?? '—' }}</td>
-                            <td>{{ $jobOrder->worker?->name ?? $jobOrder->worker?->first_name ?? 'Not assigned' }}</td>
-                            <td>
-                                <span class="report-status-badge {{ $statusClass }}">
-                                    <i class="fas fa-circle"></i>
-                                    {{ strtoupper(str_replace('_', ' ', $jobOrder->status ?? 'Unknown')) }}
-                                </span>
-                            </td>
-                            <td>
-                                <div>{{ optional($jobOrder->scheduled_date)->format('M d, Y') ?? '—' }}</div>
-                                <div class="project-table-meta">{{ $jobOrder->scheduled_time ?? '' }}</div>
-                            </td>
-                            <td>{{ optional($jobOrder->created_at)->format('M d, Y') ?? '—' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                No project records found for the selected filter.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                <form method="GET" action="{{ route('admin.reports.projects.export') }}">
+                    <input type="hidden" name="year" value="{{ $year }}">
+                    <input type="hidden" name="month" value="{{ $month }}">
+                    <input type="hidden" name="status" value="{{ $status }}">
+                    <input type="hidden" name="report_type" value="{{ $reportType }}">
+                    <button class="btn btn-outline-primary reports-export-btn">
+                        <i class="fas fa-file-excel me-1"></i> Export Selected Report
+                    </button>
+                </form>
+            </div>
         </div>
 
-        @if(method_exists($jobOrders, 'links'))
-            <div class="p-3">
-                {{ $jobOrders->links() }}
+        <div class="reports-table-wrap">
+            @if ($reportType === 'inspector_availability')
+                <table class="table align-middle reports-table reports-table-availability" id="reportRecordsTable">
+                    <thead>
+                        <tr>
+                            @foreach ($recordColumns as $column)
+                                <th>{{ $column }}</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($records as $row)
+                            <tr>
+                                <td><div class="reports-client-name">{{ $row['inspector'] }}</div><div class="reports-muted-text">Latest: {{ $row['latest_date'] ?? '—' }}</div></td>
+                                <td><span class="reports-count-badge available">{{ $row['available'] }}</span></td>
+                                <td><span class="reports-count-badge duty">{{ $row['on_duty'] }}</span></td>
+                                <td><span class="reports-count-badge off">{{ $row['off_duty'] }}</span></td>
+                                <td><span class="reports-count-badge leave">{{ $row['on_leave'] }}</span></td>
+                                <td><span class="reports-count-badge neutral">{{ $row['no_record'] }}</span></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="text-center text-muted py-5">No inspector availability records found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            @else
+                <table class="table align-middle reports-table" id="reportRecordsTable">
+                    <thead>
+                        <tr>
+                            @foreach ($recordColumns as $column)
+                                <th>{{ $column }}</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($records as $row)
+                            <tr>
+                                <td><span class="reports-type-badge">{{ $row['type'] }}</span></td>
+                                <td><div class="reports-reference">{{ $row['reference'] }}</div></td>
+                                <td><div class="reports-client-name">{{ $row['client'] }}</div></td>
+                                <td>{{ \Illuminate\Support\Str::limit($row['subject'], 70) }}</td>
+                                <td>
+                                    <span class="report-status-badge {{ $statusBadgeClass($row['status']) }}">
+                                        <i class="fas fa-circle"></i>{{ strtoupper(str_replace('_', ' ', $row['status'])) }}
+                                    </span>
+                                </td>
+                                <td>{{ $row['date'] }}</td>
+                                <td><div class="reports-muted-text">{{ \Illuminate\Support\Str::limit($row['remarks'], 80) }}</div></td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-5">
+                                    <i class="fas fa-file-circle-xmark d-block mb-2 fs-3"></i>
+                                    No records found for the selected filter.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            @endif
+        </div>
+
+        @if(method_exists($records, 'links'))
+            <div class="reports-pagination">
+                {{ $records->links() }}
             </div>
         @endif
-    </div>
+    </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const chartPalette = [
-        '#1d9bf0',
-        '#16a34a',
-        '#f59e0b',
-        '#ef4444',
-        '#7c3aed',
-        '#0891b2'
-    ];
-
-    new Chart(document.getElementById('monthlyProjectsIncomeChart'), {
-        type: 'bar',
-        data: {
-            labels: @json($monthlyChart['labels']),
-            datasets: [
-                {
-                    type: 'bar',
-                    label: 'Projects',
-                    data: @json($monthlyChart['projects']),
-                    backgroundColor: 'rgba(29, 155, 240, 0.22)',
-                    borderColor: '#1d9bf0',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                {
-                    type: 'line',
-                    label: 'Income',
-                    data: @json($monthlyChart['income']),
-                    borderColor: '#16a34a',
-                    backgroundColor: 'rgba(22, 163, 74, 0.12)',
-                    fill: true,
-                    tension: 0.35,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
+document.addEventListener('DOMContentLoaded', function () {
+    const monthlyChartElement = document.getElementById('monthlyOperationsChart');
+    if (monthlyChartElement) {
+        new Chart(monthlyChartElement, {
+            type: 'bar',
+            data: {
+                labels: @json($monthlyChart['labels']),
+                datasets: [
+                    { label: 'Job Orders', data: @json($monthlyChart['jobOrders']), backgroundColor: 'rgba(29, 155, 240, 0.25)', borderColor: '#1d9bf0', borderWidth: 1, borderRadius: 6, yAxisID: 'y' },
+                    { label: 'Quotations', data: @json($monthlyChart['quotations']), backgroundColor: 'rgba(15, 76, 129, 0.18)', borderColor: '#0f4c81', borderWidth: 1, borderRadius: 6, yAxisID: 'y' },
+                    { label: 'Warranty Claims', data: @json($monthlyChart['warranties']), backgroundColor: 'rgba(124, 58, 237, 0.18)', borderColor: '#7c3aed', borderWidth: 1, borderRadius: 6, yAxisID: 'y' },
+                    { label: 'Backjobs', data: @json($monthlyChart['backjobs']), backgroundColor: 'rgba(239, 68, 68, 0.16)', borderColor: '#ef4444', borderWidth: 1, borderRadius: 6, yAxisID: 'y' },
+                    { type: 'line', label: 'Income (PHP)', data: @json($monthlyChart['income']), borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.08)', fill: true, tension: 0.35, pointRadius: 3, yAxisID: 'y1' }
+                ]
             },
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    position: 'left',
-                    ticks: {
-                        precision: 0
-                    }
-                },
-                y1: {
-                    beginAtZero: true,
-                    suggestedMax: 1000,
-                    position: 'right',
-                    grid: {
-                        drawOnChartArea: false
-                    },
-                    ticks: {
-                        callback: value => 'PHP ' + Number(value).toLocaleString()
-                    }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10 } } },
+                scales: {
+                    y: { beginAtZero: true, position: 'left', ticks: { precision: 0 } },
+                    y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: value => 'PHP ' + Number(value).toLocaleString() } }
                 }
             }
-        }
-    });
+        });
+    }
 
-    new Chart(document.getElementById('projectStatusChart'), {
-        type: 'doughnut',
-        data: {
-            labels: @json($statusChart['labels']),
-            datasets: [{
-                data: @json($statusChart['values']),
-                backgroundColor: chartPalette,
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        boxWidth: 12
-                    }
-                }
-            }
-        }
-    });
+    const statusChartElement = document.getElementById('projectStatusChart');
+    if (statusChartElement) {
+        new Chart(statusChartElement, {
+            type: 'doughnut',
+            data: {
+                labels: @json($statusChart['labels']),
+                datasets: [{ data: @json($statusChart['values']), backgroundColor: ['#1d9bf0', '#16a34a', '#f59e0b', '#ef4444'], borderWidth: 3, borderColor: '#ffffff', hoverOffset: 4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { display: false } } }
+        });
+    }
+
+    const searchInput = document.getElementById('reportRecordSearch');
+    const table = document.getElementById('reportRecordsTable');
+    if (searchInput && table) {
+        searchInput.addEventListener('input', function () {
+            const term = searchInput.value.toLowerCase().trim();
+            table.querySelectorAll('tbody tr').forEach(function (row) {
+                row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+            });
+        });
+    }
+});
 </script>
 @endsection

@@ -11,19 +11,23 @@ use App\Services\AuditLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class QuotationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = QuotationRequest::query()->with(['worker', 'jobOrder']);
+        $query = QuotationRequest::query()
+            ->with(['worker', 'jobOrder', 'quotation',])
+            ->whereNull('archived_at');
 
         if ($request->filled('status')) {
             $status = $request->status;
 
-            // The UI displays job-order status first when a job order exists.
-            // Therefore request statuses should only show records without job orders,
-            // while job_* filters should search inside the related job order.
+
             if (str_starts_with($status, 'job_')) {
                 $jobStatus = str_replace('job_', '', $status);
 
@@ -71,7 +75,7 @@ class QuotationController extends Controller
 
         foreach ($quotations as $quotation) {
             if ($quotation->preferred_date) {
-                $availableWorkers = User::where('role', 'worker')
+                $availableWorkers = User::where('role', ['inspector', 'worker'])
                     ->where('is_active', true)
                     ->whereHas('inspectorAvailabilities', function ($q) use ($quotation) {
                         $q->whereDate('availability_date', $quotation->preferred_date)
@@ -144,7 +148,7 @@ class QuotationController extends Controller
         ]);
 
         $worker = User::where('id', $validated['worker_id'])
-            ->where('role', 'worker')
+            ->where('role', ['inspector', 'worker'])
             ->firstOrFail();
 
         if ($quotation->preferred_date) {
@@ -154,9 +158,9 @@ class QuotationController extends Controller
             );
 
             if (!$isAvailable) {
-                return back()->withErrors([
+                return $this->workflowError($request, [
                     'worker_id' => 'Selected inspector is not marked available on the preferred date.'
-                ])->withInput();
+                ], 'Selected inspector is not marked available on the preferred date.');
             }
         }
 
@@ -169,9 +173,9 @@ class QuotationController extends Controller
             );
 
             if ($hasConflict) {
-                return back()->withErrors([
+                return $this->workflowError($request, [
                     'worker_id' => 'Selected inspector already has an appointment at this schedule.'
-                ])->withInput();
+                ], 'Selected inspector already has an appointment at this schedule.');
             }
         }
 
@@ -189,22 +193,6 @@ class QuotationController extends Controller
         $quotation->assigned_by = Auth::id();
         $quotation->assigned_at = now();
         $quotation->admin_notes = $validated['admin_notes'] ?? null;
-
-        if (
-            $quotation->service_flow === 'direct_service' &&
-            empty($quotation->appointment_date) &&
-            !empty($quotation->preferred_date)
-        ) {
-            $quotation->appointment_date = $quotation->preferred_date;
-        }
-
-        if (
-            $quotation->service_flow === 'direct_service' &&
-            empty($quotation->appointment_time) &&
-            !empty($quotation->preferred_time)
-        ) {
-            $quotation->appointment_time = $quotation->preferred_time;
-        }
 
         $this->syncRequestStatusFromFlow($quotation);
         $quotation->save();
@@ -246,10 +234,16 @@ class QuotationController extends Controller
             'info'
         );
 
-        return back()->with('success', $quotation->service_flow === 'direct_service'
-            ? 'Personnel assigned successfully. Preferred date/time was applied as service schedule when available.'
-            : 'Inspector assigned successfully.'
-        );
+        $message = $quotation->service_flow === 'direct_service'
+            ? 'Personnel assigned successfully. Please confirm the service schedule next.'
+            : 'Inspector assigned successfully.';
+
+        return $this->workflowSuccess($request, $message, [
+            'request_id' => $quotation->id,
+            'next_step' => 3,
+            'status' => $quotation->status,
+            'worker_name' => $worker->name,
+        ]);
     }
 
     protected function normalizeAppointmentTime(?string $time): ?string
@@ -310,28 +304,28 @@ class QuotationController extends Controller
             in_array($status, ['approved', 'rescheduled']) &&
             empty($quotation->worker_id)
         ) {
-            return back()->withErrors([
+            return $this->workflowError($request, [
                 'worker_id' => 'Assign personnel first before approving a direct service schedule.',
-            ])->withInput();
+            ], 'Assign personnel first before confirming a direct service schedule.');
         }
 
         if (in_array($status, ['approved', 'rescheduled'])) {
             if (!$quotation->worker_id) {
-                return back()->withErrors([
+                return $this->workflowError($request, [
                     'appointment_status' => 'Assign an inspector first before approving or rescheduling.'
-                ])->withInput();
+                ], 'Assign an inspector first before confirming the schedule.');
             }
 
             if (empty($validated['appointment_date']) || empty($validated['appointment_time'])) {
-                return back()->withErrors([
+                return $this->workflowError($request, [
                     'appointment_date' => 'Appointment date and time are required for approval or reschedule.'
-                ])->withInput();
+                ], 'Appointment date and time are required.');
             }
 
             if (!$this->inspectorIsAvailableOnDate($quotation->worker_id, $validated['appointment_date'])) {
-                return back()->withErrors([
+                return $this->workflowError($request, [
                     'appointment_date' => 'The assigned inspector is not marked available on this appointment date.'
-                ])->withInput();
+                ], 'The assigned inspector is not marked available on this appointment date.');
             }
 
             if ($this->hasAppointmentConflict(
@@ -340,9 +334,9 @@ class QuotationController extends Controller
                 $validated['appointment_date'],
                 $validated['appointment_time']
             )) {
-                return back()->withErrors([
+                return $this->workflowError($request, [
                     'appointment_time' => 'Scheduling conflict detected. This inspector already has an appointment at that exact date and time.'
-                ])->withInput();
+                ], 'Scheduling conflict detected for this date and time.');
             }
         }
 
@@ -481,10 +475,21 @@ class QuotationController extends Controller
             );
         }
 
-        return back()->with('success', $quotation->service_flow === 'direct_service'
-            ? 'Service schedule updated successfully.'
-            : 'Appointment updated successfully.'
-        );
+        $message = $quotation->service_flow === 'direct_service'
+            ? 'Service schedule confirmed successfully.'
+            : 'Inspection schedule confirmed successfully.';
+
+        return $this->workflowSuccess($request, $message, [
+            'request_id' => $quotation->id,
+            'next_step' => 4,
+            'status' => $quotation->status,
+            'appointment_status' => $quotation->appointment_status,
+            'appointment_date' => optional($quotation->appointment_date)->format('Y-m-d'),
+            'appointment_time' => $quotation->appointment_time,
+            'appointment_time_display' => $quotation->appointment_time
+                ? \Carbon\Carbon::parse($quotation->appointment_time)->format('h:i A')
+                : null,
+        ]);
     }
 
     public function reviewClientRequest(Request $request, QuotationRequest $quotation)
@@ -495,9 +500,9 @@ class QuotationController extends Controller
         ]);
 
         if ($quotation->client_action_status !== 'pending' || !$quotation->client_action_request) {
-            return back()->withErrors([
+            return $this->workflowError($request, [
                 'decision' => 'There is no pending client request to review.'
-            ]);
+            ], 'There is no pending client request to review.');
         }
 
         $oldValues = $quotation->only([
@@ -521,23 +526,23 @@ class QuotationController extends Controller
         if ($validated['decision'] === 'approved') {
             if ($quotation->client_action_request === 'reschedule') {
                 if (!$quotation->worker_id) {
-                    return back()->withErrors([
+                    return $this->workflowError($request, [
                         'decision' => 'Assign an inspector first before approving reschedule.'
-                    ]);
+                    ], 'Assign an inspector first before approving reschedule.');
                 }
 
                 if (!$quotation->client_requested_date || !$quotation->client_requested_time) {
-                    return back()->withErrors([
+                    return $this->workflowError($request, [
                         'decision' => 'Requested reschedule date/time is missing.'
-                    ]);
+                    ], 'Requested reschedule date/time is missing.');
                 }
 
                 $requestedDate = date('Y-m-d', strtotime($quotation->client_requested_date));
 
                 if (!$this->inspectorIsAvailableOnDate($quotation->worker_id, $requestedDate)) {
-                    return back()->withErrors([
+                    return $this->workflowError($request, [
                         'decision' => 'Assigned inspector is not available on the requested date.'
-                    ]);
+                    ], 'Assigned inspector is not available on the requested date.');
                 }
 
                 if ($this->hasAppointmentConflict(
@@ -546,9 +551,9 @@ class QuotationController extends Controller
                     $requestedDate,
                     $quotation->client_requested_time
                 )) {
-                    return back()->withErrors([
+                    return $this->workflowError($request, [
                         'decision' => 'Scheduling conflict detected for the requested date/time.'
-                    ]);
+                    ], 'Scheduling conflict detected for the requested date/time.');
                 }
 
                 $quotation->update([
@@ -638,8 +643,941 @@ class QuotationController extends Controller
             "Admin {$validated['decision']} the client's {$quotation->client_action_request} request for quotation request #{$quotation->id}."
         );
 
-        return back()->with('success', 'Client request reviewed successfully.');
+        return $this->workflowSuccess($request, 'Client request reviewed successfully.', [
+            'request_id' => $quotation->id,
+            'decision' => $validated['decision'],
+            'client_action_status' => $quotation->client_action_status,
+        ]);
     }
+
+
+    public function archived(Request $request)
+    {
+        $recordTypes = $this->archiveRecordTypes();
+
+        $allRecords = $this->collectArchivedRecords();
+        $records = $this->applyArchivedRecordFilters($allRecords, $request)
+            ->sortByDesc('archived_at_sort')
+            ->values();
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 10;
+
+        $archives = new LengthAwarePaginator(
+            $records->forPage($page, $perPage)->values(),
+            $records->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        $summary = [
+            'total_records' => $allRecords->count(),
+            'filtered_records' => $records->count(),
+            'latest_archived' => $allRecords->max('archived_at_sort'),
+            'by_type' => $allRecords->groupBy('type')->map->count()->toArray(),
+        ];
+
+        $archiveCandidates = $this->collectArchiveCandidates();
+
+        return view('admin.quotations.archived', compact('archives', 'recordTypes', 'summary', 'archiveCandidates'));
+    }
+
+    protected function archiveRecordTypes(): array
+    {
+        return [
+            'all' => 'All Records',
+            'request' => 'Requests',
+            'quotation' => 'Quotations',
+            'job_order' => 'Job Orders',
+            'warranty_claim' => 'Warranty Claims',
+            'back_job' => 'Back Jobs',
+        ];
+    }
+
+    protected function archiveTypeTables(): array
+    {
+        return [
+            'request' => 'quotation_requests',
+            'quotation' => 'quotations',
+            'job_order' => 'job_orders',
+            'warranty_claim' => 'warranty_claims',
+            'back_job' => 'back_jobs',
+        ];
+    }
+
+    protected function archiveTypeLabels(): array
+    {
+        return [
+            'request' => 'Request',
+            'quotation' => 'Quotation',
+            'job_order' => 'Job Order',
+            'warranty_claim' => 'Warranty Claim',
+            'back_job' => 'Back Job',
+        ];
+    }
+
+    protected function collectArchivedRecords(): \Illuminate\Support\Collection
+    {
+        return collect($this->archiveTypeTables())
+            ->flatMap(function (string $table, string $type) {
+                if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'archived_at')) {
+                    return collect();
+                }
+
+                return DB::table($table)
+                    ->whereNotNull('archived_at')
+                    ->get()
+                    ->map(fn ($row) => $this->makeArchivedRecord($type, $table, $row));
+            })
+            ->values();
+    }
+
+    protected function collectArchiveCandidates(): array
+    {
+        return collect($this->archiveTypeTables())
+            ->mapWithKeys(function (string $table, string $type) {
+                if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'archived_at')) {
+                    return [$type => []];
+                }
+
+                $query = DB::table($table)
+                    ->whereNull('archived_at');
+
+                if (Schema::hasColumn($table, 'id')) {
+                    $query->orderByDesc('id');
+                }
+
+                $candidates = $query
+                    ->limit(100)
+                    ->get()
+                    ->map(fn ($row) => $this->makeArchiveCandidate($type, $row))
+                    ->values()
+                    ->toArray();
+
+                return [$type => $candidates];
+            })
+            ->toArray();
+    }
+
+    protected function makeArchiveCandidate(string $type, object $row): array
+    {
+        $labels = $this->archiveTypeLabels();
+        $relatedRequest = $this->findRelatedRequest($row);
+        $reference = $this->archiveReference($type, $row);
+        $client = $this->archiveClientName($row, $relatedRequest);
+        $service = $this->archiveService($type, $row, $relatedRequest);
+        $status = $this->archiveStatus($row);
+        $category = $this->archiveCategory($row, $relatedRequest, $labels[$type] ?? 'Record');
+
+        return [
+            'type' => $type,
+            'id' => (int) $this->archiveValue($row, ['id'], 0),
+            'reference' => $reference,
+            'client' => $client,
+            'service' => $service,
+            'status' => $status,
+            'category' => $category,
+            'meta' => ($labels[$type] ?? 'Record') . ' • ' . $status,
+            'label' => $reference . ' — ' . $client . ' — ' . $service,
+        ];
+    }
+
+    protected function applyArchivedRecordFilters(\Illuminate\Support\Collection $records, Request $request): \Illuminate\Support\Collection
+    {
+        $recordType = $request->input('record_type', 'all');
+        $status = $request->input('status');
+        $source = $request->input('archive_source');
+        $search = trim((string) $request->input('search', ''));
+        $from = $request->input('archived_from');
+        $to = $request->input('archived_to');
+
+        return $records->filter(function (array $record) use ($recordType, $status, $source, $search, $from, $to) {
+            if ($recordType !== 'all' && $record['type'] !== $recordType) {
+                return false;
+            }
+
+            if ($status && $record['status_key'] !== $this->normalizeArchiveKey($status)) {
+                return false;
+            }
+
+            if ($source && $record['source_key'] !== $this->normalizeArchiveKey($source)) {
+                return false;
+            }
+
+            if ($from && $record['archived_at_sort'] < Carbon::parse($from)->startOfDay()->timestamp) {
+                return false;
+            }
+
+            if ($to && $record['archived_at_sort'] > Carbon::parse($to)->endOfDay()->timestamp) {
+                return false;
+            }
+
+            if ($search !== '') {
+                $haystack = strtolower(implode(' ', [
+                    $record['type_label'],
+                    $record['reference'],
+                    $record['client'],
+                    $record['contact'],
+                    $record['service'],
+                    $record['category'],
+                    $record['status'],
+                    $record['reason'],
+                    $record['source'],
+                ]));
+
+                if (!str_contains($haystack, strtolower($search))) {
+                    return false;
+                }
+            }
+
+            return true;
+        })->values();
+    }
+
+    protected function makeArchivedRecord(string $type, string $table, object $row): array
+    {
+        $labels = $this->archiveTypeLabels();
+        $relatedRequest = $this->findRelatedRequest($row);
+        $reference = $this->archiveReference($type, $row);
+        $client = $this->archiveClientName($row, $relatedRequest);
+        $contact = $this->archiveContact($row, $relatedRequest);
+        $service = $this->archiveService($type, $row, $relatedRequest);
+        $category = $this->archiveCategory($row, $relatedRequest, $labels[$type] ?? 'Record');
+        $status = $this->archiveStatus($row);
+        $archivedAt = $this->archiveValue($row, ['archived_at'], null);
+        $reason = $this->archiveValue($row, ['archive_reason', 'closed_reason', 'remarks'], '—');
+        $source = $this->archiveSource($row, $reason);
+        $archivedAtCarbon = $archivedAt ? Carbon::parse($archivedAt) : null;
+
+        return [
+            'type' => $type,
+            'type_label' => $labels[$type] ?? ucfirst(str_replace('_', ' ', $type)),
+            'id' => (int) $this->archiveValue($row, ['id'], 0),
+            'reference' => $reference,
+            'client' => $client,
+            'contact' => $contact,
+            'service' => $service,
+            'category' => $category,
+            'status' => $status,
+            'status_key' => $this->normalizeArchiveKey($status),
+            'archived_at' => $archivedAtCarbon,
+            'archived_at_display' => $archivedAtCarbon ? $archivedAtCarbon->format('M d, Y h:i A') : '—',
+            'archived_at_sort' => $archivedAtCarbon ? $archivedAtCarbon->timestamp : 0,
+            'reason' => $reason ?: '—',
+            'source' => $source,
+            'source_key' => $this->normalizeArchiveKey($source),
+            'restore_url' => route('admin.archives.restore', ['type' => $type, 'id' => (int) $this->archiveValue($row, ['id'], 0)]),
+            'view_url' => $this->archiveViewUrl($type, $row),
+        ];
+    }
+
+    protected function archiveValue(object $row, array $candidates, mixed $default = null): mixed
+    {
+        foreach ($candidates as $candidate) {
+            if (property_exists($row, $candidate) && $row->{$candidate} !== null && $row->{$candidate} !== '') {
+                return $row->{$candidate};
+            }
+        }
+
+        return $default;
+    }
+
+    protected function archiveReference(string $type, object $row): string
+    {
+        $id = (int) $this->archiveValue($row, ['id'], 0);
+
+        return match ($type) {
+            'request' => $this->archiveValue($row, ['request_no', 'quotation_request_no', 'reference_no'], 'REQ-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT)),
+            'quotation' => $this->archiveValue($row, ['quotation_no', 'reference_no'], 'QT-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT)),
+            'job_order' => $this->archiveValue($row, ['job_order_no', 'job_no', 'reference_no'], 'JO-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT)),
+            'warranty_claim' => $this->archiveValue($row, ['warranty_claim_no', 'claim_no', 'reference_no'], 'WC-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT)),
+            'back_job' => $this->archiveValue($row, ['back_job_no', 'backjob_no', 'reference_no'], 'BJ-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT)),
+            default => 'REC-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT),
+        };
+    }
+
+    protected function archiveClientName(object $row, ?QuotationRequest $request): string
+    {
+        if ($request) {
+            return $request->full_name ?: trim(($request->first_name ?? '') . ' ' . ($request->last_name ?? '')) ?: 'Unnamed Client';
+        }
+
+        $name = $this->archiveValue($row, ['full_name', 'client_name', 'customer_name', 'name'], null);
+
+        if ($name) {
+            return $name;
+        }
+
+        $first = $this->archiveValue($row, ['first_name'], '');
+        $last = $this->archiveValue($row, ['last_name'], '');
+
+        return trim("{$first} {$last}") ?: 'Unnamed Client';
+    }
+
+    protected function archiveContact(object $row, ?QuotationRequest $request): string
+    {
+        $email = $request?->email ?: $this->archiveValue($row, ['email', 'client_email'], '');
+        $phone = $request?->phone ?: $this->archiveValue($row, ['phone', 'client_phone', 'contact_no'], '');
+
+        return trim($email . ($email && $phone ? ' • ' : '') . $phone) ?: '—';
+    }
+
+    protected function archiveService(string $type, object $row, ?QuotationRequest $request): string
+    {
+        if ($request && in_array($type, ['quotation', 'job_order', 'warranty_claim', 'back_job'], true)) {
+            return $request->service_type ?: '—';
+        }
+
+        return $this->archiveValue($row, [
+            'service_type',
+            'subject',
+            'title',
+            'issue_type',
+            'claim_type',
+            'backjob_type',
+            'description',
+        ], '—');
+    }
+
+    protected function archiveCategory(object $row, ?QuotationRequest $request, string $fallback): string
+    {
+        return $request?->service_category
+            ?: $this->archiveValue($row, ['service_category', 'category', 'type'], $fallback);
+    }
+
+    protected function archiveStatus(object $row): string
+    {
+        return ucfirst(str_replace('_', ' ', (string) $this->archiveValue($row, ['status', 'state'], 'Archived')));
+    }
+
+    protected function archiveSource(object $row, ?string $reason): string
+    {
+        $source = $this->archiveValue($row, ['archive_source', 'closed_source'], null);
+
+        if ($source) {
+            return ucfirst(str_replace('_', ' ', $source));
+        }
+
+        $reason = strtolower((string) $reason);
+
+        if (str_contains($reason, 'system') || str_contains($reason, 'older than') || str_contains($reason, 'automatic')) {
+            return 'System';
+        }
+
+        return 'Manual';
+    }
+
+    protected function archiveViewUrl(string $type, object $row): ?string
+    {
+        $id = (int) $this->archiveValue($row, ['id'], 0);
+
+        return match ($type) {
+            'job_order' => RouteFacade::has('admin.job-orders.show') ? route('admin.job-orders.show', $id) : null,
+            'warranty_claim' => RouteFacade::has('admin.warranty-claims.show') ? route('admin.warranty-claims.show', $id) : null,
+            'back_job' => RouteFacade::has('admin.backjobs.show') ? route('admin.backjobs.show', $id) : null,
+            default => null,
+        };
+    }
+
+    protected function findRelatedRequest(object $row): ?QuotationRequest
+    {
+        $requestId = $this->archiveValue($row, ['quotation_request_id', 'request_id'], null);
+
+        if ($requestId) {
+            return QuotationRequest::find($requestId);
+        }
+
+        $quotationId = $this->archiveValue($row, ['quotation_id'], null);
+
+        if ($quotationId && Schema::hasTable('quotations')) {
+            $quotation = DB::table('quotations')->where('id', $quotationId)->first();
+            $requestId = $quotation ? $this->archiveValue($quotation, ['quotation_request_id', 'request_id'], null) : null;
+
+            if ($requestId) {
+                return QuotationRequest::find($requestId);
+            }
+        }
+
+        $jobOrderId = $this->archiveValue($row, ['job_order_id'], null);
+
+        if ($jobOrderId && Schema::hasTable('job_orders')) {
+            $jobOrder = DB::table('job_orders')->where('id', $jobOrderId)->first();
+
+            if ($jobOrder) {
+                return $this->findRelatedRequest($jobOrder);
+            }
+        }
+
+        $warrantyClaimId = $this->archiveValue($row, ['warranty_claim_id'], null);
+
+        if ($warrantyClaimId && Schema::hasTable('warranty_claims')) {
+            $warrantyClaim = DB::table('warranty_claims')->where('id', $warrantyClaimId)->first();
+
+            if ($warrantyClaim) {
+                return $this->findRelatedRequest($warrantyClaim);
+            }
+        }
+
+        return null;
+    }
+
+    protected function normalizeArchiveKey(string $value): string
+    {
+        $value = strtolower(trim($value));
+        $value = preg_replace('/[^a-z0-9]+/', '_', $value);
+
+        return trim($value ?? '', '_');
+    }
+
+
+    protected function archiveLifecycleColumns(string $type): array
+    {
+        return match ($type) {
+            'request' => ['completed_at', 'cancelled_at'],
+            'quotation' => ['accepted_at', 'declined_at', 'cancelled_at', 'expired_at'],
+            'job_order' => ['completed_at', 'cancelled_at'],
+            'warranty_claim' => ['resolved_at', 'closed_at', 'denied_at', 'cancelled_at'],
+            'back_job' => ['resolved_at', 'completed_at', 'closed_at', 'cancelled_at'],
+            default => ['completed_at', 'cancelled_at', 'resolved_at', 'closed_at'],
+        };
+    }
+
+    protected function archiveFallbackAgeColumns(string $type): array
+    {
+        return match ($type) {
+            'quotation' => ['sent_at', 'updated_at', 'created_at'],
+            default => ['updated_at', 'created_at'],
+        };
+    }
+
+    protected function archiveEligibleStatuses(string $type): array
+    {
+        return match ($type) {
+            'request' => ['completed', 'cancelled'],
+            'quotation' => ['accepted', 'rejected', 'declined', 'expired', 'cancelled', 'converted'],
+            'job_order' => ['completed', 'cancelled'],
+            'warranty_claim' => ['resolved', 'closed', 'denied', 'rejected', 'cancelled'],
+            'back_job' => ['resolved', 'completed', 'closed', 'cancelled'],
+            default => ['completed', 'cancelled', 'resolved', 'closed'],
+        };
+    }
+
+    protected function archiveExistingColumns(string $table, array $columns): array
+    {
+        return array_values(array_filter($columns, fn ($column) => Schema::hasColumn($table, $column)));
+    }
+
+    protected function archiveEligibilityDateColumns(string $type, string $table): array
+    {
+        $lifecycle = $this->archiveExistingColumns($table, $this->archiveLifecycleColumns($type));
+
+        if (!empty($lifecycle)) {
+            return $lifecycle;
+        }
+
+        return $this->archiveExistingColumns($table, $this->archiveFallbackAgeColumns($type));
+    }
+
+    protected function archiveEligibilityDateExpression(array $columns): string
+    {
+        $quoted = collect($columns)
+            ->map(fn ($column) => '`' . str_replace('`', '``', $column) . '`')
+            ->implode(', ');
+
+        return count($columns) > 1 ? "COALESCE({$quoted})" : $quoted;
+    }
+
+    protected function shouldApplyArchiveStatusFilter(string $type, string $table, array $dateColumns): bool
+    {
+        if (!Schema::hasColumn($table, 'status')) {
+            return false;
+        }
+
+        // Requests, job orders, warranty claims, and back jobs with lifecycle dates are already safe.
+        // Quotations still need status filtering because sent/updated dates may exist while a quotation remains active.
+        if ($type !== 'quotation' && !empty($this->archiveExistingColumns($table, $this->archiveLifecycleColumns($type)))) {
+            return false;
+        }
+
+        return !empty($this->archiveEligibleStatuses($type));
+    }
+
+    protected function eligibleArchiveRecordsForType(string $type, int $ageDays, int $limit = 200): \Illuminate\Support\Collection
+    {
+        $tables = $this->archiveTypeTables();
+
+        if (!isset($tables[$type])) {
+            return collect();
+        }
+
+        $table = $tables[$type];
+
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'archived_at')) {
+            return collect();
+        }
+
+        $dateColumns = $this->archiveEligibilityDateColumns($type, $table);
+
+        if (empty($dateColumns)) {
+            return collect();
+        }
+
+        $dateExpression = $this->archiveEligibilityDateExpression($dateColumns);
+        $cutoff = now()->subDays($ageDays)->toDateString();
+
+        $query = DB::table($table)
+            ->select('*')
+            ->selectRaw("{$dateExpression} as archive_basis_date")
+            ->whereNull('archived_at')
+            ->whereRaw("{$dateExpression} IS NOT NULL")
+            ->whereRaw("DATE({$dateExpression}) <= ?", [$cutoff]);
+
+        if ($this->shouldApplyArchiveStatusFilter($type, $table, $dateColumns)) {
+            $query->whereIn('status', $this->archiveEligibleStatuses($type));
+        }
+
+        return $query
+            ->orderByRaw("{$dateExpression} asc")
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row) => $this->makeEligibleArchiveRecord($type, $row, $ageDays))
+            ->values();
+    }
+
+    protected function makeEligibleArchiveRecord(string $type, object $row, int $ageDays): array
+    {
+        $candidate = $this->makeArchiveCandidate($type, $row);
+        $basisDate = $this->archiveValue($row, ['archive_basis_date', 'completed_at', 'cancelled_at', 'resolved_at', 'closed_at', 'updated_at', 'created_at'], null);
+        $basisDateCarbon = $basisDate ? Carbon::parse($basisDate) : null;
+        $daysOld = $basisDateCarbon ? $basisDateCarbon->diffInDays(now()) : null;
+
+        return array_merge($candidate, [
+            'basis_date' => $basisDateCarbon?->toDateString(),
+            'basis_date_display' => $basisDateCarbon ? $basisDateCarbon->format('M d, Y') : '—',
+            'days_old' => $daysOld,
+            'age_label' => $daysOld !== null ? $daysOld . ' day(s) old' : 'Older than ' . $ageDays . ' days',
+        ]);
+    }
+
+    public function eligibleArchiveRecords(Request $request)
+    {
+        $validated = $request->validate([
+            'record_type' => ['required', 'string'],
+            'age_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
+        ]);
+
+        $type = $validated['record_type'];
+        $ageDays = (int) ($validated['age_days'] ?? 30);
+
+        abort_unless(isset($this->archiveTypeTables()[$type]), 404);
+
+        $records = $this->eligibleArchiveRecordsForType($type, $ageDays);
+
+        return response()->json([
+            'record_type' => $type,
+            'age_days' => $ageDays,
+            'count' => $records->count(),
+            'records' => $records,
+        ]);
+    }
+
+    public function bulkArchiveRecords(Request $request)
+    {
+        $validated = $request->validate([
+            'record_type' => ['required', 'string'],
+            'age_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
+            'record_ids' => ['required', 'array', 'min:1'],
+            'record_ids.*' => ['integer'],
+            'archive_reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $tables = $this->archiveTypeTables();
+        $labels = $this->archiveTypeLabels();
+        $type = $validated['record_type'];
+        $ageDays = (int) ($validated['age_days'] ?? 30);
+
+        abort_unless(isset($tables[$type]), 404);
+
+        $table = $tables[$type];
+
+        abort_unless(Schema::hasTable($table) && Schema::hasColumn($table, 'archived_at'), 404);
+
+        $requestedIds = collect($validated['record_ids'])
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $eligibleIds = $this->eligibleArchiveRecordsForType($type, $ageDays, 1000)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id);
+
+        $ids = $requestedIds->intersect($eligibleIds)->values();
+
+        if ($ids->isEmpty()) {
+            return redirect()
+                ->route('admin.archives.index', ['record_type' => $type])
+                ->with('info', 'No eligible selected records were archived. Active or ineligible records were protected.');
+        }
+
+        $payload = [
+            'archived_at' => now(),
+        ];
+
+        if (Schema::hasColumn($table, 'archive_reason')) {
+            $payload['archive_reason'] = $validated['archive_reason'];
+        }
+
+        if (Schema::hasColumn($table, 'archive_source')) {
+            $payload['archive_source'] = 'manual';
+        }
+
+        if (Schema::hasColumn($table, 'archived_by')) {
+            $payload['archived_by'] = Auth::id();
+        }
+
+        if (Schema::hasColumn($table, 'updated_at')) {
+            $payload['updated_at'] = now();
+        }
+
+        $updated = DB::table($table)
+            ->whereIn('id', $ids->all())
+            ->whereNull('archived_at')
+            ->update($payload);
+
+        try {
+            AuditLogService::log(
+                'Admin Bulk Archived Records',
+                $labels[$type] ?? 'Archived Records',
+                null,
+                ['record_ids' => $ids->all()],
+                array_merge($payload, ['count' => $updated]),
+                "Admin bulk archived {$updated} {$type} record(s)."
+            );
+        } catch (\Throwable $e) {
+            // Bulk archive should not fail because generic audit logging is unavailable.
+        }
+
+        return redirect()
+            ->route('admin.archives.index', ['record_type' => $type])
+            ->with('success', "Archived {$updated} " . strtolower($labels[$type] ?? 'record') . " record(s) successfully.");
+    }
+
+    public function archiveRecordManually(Request $request)
+    {
+        $validated = $request->validate([
+            'record_type' => ['required', 'string'],
+            'record_id' => ['required', 'integer'],
+            'archive_reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $tables = $this->archiveTypeTables();
+        $labels = $this->archiveTypeLabels();
+        $type = $validated['record_type'];
+        $id = (int) $validated['record_id'];
+
+        abort_unless(isset($tables[$type]), 404);
+
+        $table = $tables[$type];
+
+        abort_unless(Schema::hasTable($table) && Schema::hasColumn($table, 'archived_at'), 404);
+
+        $row = DB::table($table)->where('id', $id)->first();
+
+        abort_unless($row, 404);
+
+        if ($this->archiveValue($row, ['archived_at'], null)) {
+            return redirect()
+                ->route('admin.archives.index', ['record_type' => $type])
+                ->with('info', ($labels[$type] ?? 'Record') . ' is already archived.');
+        }
+
+        $oldValues = [
+            'archived_at' => null,
+            'archive_reason' => $this->archiveValue($row, ['archive_reason'], null),
+        ];
+
+        $payload = [
+            'archived_at' => now(),
+        ];
+
+        if (Schema::hasColumn($table, 'archive_reason')) {
+            $payload['archive_reason'] = $validated['archive_reason'];
+        }
+
+        if (Schema::hasColumn($table, 'archive_source')) {
+            $payload['archive_source'] = 'manual';
+        }
+
+        if (Schema::hasColumn($table, 'archived_by')) {
+            $payload['archived_by'] = Auth::id();
+        }
+
+        if (Schema::hasColumn($table, 'updated_at')) {
+            $payload['updated_at'] = now();
+        }
+
+        DB::table($table)->where('id', $id)->update($payload);
+
+        try {
+            $model = $type === 'request' ? QuotationRequest::find($id) : null;
+
+            AuditLogService::log(
+                'Admin Manually Archived Record',
+                $labels[$type] ?? 'Archived Records',
+                $model,
+                $oldValues,
+                $payload,
+                "Admin manually archived {$type} record #{$id}."
+            );
+        } catch (\Throwable $e) {
+            // Manual archive must not fail just because generic audit logging is unavailable.
+        }
+
+        return redirect()
+            ->route('admin.archives.index', ['record_type' => $type])
+            ->with('success', ($labels[$type] ?? 'Record') . ' added to archived records successfully.');
+    }
+
+    public function archive(Request $request, QuotationRequest $quotation)
+    {
+        $oldValues = $quotation->only(['archived_at', 'archive_reason']);
+
+        $quotation->forceFill([
+            'archived_at' => now(),
+            'archive_reason' => $request->archive_reason ?: 'Manually archived by admin',
+        ])->save();
+
+        AuditLogService::log(
+            'Admin Archived Request',
+            'Quotation Requests',
+            $quotation,
+            $oldValues,
+            $quotation->only(['archived_at', 'archive_reason']),
+            "Admin archived quotation request #{$quotation->id}."
+        );
+
+        return redirect()
+            ->route('admin.quotations.index')
+            ->with('success', 'Request archived successfully.');
+    }
+
+    public function restore(QuotationRequest $quotation)
+    {
+        $oldValues = $quotation->only(['archived_at', 'archive_reason']);
+
+        $quotation->forceFill([
+            'archived_at' => null,
+            'archive_reason' => null,
+        ])->save();
+
+        AuditLogService::log(
+            'Admin Restored Request',
+            'Quotation Requests',
+            $quotation,
+            $oldValues,
+            $quotation->only(['archived_at', 'archive_reason']),
+            "Admin restored quotation request #{$quotation->id}."
+        );
+
+        return redirect()
+            ->route('admin.archives.index', ['record_type' => 'request'])
+            ->with('success', 'Request restored successfully.');
+    }
+
+    public function restoreArchivedRecord(Request $request, string $type, int $id)
+    {
+        $tables = $this->archiveTypeTables();
+        $labels = $this->archiveTypeLabels();
+
+        abort_unless(isset($tables[$type]), 404);
+
+        $table = $tables[$type];
+
+        abort_unless(Schema::hasTable($table) && Schema::hasColumn($table, 'archived_at'), 404);
+
+        $row = DB::table($table)->where('id', $id)->first();
+
+        abort_unless($row, 404);
+
+        $oldValues = [
+            'archived_at' => $this->archiveValue($row, ['archived_at'], null),
+            'archive_reason' => $this->archiveValue($row, ['archive_reason'], null),
+        ];
+
+        $payload = [
+            'archived_at' => null,
+        ];
+
+        foreach (['archive_reason', 'archive_source', 'archived_by'] as $column) {
+            if (Schema::hasColumn($table, $column)) {
+                $payload[$column] = null;
+            }
+        }
+
+        if (Schema::hasColumn($table, 'updated_at')) {
+            $payload['updated_at'] = now();
+        }
+
+        DB::table($table)->where('id', $id)->update($payload);
+
+        try {
+            $model = $type === 'request' ? QuotationRequest::find($id) : null;
+
+            AuditLogService::log(
+                'Admin Restored Archived Record',
+                $labels[$type] ?? 'Archived Records',
+                $model,
+                $oldValues,
+                $payload,
+                "Admin restored {$type} archived record #{$id}."
+            );
+        } catch (\Throwable $e) {
+            // Restore must not fail just because audit logging is unavailable for a generic archived record.
+        }
+
+        return redirect()
+            ->route('admin.archives.index', ['record_type' => $type])
+            ->with('success', ($labels[$type] ?? 'Record') . ' restored successfully.');
+    }
+
+    public function sendToHr(Request $request, QuotationRequest $quotation)
+{
+    $validated = $request->validate([
+        'quotation_handoff_notes' => ['nullable', 'string', 'max:1000'],
+    ]);
+
+    $quotation->load(['worker', 'jobOrder', 'quotation']);
+
+    if ($quotation->quotation) {
+        return $this->workflowError(
+            $request,
+            [
+                'quotation' => 'A quotation already exists for this request.',
+            ],
+            'A quotation has already been created for this request.'
+        );
+    }
+
+    if ($quotation->ready_for_quotation_at) {
+        return $this->workflowError(
+            $request,
+            [
+                'quotation' => 'This request has already been sent to HR.',
+            ],
+            'This request has already been sent to HR.'
+        );
+    }
+
+    if (!$quotation->worker_id) {
+        return $this->workflowError(
+            $request,
+            [
+                'worker_id' => 'Assign an inspector or personnel first.',
+            ],
+            'Assign an inspector or personnel before sending this request to HR.'
+        );
+    }
+
+    if (
+        !$quotation->appointment_date ||
+        !$quotation->appointment_time ||
+        !in_array(
+            $quotation->appointment_status,
+            ['approved', 'rescheduled'],
+            true
+        )
+    ) {
+        return $this->workflowError(
+            $request,
+            [
+                'appointment' => 'A confirmed schedule is required.',
+            ],
+            'Confirm the inspection or service schedule first.'
+        );
+    }
+
+    if ($quotation->service_flow === 'inspection_required') {
+        if (!$quotation->jobOrder) {
+            return $this->workflowError(
+                $request,
+                [
+                    'job_order' => 'An inspection job order is required.',
+                ],
+                'Create the inspection job order first.'
+            );
+        }
+
+        if ($quotation->jobOrder->status !== 'completed') {
+            return $this->workflowError(
+                $request,
+                [
+                    'job_order' => 'The inspection job order must be completed.',
+                ],
+                'Complete the inspection job order before sending this request to HR.'
+            );
+        }
+    }
+
+    $oldValues = $quotation->only([
+        'status',
+        'ready_for_quotation_at',
+        'forwarded_to_hr_by',
+        'quotation_handoff_notes',
+    ]);
+
+    $quotation->update([
+        'status' => 'ready_for_quotation',
+        'ready_for_quotation_at' => now(),
+        'forwarded_to_hr_by' => Auth::id(),
+        'quotation_handoff_notes' =>
+            $validated['quotation_handoff_notes'] ?? null,
+    ]);
+
+    $clientName = $quotation->full_name ?: 'Client';
+
+    AlertService::sendToRole(
+        'hr',
+        'New quotation request ready',
+        "{$clientName}'s {$quotation->service_type} request is ready for quotation preparation.",
+        route('hr.quotations.create', $quotation),
+        'success'
+    );
+
+    AuditLogService::log(
+        'Admin Sent Request to HR',
+        'Quotation Requests',
+        $quotation,
+        $oldValues,
+        [
+            'status' => $quotation->status,
+            'ready_for_quotation_at' =>
+                optional($quotation->ready_for_quotation_at)
+                    ->toDateTimeString(),
+            'forwarded_to_hr_by' => $quotation->forwarded_to_hr_by,
+            'quotation_handoff_notes' =>
+                $quotation->quotation_handoff_notes,
+        ],
+        "Admin sent quotation request #{$quotation->id} to HR for quotation preparation."
+    );
+
+    return $this->workflowSuccess(
+        $request,
+        'Request successfully sent to HR for quotation preparation.',
+        [
+            'request_id' => $quotation->id,
+            'status' => $quotation->status,
+            'ready_for_quotation_at' =>
+                optional($quotation->ready_for_quotation_at)
+                    ->format('M d, Y h:i A'),
+            'sent_to_hr' => true,
+        ]
+    );
+}
 
     public function updateFlow(Request $request, QuotationRequest $quotation)
     {
@@ -682,6 +1620,34 @@ class QuotationController extends Controller
             "Admin changed the service flow for quotation request #{$quotation->id}."
         );
 
-        return back()->with('success', 'Service flow updated successfully.');
+        return $this->workflowSuccess($request, 'System decision updated successfully.', [
+            'request_id' => $quotation->id,
+            'service_flow' => $quotation->service_flow,
+            'visit_purpose' => $quotation->visit_purpose,
+        ]);
     }
+
+    private function workflowSuccess(Request $request, string $message, array $data = [])
+    {
+        if ($request->expectsJson()) {
+            return response()->json(array_merge([
+                'message' => $message,
+            ], $data));
+        }
+
+        return back()->with('success', $message);
+    }
+
+    private function workflowError(Request $request, array $errors, string $message, int $status = 422)
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'errors' => $errors,
+            ], $status);
+        }
+
+        return back()->withErrors($errors)->withInput();
+    }
+
 }

@@ -5,19 +5,210 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JobOrder;
 use App\Models\QuotationRequest;
+use App\Models\User;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class JobOrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $jobOrders = JobOrder::with(['quotationRequest', 'worker', 'creator'])
-            ->latest()
-            ->paginate(10);
+        $allowedStatuses = ['scheduled', 'in_progress', 'completed', 'cancelled'];
 
-        return view('admin.job-orders.index', compact('jobOrders'));
+        $search = trim((string) $request->input('search'));
+        $status = $request->input('status');
+        $serviceType = $request->input('service_type');
+        $workerId = $request->input('worker_id');
+
+        $allowedSorts = [
+            'created_at',
+            'job_order_no',
+            'client',
+            'service_type',
+            'worker',
+            'scheduled_date',
+            'status',
+            'progress',
+        ];
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = strtolower((string) $request->input('direction', 'desc'));
+
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        if (!in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
+        if ($status && !in_array($status, $allowedStatuses, true)) {
+            $status = null;
+        }
+
+        $baseQuery = JobOrder::query()
+            ->with(['quotationRequest', 'worker', 'creator'])
+            ->withCount(['warrantyClaims', 'backJobs'])
+            ->when($search !== '', function ($query) use ($search) {
+                $terms = collect(preg_split('/\\s+/', $search, -1, PREG_SPLIT_NO_EMPTY))
+                    ->map(fn ($term) => trim($term))
+                    ->filter()
+                    ->values();
+
+                $query->where(function ($q) use ($search, $terms) {
+                    // Exact phrase-style matching for normal searchable fields.
+                    $q->where('job_order_no', 'like', "%{$search}%")
+                        ->orWhere('service_type', 'like', "%{$search}%")
+                        ->orWhere('service_flow', 'like', "%{$search}%")
+                        ->orWhereHas('quotationRequest', function ($requestQuery) use ($search, $terms) {
+                            $requestQuery->where(function ($clientQuery) use ($search, $terms) {
+                                $clientQuery
+                                    ->whereRaw(
+                                        "TRIM(CONCAT_WS(' ', first_name, last_name)) LIKE ?",
+                                        ["%{$search}%"]
+                                    )
+                                    ->orWhereRaw(
+                                        "TRIM(CONCAT_WS(' ', first_name, middle_initial, last_name)) LIKE ?",
+                                        ["%{$search}%"]
+                                    )
+                                    ->orWhereRaw(
+                                        "TRIM(CONCAT_WS(' ', first_name, CONCAT(middle_initial, '.'), last_name)) LIKE ?",
+                                        ["%{$search}%"]
+                                    )
+                                    ->orWhere('email', 'like', "%{$search}%")
+                                    ->orWhere('phone', 'like', "%{$search}%");
+
+                                // If the displayed client name contains initials/punctuation,
+                                // require every typed token to occur somewhere in the client record.
+                                if ($terms->count() > 1) {
+                                    $clientQuery->orWhere(function ($tokenQuery) use ($terms) {
+                                        foreach ($terms as $term) {
+                                            $cleanTerm = trim($term, " .,-");
+                                            $tokenQuery->where(function ($part) use ($cleanTerm) {
+                                                $part->where('first_name', 'like', "%{$cleanTerm}%")
+                                                    ->orWhere('middle_initial', 'like', "%{$cleanTerm}%")
+                                                    ->orWhere('last_name', 'like', "%{$cleanTerm}%")
+                                                    ->orWhere('email', 'like', "%{$cleanTerm}%");
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        })
+                        ->orWhereHas('worker', function ($workerQuery) use ($search) {
+                            $workerQuery->where(function ($worker) use ($search) {
+                                $worker->where('name', 'like', "%{$search}%")
+                                    ->orWhereRaw(
+                                        "TRIM(CONCAT_WS(' ', first_name, last_name)) LIKE ?",
+                                        ["%{$search}%"]
+                                    )
+                                    ->orWhere('email', 'like', "%{$search}%");
+                            });
+                        });
+                });
+            })
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($serviceType, fn ($query) => $query->where('service_type', $serviceType))
+            ->when($workerId, fn ($query) => $query->where('worker_id', $workerId));
+
+        $summary = [
+            'total' => (clone $baseQuery)->count(),
+            'scheduled' => (clone $baseQuery)->where('status', 'scheduled')->count(),
+            'in_progress' => (clone $baseQuery)->where('status', 'in_progress')->count(),
+            'completed' => (clone $baseQuery)->where('status', 'completed')->count(),
+            'cancelled' => (clone $baseQuery)->where('status', 'cancelled')->count(),
+        ];
+
+        $jobOrdersQuery = clone $baseQuery;
+
+        switch ($sort) {
+            case 'client':
+                $jobOrdersQuery->orderBy(
+                    QuotationRequest::selectRaw(
+                        "TRIM(CONCAT_WS(' ', first_name, middle_initial, last_name))"
+                    )
+                        ->whereColumn('quotation_requests.id', 'job_orders.quotation_request_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            case 'worker':
+                $jobOrdersQuery->orderBy(
+                    User::selectRaw(
+                        "COALESCE(NULLIF(name, ''), TRIM(CONCAT_WS(' ', first_name, last_name)), email)"
+                    )
+                        ->whereColumn('users.id', 'job_orders.worker_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            case 'progress':
+                $jobOrdersQuery->orderByRaw(
+                    "CASE status
+                        WHEN 'completed' THEN 100
+                        WHEN 'in_progress' THEN 60
+                        WHEN 'scheduled' THEN 25
+                        WHEN 'cancelled' THEN 0
+                        ELSE 10
+                    END {$direction}"
+                );
+                break;
+
+            default:
+                $jobOrdersQuery->orderBy($sort, $direction);
+                break;
+        }
+
+        // Stable secondary sort keeps pagination predictable.
+        if ($sort !== 'id') {
+            $jobOrdersQuery->orderBy('id', 'desc');
+        }
+
+        $jobOrders = $jobOrdersQuery
+            ->paginate(10)
+            ->withQueryString();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'list_html' => view('admin.job-orders.partials.job-list', [
+                    'jobOrders' => $jobOrders,
+                ])->render(),
+
+                'stats_html' => view('admin.job-orders.partials.stats', [
+                    'jobOrders' => $jobOrders,
+                    'summary' => $summary,
+                ])->render(),
+            ]);
+        }
+
+        $serviceTypes = JobOrder::query()
+            ->whereNotNull('service_type')
+            ->where('service_type', '<>', '')
+            ->distinct()
+            ->orderBy('service_type')
+            ->pluck('service_type');
+
+        $workers = User::query()
+            ->where('role', 'worker')
+            ->orderBy('name')
+            ->orderBy('first_name')
+            ->get(['id', 'name', 'first_name', 'last_name', 'email']);
+
+        return view('admin.job-orders.index', compact(
+            'jobOrders',
+            'summary',
+            'serviceTypes',
+            'workers',
+            'search',
+            'status',
+            'serviceType',
+            'workerId',
+            'sort',
+            'direction'
+        ));
     }
 
     public function create(QuotationRequest $quotation)
@@ -89,7 +280,90 @@ class JobOrderController extends Controller
     {
         $jobOrder->load(['quotationRequest', 'worker', 'creator']);
 
-        return view('admin.job-orders.show', compact('jobOrder'));
+        $availableWorkers = User::query()
+            ->whereIn('role', ['worker', 'inspector'])
+            ->where('is_active', true)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get(['id', 'name', 'first_name', 'last_name', 'email', 'role']);
+
+        return view('admin.job-orders.show', compact('jobOrder', 'availableWorkers'));
+    }
+
+    public function reschedule(Request $request, JobOrder $jobOrder)
+    {
+        if (in_array($jobOrder->status, ['completed', 'cancelled'], true)) {
+            return back()->withErrors([
+                'job_order' => 'Completed or cancelled job orders can no longer be rescheduled.'
+            ]);
+        }
+
+        $validated = $request->validate([
+            'scheduled_date' => ['required', 'date'],
+            'scheduled_time' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
+
+        $jobOrder->update([
+            'scheduled_date' => $validated['scheduled_date'],
+            'scheduled_time' => $validated['scheduled_time'] ?? null,
+        ]);
+
+        $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
+
+        $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
+
+        AuditLogService::log(
+            'Admin Rescheduled Job Order',
+            'Job Orders',
+            $jobOrder,
+            $oldValues,
+            $this->jobOrderAuditSnapshot($jobOrder),
+            "Admin rescheduled job order {$jobOrder->job_order_no}."
+        );
+
+        return back()->with('success', 'Job order schedule updated successfully.');
+    }
+
+    public function reassign(Request $request, JobOrder $jobOrder)
+    {
+        if (in_array($jobOrder->status, ['completed', 'cancelled'], true)) {
+            return back()->withErrors([
+                'job_order' => 'Completed or cancelled job orders can no longer be reassigned.'
+            ]);
+        }
+
+        $validated = $request->validate([
+            'worker_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $worker = User::query()
+            ->whereKey($validated['worker_id'])
+            ->whereIn('role', ['worker', 'inspector'])
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
+
+        $jobOrder->update([
+            'worker_id' => $worker->id,
+        ]);
+
+        $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
+
+        $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
+
+        AuditLogService::log(
+            'Admin Reassigned Job Order',
+            'Job Orders',
+            $jobOrder,
+            $oldValues,
+            $this->jobOrderAuditSnapshot($jobOrder),
+            "Admin reassigned job order {$jobOrder->job_order_no} to {$worker->name}."
+        );
+
+        return back()->with('success', 'Job order worker reassigned successfully.');
     }
 
     public function start(JobOrder $jobOrder)

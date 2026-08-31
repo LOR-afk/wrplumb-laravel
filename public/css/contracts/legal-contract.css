@@ -1,0 +1,348 @@
+:root {
+    --legal-ink: #111827;
+    --legal-navy: #263f60;
+    --legal-border: #b9c4d1;
+    --legal-paper: #ffffff;
+    --legal-preview: #d9dde2;
+}
+
+.legal-contract-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 20px 22px;
+    border: 1px solid #dce4ed;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.legal-contract-toolbar h1 {
+    margin: 0;
+    color: #10213f;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.legal-contract-toolbar p {
+    margin: 5px 0 0;
+    color: #69778b;
+    font-size: 12px;
+}
+
+.legal-toolbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.legal-toolbar-actions form {
+    margin: 0;
+}
+
+.legal-contract-preview {
+    padding: 28px;
+    overflow-x: auto;
+    border-radius: 16px;
+    background: var(--legal-preview);
+}
+
+.legal-contract-document {
+    width: 210mm;
+    margin: 0 auto;
+    color: var(--legal-ink);
+    font-family: "Times New Roman", Times, serif;
+}
+
+.legal-contract-page {
+    position: relative;
+    width: 210mm;
+    min-height: 297mm;
+    box-sizing: border-box;
+    margin: 0 auto 24px;
+    padding: 18mm 18mm 17mm;
+    background: var(--legal-paper);
+    box-shadow: 0 3px 18px rgba(15, 23, 42, 0.2);
+    page-break-after: always;
+}
+
+.legal-contract-page:last-child {
+    margin-bottom: 0;
+    page-break-after: auto;
+}
+
+.legal-document-header {
+    margin-bottom: 23px;
+    text-align: center;
+}
+
+.legal-document-header h1 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.legal-document-header h2 {
+    margin: 5px 0 0;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.legal-document-body {
+    font-size: 11.5pt;
+    line-height: 1.48;
+    text-align: justify;
+}
+
+.legal-document-body p {
+    margin: 0 0 13px;
+}
+
+.legal-opening-title {
+    font-weight: 700;
+}
+
+.legal-party-paragraph {
+    text-indent: 34px;
+}
+
+.legal-party-divider {
+    margin: 12px 0;
+    font-weight: 700;
+    text-align: center;
+}
+
+.legal-article {
+    margin-top: 18px;
+}
+
+.legal-article h3,
+.legal-acknowledgement h3 {
+    margin: 0 0 11px;
+    color: var(--legal-navy);
+    font-size: 12.5pt;
+    font-weight: 700;
+}
+
+.legal-preserved-text {
+    margin: 6px 0 12px 24px;
+    white-space: normal;
+}
+
+.legal-special-provision {
+    margin-left: 24px !important;
+}
+
+.legal-numbered-list {
+    margin: 4px 0 15px 29px;
+    padding: 0;
+}
+
+.legal-numbered-list li {
+    margin-bottom: 8px;
+    padding-left: 5px;
+}
+
+.legal-payment-table,
+.legal-items-table {
+    width: 100%;
+    margin: 12px 0 18px;
+    border-collapse: collapse;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9.5pt;
+}
+
+.legal-payment-table th,
+.legal-payment-table td,
+.legal-items-table th,
+.legal-items-table td {
+    padding: 8px 9px;
+    border: 1px solid var(--legal-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.legal-payment-table th,
+.legal-items-table th {
+    color: #25364d;
+    background: #f2f5f8;
+    font-weight: 700;
+}
+
+.legal-payment-table th:nth-child(2),
+.legal-payment-table td:nth-child(2) {
+    width: 23%;
+    text-align: center;
+}
+
+.legal-payment-table th:nth-child(3),
+.legal-payment-table td:nth-child(3) {
+    width: 25%;
+    text-align: right;
+}
+
+.legal-items-table th:nth-child(3),
+.legal-items-table td:nth-child(3) {
+    text-align: center;
+}
+
+.legal-items-table th:nth-child(4),
+.legal-items-table td:nth-child(4),
+.legal-items-table th:nth-child(5),
+.legal-items-table td:nth-child(5) {
+    text-align: right;
+}
+
+.legal-table-total td {
+    background: #f2f5f8;
+    font-weight: 700;
+}
+
+.legal-witness-statement {
+    margin-bottom: 40px !important;
+}
+
+.legal-signature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 45px;
+    row-gap: 50px;
+    margin: 30px 22px 45px;
+}
+
+.legal-signature-block {
+    text-align: center;
+}
+
+.legal-signature-space {
+    height: 48px;
+    border-bottom: 1px solid #111827;
+}
+
+.legal-signature-name {
+    margin-top: 6px;
+    font-size: 10.5pt;
+    font-weight: 700;
+}
+
+.legal-signature-role {
+    margin-top: 2px;
+    color: #525d6b;
+    font-size: 9.5pt;
+    font-style: italic;
+}
+
+.legal-separator {
+    margin: 38px 0 30px;
+    border-top: 1px dashed #aeb7c2;
+}
+
+.legal-acknowledgement h3 {
+    text-align: center;
+}
+
+.legal-republic-lines {
+    margin-bottom: 17px;
+}
+
+.legal-acknowledgement p {
+    text-indent: 35px;
+}
+
+.legal-notary-witness {
+    margin-top: 22px !important;
+    text-indent: 0 !important;
+}
+
+.legal-notary-details {
+    margin-top: 25px;
+    line-height: 1.9;
+}
+
+.legal-page-number {
+    position: absolute;
+    right: 18mm;
+    bottom: 9mm;
+    color: #4b5563;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 9pt;
+}
+
+@media (max-width: 900px) {
+    .legal-contract-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .legal-toolbar-actions {
+        justify-content: flex-start;
+    }
+
+    .legal-contract-preview {
+        padding: 14px;
+    }
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+
+    .no-print,
+    .sidebar,
+    .topbar,
+    .client-support-widget,
+    .client-sidebar-overlay {
+        display: none !important;
+    }
+
+    .app-shell,
+    .main,
+    .content {
+        width: 100% !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+
+    .legal-contract-preview {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+    }
+
+    .legal-contract-document {
+        width: 210mm !important;
+        margin: 0 !important;
+    }
+
+    .legal-contract-page {
+        width: 210mm !important;
+        height: 297mm !important;
+        min-height: 297mm !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        break-after: page;
+        page-break-after: always;
+    }
+
+    .legal-contract-page:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+}

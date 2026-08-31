@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v=20260517a">
+    <link rel="stylesheet" href="{{asset('assets/css/home.css') }}?v=20260517a">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light navbar-home fixed-top">
@@ -55,8 +55,12 @@
                     <div class="wr-hero-actions">
                         <a href="{{ route('login') }}" class="btn wr-btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Login to Portal</a>
                         <button type="button" class="btn wr-btn-outline" data-bs-toggle="modal" data-bs-target="#registerModal"><i class="fas fa-user-plus me-2"></i>Create Client Account</button>
-                        <button type="button" class="btn wr-btn-light" data-bs-toggle="modal" data-bs-target="#quoteModal"><i class="fas fa-file-signature me-2"></i>Request a Quote</button>
-                    </div>
+<button type="button"
+    class="btn wr-btn-light request-cta"
+    data-bs-toggle="modal"
+    data-bs-target="#quoteModal">
+    <i class="fas fa-file-signature me-2"></i>Request a Quote
+</button>                    </div>
 
                     <div class="wr-trust-row">
                         <div class="wr-trust-card"><i class="fas fa-calendar-check"></i><strong>Easy Request</strong><span>Submit service details online</span></div>
@@ -141,9 +145,17 @@
 
 <footer class="footer-section">
     <div class="container">
-        <div class="d-flex flex-wrap justify-content-between gap-2">
-            <p class="mb-0"><strong>WRPlumb</strong> — Plumbing and Construction Services</p>
-            <p class="mb-0">&copy; <span id="current-year"></span> WRPlumb. All rights reserved.</p>
+        <div class="footer-main-row">
+            <div class="footer-brand-copy">
+                <p class="mb-1"><strong>WRPlumb</strong> — Plumbing and Construction Services</p>
+                <p class="mb-0 footer-copyright">&copy; <span id="current-year"></span> WRPlumb. All rights reserved.</p>
+            </div>
+
+            <nav class="footer-legal-links" aria-label="Legal links">
+                <a href="{{ route('terms') }}">Terms &amp; Conditions</a>
+                <span class="footer-divider" aria-hidden="true">•</span>
+                <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
+            </nav>
         </div>
     </div>
 </footer>
@@ -185,7 +197,17 @@
                         <div class="col-12"><label for="fq-address" class="form-label">Service Address</label><div class="address-autocomplete"><div class="input-group"><input type="text" id="fq-address" name="address" class="form-control" placeholder="Enter address, e.g., Barra, Opol" autocomplete="street-address" required><a id="fq-address-map" class="btn btn-outline-secondary disabled" href="#" target="_blank" rel="noopener noreferrer" aria-disabled="true" tabindex="-1" title="Open the typed address in Google Maps"><i class="fas fa-map-marked-alt"></i></a></div><div id="fq-address-suggestions" class="address-suggestions d-none"></div><input type="hidden" id="fq-address-lat" name="address_lat" value=""><input type="hidden" id="fq-address-lon" name="address_lon" value=""></div></div>
                         <div class="col-12"><label for="fq-details" class="form-label">Details of the Problem / Work Needed</label><textarea id="fq-details" name="details" rows="4" class="form-control" placeholder="Describe your plumbing or construction concern." required></textarea></div>
                         <div class="col-12"><label for="fq-attachments" class="form-label">Attach Photos / Videos <span class="text-muted">(Optional)</span></label><input type="file" id="fq-attachments" name="attachments[]" class="form-control" accept="image/*,video/*" multiple><div class="form-text">Photos/videos help the team understand the concern before scheduling service or inspection. Max 25MB per file.</div></div>
-                        <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="fq-consent" required><label class="form-check-label" for="fq-consent">I agree that WRPlumb may contact me via phone or email regarding this service request.</label></div></div>
+                        <div class="col-12">
+    <div class="form-check legal-consent-check">
+        <input class="form-check-input" type="checkbox" value="1" id="fq-consent" name="consent" required>
+        <label class="form-check-label" for="fq-consent">
+            I agree to be contacted regarding this service request and acknowledge the
+            <a href="{{ url('/terms') }}" target="_blank" rel="noopener">Service Terms</a>
+            and
+            <a href="{{ url('/privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>.
+        </label>
+    </div>
+</div>
                         <div class="col-12"><button type="submit" class="btn wr-submit-btn w-100"><i class="fas fa-paper-plane me-2"></i>Submit Service Request</button></div>
                     </div>
                 </form>
@@ -226,7 +248,28 @@
                     <div class="mb-3"><label for="email" class="form-label">Email <span class="text-danger">*</span></label><input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>@error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                     <div class="mb-3"><label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label><input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" required>@error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                     <div class="mb-4"><label for="address" class="form-label">Address</label><textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address" rows="2">{{ old('address') }}</textarea>@error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
-                    <button type="submit" class="btn wr-submit-btn w-100"><i class="fas fa-user-plus me-2"></i>Create Account</button>
+                    <div class="form-check legal-consent-check mb-3">
+    <input
+        class="form-check-input @error('terms') is-invalid @enderror"
+        type="checkbox"
+        value="1"
+        id="register-terms"
+        name="terms"
+        required
+        @checked(old('terms'))
+    >
+    <label class="form-check-label" for="register-terms">
+        I agree to the
+        <a href="{{ url('/terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+        and
+        <a href="{{ url('/privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>.
+    </label>
+    @error('terms')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
+</div>
+
+<button type="submit" class="btn wr-submit-btn w-100"><i class="fas fa-user-plus me-2"></i>Create Account</button>
                 </form>
             </div>
         </div>
@@ -244,27 +287,85 @@
 @endif
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const currentYear = document.getElementById('current-year');
-        if (currentYear) currentYear.textContent = new Date().getFullYear();
+document.addEventListener('DOMContentLoaded', function () {
 
-        const toggle = document.getElementById('landingNavbarToggle');
-        const menu = document.getElementById('navbarNav');
-        if (toggle && menu) {
-            toggle.addEventListener('click', function () {
-                const isOpen = menu.classList.toggle('show');
-                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-                document.body.classList.toggle('landing-menu-open', isOpen);
-            });
+    const category = document.getElementById("fq-service-category");
+    const serviceType = document.getElementById("fq-service-type");
+
+    const form = document.getElementById("free-quotation-form");
+    const email = document.getElementById("fq-email");
+    const phone = document.getElementById("fq-phone");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+****\\.****[^\s@]+$/;
+    const phoneRegex = /^09[0-9]{9}$/;
+
+    function loadServices() {
+        const selected = category.value;
+
+        serviceType.innerHTML = '<option disabled selected>Select a service</option>';
+
+        if (!serviceMap[selected]) {
+            serviceType.disabled = true;
+            return;
         }
-        document.querySelectorAll('#navbarNav .nav-link, #navbarNav .nav-auth-btn').forEach(function (link) {
-            link.addEventListener('click', function () {
-                if (menu) menu.classList.remove('show');
-                if (toggle) toggle.setAttribute('aria-expanded', 'false');
-                document.body.classList.remove('landing-menu-open');
-            });
+
+        serviceMap[selected].forEach(item => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.textContent = item;
+            serviceType.appendChild(option);
         });
+
+        serviceType.disabled = false;
+    }
+
+    category.addEventListener("change", loadServices);
+
+    function validateEmail() {
+        return emailRegex.test(email.value.trim());
+    }
+
+    function validatePhone() {
+        return phoneRegex.test(phone.value.trim());
+    }
+
+    form.addEventListener("submit", function (e) {
+
+        let valid = true;
+
+        if (!validateEmail()) {
+            email.classList.add("is-invalid");
+            valid = false;
+        } else {
+            email.classList.remove("is-invalid");
+            email.classList.add("is-valid");
+        }
+
+        if (!validatePhone()) {
+            phone.classList.add("is-invalid");
+            valid = false;
+        } else {
+            phone.classList.remove("is-invalid");
+            phone.classList.add("is-valid");
+        }
+
+        if (serviceType.disabled || !serviceType.value) {
+            serviceType.classList.add("is-invalid");
+            valid = false;
+        } else {
+            serviceType.classList.remove("is-invalid");
+        }
+
+        if (!valid) {
+            e.preventDefault();
+
+            const errorBox = document.getElementById("fq-error");
+            errorBox.classList.remove("d-none");
+            errorBox.innerText = "Please complete all required fields correctly before submitting.";
+        }
     });
+
+});
 </script>
 <script src="{{ asset('assets/js/home.js') }}?v=20260225b"></script>
 </body>

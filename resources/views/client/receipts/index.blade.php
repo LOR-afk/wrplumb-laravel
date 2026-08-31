@@ -1,55 +1,147 @@
 @extends('client.layouts.app')
 
 @section('title', 'My Receipts')
+@section('topbar_title', 'My Receipts')
+@section('topbar_subtitle', 'View receipts issued for your confirmed payments.')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/client/receipts-index.css') }}?v=20260818a">
+@endpush
 
 @section('content')
-<div class="page-header-card mb-4">
-    <h2 class="mb-1">My Receipts</h2>
-    <p class="text-muted mb-0">View receipts issued for your confirmed payments.</p>
-</div>
+@php
+    $receiptCollection = collect($receipts->items() ?? $receipts);
 
-<div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Receipt No.</th>
-                        <th>Payment No.</th>
-                        <th>Invoice No.</th>
-                        <th>Amount</th>
-                        <th>Receipt Date</th>
-                        <th class="text-end">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($receipts as $receipt)
-                        <tr>
-                            <td class="fw-semibold">{{ $receipt->receipt_no }}</td>
-                            <td>{{ $receipt->payment->payment_no ?? '—' }}</td>
-                            <td>{{ $receipt->payment->invoice->invoice_no ?? '—' }}</td>
-                            <td>PHP {{ number_format((float) $receipt->amount_received, 2) }}</td>
-                            <td>{{ optional($receipt->receipt_date)->format('M d, Y') }}</td>
-                            <td class="text-end">
-                                <a href="{{ route('client.receipts.show', $receipt) }}" class="btn btn-sm btn-outline-primary">
-                                    View
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No receipts available yet.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    $totalReceipts = method_exists($receipts, 'total')
+        ? $receipts->total()
+        : $receiptCollection->count();
+
+    $visibleAmount = $receiptCollection
+        ->sum(fn ($receipt) => (float) ($receipt->amount_received ?? 0));
+@endphp
+
+<div class="client-receipts-page">
+    <section class="receipt-stats">
+        <article>
+            <span class="receipt-stat-icon blue"><i class="fas fa-receipt"></i></span>
+            <div>
+                <small>Total Receipts</small>
+                <strong>{{ $totalReceipts }}</strong>
+            </div>
+        </article>
+
+        <article>
+            <span class="receipt-stat-icon green"><i class="fas fa-circle-check"></i></span>
+            <div>
+                <small>Issued Receipts</small>
+                <strong>{{ $receiptCollection->count() }}</strong>
+            </div>
+        </article>
+
+        <article class="wide">
+            <span class="receipt-stat-icon violet"><i class="fas fa-peso-sign"></i></span>
+            <div>
+                <small>Visible Amount Received</small>
+                <strong class="money">PHP {{ number_format($visibleAmount, 2) }}</strong>
+            </div>
+        </article>
+    </section>
+
+    <section class="receipt-list-card">
+        <div class="receipt-list-head">
+            <div>
+                <span>Payment Proof</span>
+                <h3>Receipt History</h3>
+            </div>
+
+            <small>
+                {{ $totalReceipts }}
+                {{ $totalReceipts === 1 ? 'receipt' : 'receipts' }}
+            </small>
         </div>
 
-        @if(method_exists($receipts, 'links'))
-            <div class="p-3">
-                {{ $receipts->links() }}
+        @if ($receipts->count())
+            <div class="receipt-table-wrap">
+                <table class="receipt-table">
+                    <thead>
+                        <tr>
+                            <th>Receipt</th>
+                            <th>Payment</th>
+                            <th>Invoice</th>
+                            <th>Amount Received</th>
+                            <th>Receipt Date</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach ($receipts as $receipt)
+                            <tr>
+                                <td>
+                                    <a
+                                        href="{{ route('client.receipts.show', $receipt) }}"
+                                        class="receipt-number"
+                                    >
+                                        {{ $receipt->receipt_no }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <div class="receipt-reference">
+                                        <strong>{{ $receipt->payment->payment_no ?? '—' }}</strong>
+                                        <span>Payment record</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="receipt-reference">
+                                        <strong>{{ $receipt->payment->invoice->invoice_no ?? '—' }}</strong>
+                                        <span>Linked invoice</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <strong class="receipt-amount">
+                                        PHP {{ number_format((float) $receipt->amount_received, 2) }}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <div class="receipt-date">
+                                        <strong>{{ optional($receipt->receipt_date)->format('M d, Y') ?? '—' }}</strong>
+                                    </div>
+                                </td>
+
+                                <td class="text-end">
+                                    <a
+                                        href="{{ route('client.receipts.show', $receipt) }}"
+                                        class="receipt-view-btn"
+                                    >
+                                        <i class="fas fa-eye"></i>
+                                        View Receipt
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            @if(method_exists($receipts, 'links'))
+                <div class="receipt-pagination">
+                    {{ $receipts->links() }}
+                </div>
+            @endif
+        @else
+            <div class="receipt-empty">
+                <div class="receipt-empty-icon">
+                    <i class="fas fa-receipt"></i>
+                </div>
+
+                <strong>No receipts available yet</strong>
+                <p>Receipts will appear here after confirmed payments are recorded and a receipt is issued.</p>
             </div>
         @endif
-    </div>
+    </section>
 </div>
 @endsection

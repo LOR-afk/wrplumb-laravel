@@ -5,264 +5,12 @@
 @section('topbar_subtitle', 'Manage client, HR, inspector/personnel, and administrator accounts.')
 
 @push('styles')
-<style>
-    .user-page {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
-
-    .user-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-    }
-
-    .user-stat-card {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-height: 68px;
-        padding: 13px 15px;
-        background: #ffffff;
-        border: 1px solid #dbe7f3;
-        border-radius: 18px;
-        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.045);
-    }
-
-    .user-stat-icon {
-        width: 40px;
-        height: 40px;
-        display: grid;
-        place-items: center;
-        border-radius: 15px;
-        background: #e8f5ff;
-        color: #0f4c81;
-        flex: 0 0 auto;
-    }
-
-    .user-stat-label {
-        color: #64748b;
-        font-size: 0.68rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    .user-stat-value {
-        color: #0f172a;
-        font-size: 1.2rem;
-        font-weight: 950;
-        line-height: 1.1;
-    }
-
-    .user-card {
-        background: #ffffff;
-        border: 1px solid #dbe7f3;
-        border-radius: 20px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.055);
-        overflow: hidden;
-    }
-
-    .user-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 18px;
-        border-bottom: 1px solid #dbe7f3;
-        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-    }
-
-    .user-card-title {
-        margin: 0;
-        color: #0f172a;
-        font-weight: 950;
-        font-size: 1rem;
-    }
-
-    .user-card-subtitle {
-        margin: 3px 0 0;
-        color: #64748b;
-        font-size: 0.78rem;
-    }
-
-    .user-card-body {
-        padding: 15px 18px;
-    }
-
-    .user-filter-form {
-        display: grid;
-        grid-template-columns: minmax(260px, 1.6fr) minmax(130px, 0.8fr) minmax(130px, 0.8fr) minmax(150px, 0.8fr) auto auto;
-        gap: 10px;
-        align-items: end;
-    }
-
-    .user-filter-form .form-label {
-        font-size: 0.72rem;
-        font-weight: 850;
-        color: #334155;
-        margin-bottom: 5px;
-    }
-
-    .user-table {
-        margin-bottom: 0;
-    }
-
-    .user-table th {
-        color: #64748b;
-        font-size: 0.68rem;
-        font-weight: 950;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        white-space: nowrap;
-        padding: 10px 12px;
-    }
-
-    .user-table td {
-        padding: 12px;
-        vertical-align: middle;
-    }
-
-    .user-main-name {
-        color: #0f172a;
-        font-weight: 900;
-        line-height: 1.2;
-    }
-
-    .user-sub {
-        color: #64748b;
-        font-size: 0.74rem;
-        line-height: 1.25;
-        margin-top: 2px;
-    }
-
-    .user-contact {
-        max-width: 260px;
-    }
-
-    .user-email {
-        color: #0f172a;
-        font-weight: 700;
-        font-size: 0.82rem;
-        word-break: break-word;
-    }
-
-    .user-badge-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        align-items: center;
-    }
-
-    .role-badge,
-    .status-badge,
-    .verify-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 5px 9px;
-        border-radius: 999px;
-        font-size: 0.66rem;
-        font-weight: 950;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .role-badge {
-        background: #eef6ff;
-        color: #0f4c81;
-    }
-
-    .status-active,
-    .verify-ok {
-        background: #ecfdf3;
-        color: #15803d;
-    }
-
-    .status-inactive,
-    .verify-no {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-
-    .user-actions {
-        min-width: 122px;
-        text-align: right;
-    }
-
-    .user-actions .dropdown-menu {
-        min-width: 210px;
-        border: 1px solid #dbe7f3;
-        border-radius: 16px;
-        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
-        padding: 8px;
-    }
-
-    .user-actions .dropdown-item,
-    .user-actions .dropdown-menu button.dropdown-item {
-        border-radius: 10px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        padding: 8px 10px;
-    }
-
-    .user-actions form {
-        margin: 0;
-    }
-
-    .modal-helper {
-        color: #64748b;
-        font-size: 0.78rem;
-        line-height: 1.45;
-    }
-
-    @media (max-width: 1200px) {
-        .user-stats-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .user-filter-form {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .user-table {
-            min-width: 900px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .user-stats-grid,
-        .user-filter-form {
-            grid-template-columns: 1fr;
-        }
-
-        .user-card-header {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .user-card-header .btn {
-            width: 100%;
-        }
-
-        .user-table {
-            min-width: 860px;
-        }
-    }
-</style>
+    <link rel="stylesheet" href="{{ asset('css/admin/user-management.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/user-form.css') }}">
 @endpush
 
 @section('content')
 @php
-    $roleLabels = [
-        'admin' => 'Admin',
-        'hr' => 'HR',
-        'client' => 'Client',
-        'worker' => 'Inspector/Personnel',
-        'inspector' => 'Inspector',
-    ];
-
     $roleOptions = [
         'client' => 'Client',
         'hr' => 'HR',
@@ -320,15 +68,23 @@
         </div>
 
         <div class="user-card-body">
-            <form method="GET" class="user-filter-form">
+            <form method="GET" action="{{ route('admin.clients.index') }}" class="user-filter-form" id="userFilterForm">
                 <div>
-                    <label class="form-label">Search</label>
-                    <input type="text" name="search" class="form-control" placeholder="Name, email, username, phone..." value="{{ request('search') }}">
+                    <label class="form-label" for="userSearch">Search</label>
+                    <input
+                        type="text"
+                        id="userSearch"
+                        name="search"
+                        class="form-control"
+                        placeholder="Name, email, username, phone..."
+                        value="{{ request('search') }}"
+                        autocomplete="off"
+                    >
                 </div>
 
                 <div>
-                    <label class="form-label">Role</label>
-                    <select name="role" class="form-select">
+                    <label class="form-label" for="roleFilter">Role</label>
+                    <select name="role" id="roleFilter" class="form-select">
                         <option value="">All roles</option>
                         @foreach ($roleOptions as $value => $label)
                             <option value="{{ $value }}" @selected(request('role') === $value)>{{ $label }}</option>
@@ -337,8 +93,8 @@
                 </div>
 
                 <div>
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
+                    <label class="form-label" for="statusFilter">Status</label>
+                    <select name="status" id="statusFilter" class="form-select">
                         <option value="">All statuses</option>
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
@@ -346,189 +102,21 @@
                 </div>
 
                 <div>
-                    <label class="form-label">Email</label>
-                    <select name="verified" class="form-select">
+                    <label class="form-label" for="verifiedFilter">Email</label>
+                    <select name="verified" id="verifiedFilter" class="form-select">
                         <option value="">All emails</option>
                         <option value="verified" @selected(request('verified') === 'verified')>Verified</option>
                         <option value="unverified" @selected(request('verified') === 'unverified')>Unverified</option>
                     </select>
                 </div>
 
-                <button class="btn btn-primary" title="Apply filters"><i class="fas fa-magnifying-glass"></i></button>
-                <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-secondary">Reset</a>
+                <button type="button" class="btn btn-outline-secondary" id="resetFilters">Reset</button>
             </form>
         </div>
     </div>
 
-    <div class="user-card">
-        <div class="user-card-header">
-            <div>
-                <h5 class="user-card-title"><i class="fas fa-users-gear text-primary me-2"></i>System Users</h5>
-                <p class="user-card-subtitle">Showing {{ $users->count() }} of {{ $users->total() }} account(s).</p>
-            </div>
-        </div>
-
-        <div class="user-card-body p-0">
-            <div class="table-responsive">
-                <table class="table user-table align-middle">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Contact</th>
-                            <th>Role / Status</th>
-                            <th>Email</th>
-                            <th class="text-end">Manage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($users as $user)
-                            <tr>
-                                <td>
-                                    <div class="user-main-name">{{ $user->name }}</div>
-                                    <div class="user-sub">Username: {{ $user->username ?? 'No username' }}</div>
-                                    <div class="user-sub">ID #{{ $user->id }}</div>
-                                </td>
-                                <td>
-                                    <div class="user-contact">
-                                        <div class="user-email">{{ $user->email }}</div>
-                                        <div class="user-sub">{{ $user->phone ?? 'No phone number' }}</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="user-badge-row">
-                                        <span class="role-badge">{{ $roleLabels[$user->role] ?? ucfirst($user->role) }}</span>
-                                        @if ($user->is_active)
-                                            <span class="status-badge status-active">Active</span>
-                                        @else
-                                            <span class="status-badge status-inactive">Inactive</span>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td>
-                                    @if ($user->email_verified_at)
-                                        <span class="verify-badge verify-ok">Verified</span>
-                                    @else
-                                        <span class="verify-badge verify-no">Unverified</span>
-                                    @endif
-                                </td>
-                                <td class="user-actions">
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Manage
-                                        </button>
-
-                                        <div class="dropdown-menu dropdown-menu-end">
-                                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}">
-                                                <i class="fas fa-pen-to-square me-2 text-primary"></i>Edit details
-                                            </button>
-
-                                            @if (!$user->email_verified_at)
-                                                <form method="POST" action="{{ route('admin.clients.verify-email', $user) }}">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button class="dropdown-item">
-                                                        <i class="fas fa-envelope-circle-check me-2 text-success"></i>Verify email
-                                                    </button>
-                                                </form>
-                                            @endif
-
-                                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ $user->id }}">
-                                                <i class="fas fa-key me-2 text-secondary"></i>Reset password
-                                            </button>
-
-                                            <hr class="dropdown-divider">
-
-                                            <form method="POST" action="{{ route('admin.clients.toggle-status', $user) }}">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button class="dropdown-item {{ $user->is_active ? 'text-danger' : 'text-success' }}" @disabled(auth()->id() === $user->id && $user->is_active)>
-                                                    <i class="fas {{ $user->is_active ? 'fa-user-slash' : 'fa-user-check' }} me-2"></i>
-                                                    {{ $user->is_active ? 'Deactivate account' : 'Activate account' }}
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-
-                                    <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-                                            <div class="modal-content">
-                                                <form method="POST" action="{{ route('admin.clients.update', $user) }}">
-                                                    @csrf
-                                                    @method('PATCH')
-
-                                                    <div class="modal-header">
-                                                        <div>
-                                                            <h5 class="modal-title">Edit User Account</h5>
-                                                            <p class="text-muted mb-0">{{ $user->name }} • {{ $roleLabels[$user->role] ?? ucfirst($user->role) }}</p>
-                                                        </div>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-
-                                                    <div class="modal-body text-start">
-                                                        @include('admin.clients.partials.user-form', [
-                                                            'userRecord' => $user,
-                                                            'roleOptions' => $roleOptions,
-                                                            'includePassword' => false,
-                                                        ])
-                                                    </div>
-
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button class="btn btn-primary">Save Changes</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="modal fade" id="resetPasswordModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <form method="POST" action="{{ route('admin.clients.reset-password', $user) }}">
-                                                    @csrf
-                                                    @method('PATCH')
-
-                                                    <div class="modal-header">
-                                                        <div>
-                                                            <h5 class="modal-title">Reset Temporary Password</h5>
-                                                            <p class="text-muted mb-0">{{ $user->name }}</p>
-                                                        </div>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-
-                                                    <div class="modal-body text-start">
-                                                        <label class="form-label">New Temporary Password</label>
-                                                        <input type="text" name="password" class="form-control" placeholder="Example: TempPass.123" required>
-                                                        <p class="modal-helper mt-2">Password must have at least 8 characters with uppercase, lowercase, number, and special character.</p>
-                                                    </div>
-
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button class="btn btn-primary">Reset Password</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5">
-                                    <div class="text-center text-muted py-5">
-                                        <i class="fas fa-users-slash fa-2x mb-2 text-primary"></i>
-                                        <div class="fw-bold text-dark">No users found</div>
-                                        <div>Try adjusting your search or filters.</div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="p-3">{{ $users->links() }}</div>
-        </div>
+    <div class="user-card" id="userListContainer">
+        @include('admin.clients.partials.user-list', ['users' => $users])
     </div>
 </div>
 
@@ -581,3 +169,217 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('userFilterForm');
+    const searchInput = document.getElementById('userSearch');
+    const roleFilter = document.getElementById('roleFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const verifiedFilter = document.getElementById('verifiedFilter');
+    const resetButton = document.getElementById('resetFilters');
+    const userList = document.getElementById('userListContainer');
+
+    let searchTimer = null;
+    let activeRequest = null;
+
+    function buildUrl(pageUrl = null) {
+        const url = new URL(pageUrl || form.action, window.location.origin);
+
+        if (!pageUrl) {
+            const formData = new FormData(form);
+            url.search = '';
+
+            for (const [key, value] of formData.entries()) {
+                const cleanValue = String(value).trim();
+
+                if (cleanValue !== '') {
+                    url.searchParams.set(key, cleanValue);
+                }
+            }
+        }
+
+        return url;
+    }
+
+    async function loadUsers(pageUrl = null) {
+        const url = buildUrl(pageUrl);
+
+        if (activeRequest) {
+            activeRequest.abort();
+        }
+
+        activeRequest = new AbortController();
+        userList.classList.add('is-loading');
+
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                signal: activeRequest.signal
+            });
+
+            if (!response.ok) {
+                throw new Error('Unable to load users.');
+            }
+
+            const data = await response.json();
+            userList.innerHTML = data.html;
+            window.history.replaceState({}, '', url.toString());
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error(error);
+            }
+        } finally {
+            userList.classList.remove('is-loading');
+        }
+    }
+
+    function secureRandomIndex(max) {
+        const random = new Uint32Array(1);
+        const maxValid = Math.floor(0x100000000 / max) * max;
+
+        do {
+            crypto.getRandomValues(random);
+        } while (random[0] >= maxValid);
+
+        return random[0] % max;
+    }
+
+    function randomCharacter(characters) {
+        return characters[secureRandomIndex(characters.length)];
+    }
+
+    function shuffleSecure(characters) {
+        const result = [...characters];
+
+        for (let i = result.length - 1; i > 0; i--) {
+            const j = secureRandomIndex(i + 1);
+            [result[i], result[j]] = [result[j], result[i]];
+        }
+
+        return result.join('');
+    }
+
+    function generateStrongPassword(length = 16) {
+        const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        const lowercase = 'abcdefghijkmnopqrstuvwxyz';
+        const numbers = '23456789';
+        const symbols = '!@#$%^&*()-_=+?';
+        const all = uppercase + lowercase + numbers + symbols;
+
+        const password = [
+            randomCharacter(uppercase),
+            randomCharacter(lowercase),
+            randomCharacter(numbers),
+            randomCharacter(symbols)
+        ];
+
+        while (password.length < length) {
+            password.push(randomCharacter(all));
+        }
+
+        return shuffleSecure(password);
+    }
+
+    document.addEventListener('click', function (event) {
+        const generateButton = event.target.closest('.generate-password-btn');
+
+        if (generateButton) {
+            const targetId = generateButton.dataset.passwordTarget;
+            const input = document.getElementById(targetId);
+
+            if (input) {
+                input.value = generateStrongPassword(16);
+                input.type = 'text';
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+
+                const toggle = document.querySelector('.password-toggle[data-password-target="' + targetId + '"]');
+
+                if (toggle) {
+                    const icon = toggle.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    }
+                    toggle.setAttribute('aria-label', 'Hide password');
+                    toggle.setAttribute('title', 'Hide password');
+                }
+
+                input.focus();
+                input.select();
+            }
+
+            return;
+        }
+
+        const toggleButton = event.target.closest('.password-toggle');
+
+        if (toggleButton) {
+            const targetId = toggleButton.dataset.passwordTarget;
+            const input = document.getElementById(targetId);
+
+            if (!input) {
+                return;
+            }
+
+            const showPassword = input.type === 'password';
+            input.type = showPassword ? 'text' : 'password';
+
+            const icon = toggleButton.querySelector('i');
+
+            if (icon) {
+                icon.classList.toggle('fa-eye', !showPassword);
+                icon.classList.toggle('fa-eye-slash', showPassword);
+            }
+
+            toggleButton.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+            toggleButton.setAttribute('title', showPassword ? 'Hide password' : 'Show password');
+
+            return;
+        }
+
+        const paginationLink = event.target.closest('#userListContainer .pagination a');
+
+        if (paginationLink) {
+            event.preventDefault();
+            loadUsers(paginationLink.href);
+        }
+    });
+
+    if (!form || !searchInput || !userList) {
+        return;
+    }
+
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(function () {
+            loadUsers();
+        }, 350);
+    });
+
+    [roleFilter, statusFilter, verifiedFilter].forEach(function (filter) {
+        filter.addEventListener('change', function () {
+            loadUsers();
+        });
+    });
+
+    resetButton.addEventListener('click', function () {
+        clearTimeout(searchTimer);
+
+        searchInput.value = '';
+        roleFilter.value = '';
+        statusFilter.value = '';
+        verifiedFilter.value = '';
+
+        loadUsers();
+        searchInput.focus();
+    });
+});
+</script>
+@endpush

@@ -2,6 +2,11 @@
 
 @section('title', 'Create Quotation')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/hr/quotation-create.css') }}?v=quotation-create-03">
+<link rel="stylesheet" href="{{ asset('css/hr/inspection-reports.css') }}?v=inspection-reports-01">
+@endpush
+
 @section('content')
 <div class="page-header-card mb-4">
     <h2 class="mb-1">Create Quotation</h2>
@@ -15,6 +20,39 @@
                 <li>{{ $error }}</li>
             @endforeach
         </ul>
+    </div>
+@endif
+
+@if ($inspectionReport && $inspectionReport->status === 'submitted')
+    <div class="inspection-source-card mb-4">
+        <div class="inspection-source-icon">
+            <i class="fas fa-clipboard-check"></i>
+        </div>
+
+        <div class="inspection-source-copy">
+            <span>INSPECTION REPORT AVAILABLE</span>
+            <h5>{{ $inspectionReport->report_no }}</h5>
+            <p>
+                Inspector estimate has been loaded as a starting point.
+                Review and adjust all items before sending the quotation.
+            </p>
+        </div>
+
+        <div class="inspection-source-meta">
+            <div>
+                <span>Inspector Estimate</span>
+                <strong>PHP {{ number_format((float) $inspectionReport->estimated_total_cost, 2) }}</strong>
+            </div>
+
+            <a
+                href="{{ route('hr.inspection-reports.show', $inspectionReport) }}"
+                class="btn btn-sm btn-outline-primary"
+                target="_blank"
+            >
+                <i class="fas fa-eye me-1"></i>
+                View Report
+            </a>
+        </div>
     </div>
 @endif
 
@@ -67,44 +105,96 @@
                 </div>
 
                 <div id="quotationItemsContainer">
-                    <div class="quotation-item-row">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Description</label>
-                                <input type="text" name="items[0][description]" class="form-control item-description" required>
+                    @foreach ($prefillItems as $index => $prefillItem)
+                        <div class="quotation-item-row">
+                            <div class="row g-3 quotation-item-grid">
+                                <div class="col-md-3">
+                                    <label class="form-label">Description</label>
+                                    <input
+                                        type="text"
+                                        name="items[{{ $index }}][description]"
+                                        class="form-control item-description"
+                                        value="{{ old("items.$index.description", $prefillItem['description']) }}"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Category</label>
+                                    <select
+                                        name="items[{{ $index }}][item_category]"
+                                        class="form-select item-category"
+                                        required
+                                    >
+                                        <option value="material" @selected(old("items.$index.item_category", $prefillItem['item_category']) === 'material')>Material</option>
+                                        <option value="labor" @selected(old("items.$index.item_category", $prefillItem['item_category']) === 'labor')>Labor</option>
+                                        <option value="misc" @selected(old("items.$index.item_category", $prefillItem['item_category']) === 'misc')>Misc</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Quantity</label>
+                                    <input
+                                        type="number"
+                                        name="items[{{ $index }}][quantity]"
+                                        class="form-control item-quantity"
+                                        step="0.01"
+                                        min="0.01"
+                                        value="{{ old("items.$index.quantity", $prefillItem['quantity']) }}"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Unit</label>
+                                    @php
+                                        $unitValue = old("items.$index.unit", $prefillItem['unit']);
+                                        $unitOptions = [
+                                            'pcs', 'set', 'box', 'pack', 'roll', 'meter', 'foot',
+                                            'length', 'liter', 'gallon', 'kg', 'bag', 'sack',
+                                            'bundle', 'lot', 'service', 'hour', 'day'
+                                        ];
+                                    @endphp
+
+                                    <select
+                                        name="items[{{ $index }}][unit]"
+                                        class="form-select item-unit"
+                                        required
+                                    >
+                                        @foreach ($unitOptions as $unitOption)
+                                            <option value="{{ $unitOption }}" @selected($unitValue === $unitOption)>
+                                                {{ $unitOption }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Unit Price</label>
+                                    <input
+                                        type="number"
+                                        name="items[{{ $index }}][unit_price]"
+                                        class="form-control item-price"
+                                        step="0.01"
+                                        min="0"
+                                        value="{{ old("items.$index.unit_price", $prefillItem['unit_price']) }}"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Line Total</label>
+                                    <input type="text" class="form-control item-total-display" value="PHP 0.00" readonly>
+                                </div>
                             </div>
 
-                            <div class="col-md-2">
-                                <label class="form-label">Category</label>
-                                <select name="items[0][item_category]" class="form-select item-category" required>
-                                    <option value="material">Material</option>
-                                    <option value="labor">Labor</option>
-                                    <option value="misc">Misc</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" name="items[0][quantity]" class="form-control item-quantity" step="0.01" min="0.01" value="1" required>
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="form-label">Unit Price</label>
-                                <input type="number" name="items[0][unit_price]" class="form-control item-price" step="0.01" min="0" value="0" required>
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="form-label">Line Total</label>
-                                <input type="text" class="form-control item-total-display" value="PHP 0.00" readonly>
+                            <div class="mt-3 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-danger quotation-round-btn remove-item-btn">
+                                    <i class="fas fa-trash me-1"></i>Remove
+                                </button>
                             </div>
                         </div>
-
-                        <div class="mt-3 text-end">
-                            <button type="button" class="btn btn-sm btn-outline-danger quotation-round-btn remove-item-btn">
-                                <i class="fas fa-trash me-1"></i>Remove
-                            </button>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
 
                 <div class="mt-3">
@@ -126,9 +216,14 @@
 
                 <div class="cost-line"><span>Subtotal</span><strong id="subtotalAmount">PHP 0.00</strong></div>
 
-                <div class="mb-3">
-                    <label class="form-label">Tax Rate (%)</label>
-                    <input type="number" step="0.01" min="0" max="100" name="tax_rate" id="taxRate" class="form-control" value="{{ old('tax_rate', 0) }}">
+                <input type="hidden" name="tax_rate" id="taxRate" value="12">
+
+                <div class="vat-rate-card">
+                    <div>
+                        <span>VAT Rate</span>
+                        <small>Fixed company VAT rate</small>
+                    </div>
+                    <strong>12%</strong>
                 </div>
 
                 <div class="cost-line"><span>Tax Amount</span><strong id="taxAmount">PHP 0.00</strong></div>
@@ -138,6 +233,7 @@
                     <label class="form-label">Payment Plan</label>
                     <select name="payment_plan" id="paymentPlan" class="form-select">
                         <option value="auto">Auto</option>
+                        <option value="full">Full Payment (100%)</option>
                         <option value="5050">50 / 50</option>
                         <option value="30303010">30 / 30 / 30 / 10</option>
                     </select>
@@ -164,10 +260,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const taxRateInput = document.getElementById('taxRate');
     const paymentPlan = document.getElementById('paymentPlan');
 
-    let itemIndex = 1;
+    let itemIndex = document.querySelectorAll('.quotation-item-row').length;
 
     function formatMoney(value) {
-        return 'PHP ' + Number(value).toFixed(2);
+        return 'PHP ' + new Intl.NumberFormat('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(Number(value) || 0);
     }
 
     function parseNumber(value) {
@@ -182,17 +281,25 @@ document.addEventListener('DOMContentLoaded', function () {
             chosenPlan = total >= 100000 ? '30303010' : '5050';
         }
 
-        const phases = chosenPlan === '30303010'
-            ? [
+        let phases;
+
+        if (chosenPlan === 'full') {
+            phases = [
+                { label: 'Full Payment', percent: 100 },
+            ];
+        } else if (chosenPlan === '30303010') {
+            phases = [
                 { label: 'Downpayment', percent: 30 },
                 { label: 'Progress 1', percent: 30 },
                 { label: 'Progress 2', percent: 30 },
                 { label: 'Retention', percent: 10 },
-            ]
-            : [
+            ];
+        } else {
+            phases = [
                 { label: 'Downpayment', percent: 50 },
                 { label: 'Final', percent: 50 },
             ];
+        }
 
         let running = 0;
 
@@ -277,10 +384,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = document.createElement('div');
         row.className = 'quotation-item-row';
         row.innerHTML = `
-            <div class="row g-3">
-                <div class="col-md-4"><label class="form-label">Description</label><input type="text" name="items[${itemIndex}][description]" class="form-control item-description" required></div>
+            <div class="row g-3 quotation-item-grid">
+                <div class="col-md-3"><label class="form-label">Description</label><input type="text" name="items[${itemIndex}][description]" class="form-control item-description" required></div>
                 <div class="col-md-2"><label class="form-label">Category</label><select name="items[${itemIndex}][item_category]" class="form-select item-category" required><option value="material">Material</option><option value="labor">Labor</option><option value="misc">Misc</option></select></div>
                 <div class="col-md-2"><label class="form-label">Quantity</label><input type="number" name="items[${itemIndex}][quantity]" class="form-control item-quantity" step="0.01" min="0.01" value="1" required></div>
+                <div class="col-md-2"><label class="form-label">Unit</label><select name="items[${itemIndex}][unit]" class="form-select item-unit" required><option value="pcs">pcs</option><option value="set">set</option><option value="box">box</option><option value="pack">pack</option><option value="roll">roll</option><option value="meter">meter</option><option value="foot">foot</option><option value="length">length</option><option value="liter">liter</option><option value="gallon">gallon</option><option value="kg">kg</option><option value="bag">bag</option><option value="sack">sack</option><option value="bundle">bundle</option><option value="lot">lot</option><option value="service">service</option><option value="hour">hour</option><option value="day">day</option></select></div>
                 <div class="col-md-2"><label class="form-label">Unit Price</label><input type="number" name="items[${itemIndex}][unit_price]" class="form-control item-price" step="0.01" min="0" value="0" required></div>
                 <div class="col-md-2"><label class="form-label">Line Total</label><input type="text" class="form-control item-total-display" value="PHP 0.00" readonly></div>
             </div>
@@ -294,121 +402,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.querySelectorAll('.quotation-item-row').forEach(attachRowEvents);
-    taxRateInput.addEventListener('input', recalculateTotals);
     paymentPlan.addEventListener('change', recalculateTotals);
     recalculateTotals();
 });
 </script>
 
-<style>
-    .quotation-request-card,
-    .quotation-form-card,
-    .quotation-cost-card {
-        background: #fff;
-        border: 1px solid rgba(15, 76, 129, 0.12);
-        border-radius: 24px;
-        box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
-        padding: 22px;
-    }
-
-    .request-service-chip {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 8px 13px;
-        background: #eaf6ff;
-        color: #0f4c81;
-        font-weight: 900;
-        font-size: 0.84rem;
-    }
-
-    .request-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-    }
-
-    .summary-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 18px;
-        padding: 14px;
-    }
-
-    .summary-box.wide { grid-column: span 2; }
-    .summary-box.full { grid-column: 1 / -1; }
-
-    .summary-label {
-        color: #64748b;
-        font-size: 0.75rem;
-        font-weight: 950;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 4px;
-    }
-
-    .summary-value {
-        color: #0f172a;
-        font-weight: 850;
-        line-height: 1.5;
-    }
-
-    .quotation-item-row {
-        border: 1px solid #dbe5f1;
-        border-radius: 22px;
-        padding: 18px;
-        margin-bottom: 16px;
-        background: #f8fbff;
-    }
-
-    .quotation-round-btn,
-    .quotation-submit-btn {
-        border-radius: 14px;
-        font-weight: 900;
-    }
-
-    .form-label { font-weight: 850; color: #334155; }
-    .form-control,
-    .form-select { border-radius: 14px; padding: 11px 14px; }
-
-    .quotation-cost-card { position: sticky; top: 96px; }
-
-    .cost-line {
-        display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        margin-bottom: 10px;
-        color: #334155;
-    }
-
-    .grand-total-box {
-        display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        background: linear-gradient(135deg, #0f4c81, #102a43);
-        color: #fff;
-        border-radius: 18px;
-        padding: 16px;
-        font-weight: 950;
-        margin-top: 12px;
-    }
-
-    .payment-breakdown-box {
-        border: 1px solid #dbe5f1;
-        border-radius: 18px;
-        background: #f8fafc;
-        padding: 14px;
-        color: #334155;
-    }
-
-    @media (max-width: 991.98px) {
-        .request-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .summary-box.wide { grid-column: span 1; }
-        .quotation-cost-card { position: static; }
-    }
-
-    @media (max-width: 575.98px) {
-        .request-summary-grid { grid-template-columns: 1fr; }
-    }
-</style>
 @endsection

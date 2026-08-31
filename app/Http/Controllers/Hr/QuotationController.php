@@ -16,9 +16,90 @@ class QuotationController extends Controller
 {
     public function index(Request $request)
     {
+        $baseActiveQuery = Quotation::query()
+            ->whereNull('archived_at')
+            ->whereHas('request', function ($requestQuery) {
+                $requestQuery->whereNull('archived_at');
+            });
+
         $query = Quotation::query()
             ->with(['request', 'items', 'preparedBy', 'invoice'])
-            ->withCount('items');
+            ->withCount('items')
+            ->whereNull('archived_at')
+            ->whereHas('request', function ($requestQuery) {
+                $requestQuery->whereNull('archived_at');
+            });
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+
+            $query->where(function ($q) use ($search) {
+                $q->where('quotation_no', 'like', "%{$search}%")
+                    ->orWhereHas('request', function ($requestQuery) use ($search) {
+                        $requestQuery->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('service_type', 'like', "%{$search}%")
+                            ->orWhere('service_category', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $summary = [
+            'total_quotations' => (clone $baseActiveQuery)->count(),
+            'sent_quotations' => (clone $baseActiveQuery)->where('status', 'sent')->count(),
+            'total_amount' => (clone $baseActiveQuery)->sum('grand_total'),
+            'latest_created' => (clone $baseActiveQuery)->max('created_at'),
+        ];
+
+        $statusCounts = [
+            'all' => (clone $baseActiveQuery)->count(),
+            'draft' => (clone $baseActiveQuery)->where('status', 'draft')->count(),
+            'sent' => (clone $baseActiveQuery)->where('status', 'sent')->count(),
+            'accepted' => (clone $baseActiveQuery)->where('status', 'accepted')->count(),
+            'rejected' => (clone $baseActiveQuery)->whereIn('status', ['rejected', 'declined'])->count(),
+        ];
+
+    $quotationRequestsForCreate = QuotationRequest::query()
+        ->with([
+            'worker',
+            'jobOrder',
+            'forwardedToHrBy',
+        ])
+        ->whereNull('archived_at')
+        ->where('status', 'ready_for_quotation')
+        ->whereNotNull('ready_for_quotation_at')
+        ->whereDoesntHave('quotation')
+        ->latest('ready_for_quotation_at')
+        ->take(6)
+        ->get();
+
+        $quotations = $query
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('hr.quotations.index', compact(
+            'quotations',
+            'summary',
+            'statusCounts',
+            'quotationRequestsForCreate'
+        ));
+    }
+
+
+    public function archived(Request $request)
+    {
+        $query = Quotation::query()
+            ->with(['request', 'items', 'preparedBy', 'invoice'])
+            ->withCount('items')
+            ->whereNotNull('archived_at');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -40,23 +121,48 @@ class QuotationController extends Controller
         }
 
         $summary = [
-            'total_quotations' => Quotation::count(),
-            'sent_quotations' => Quotation::where('status', 'sent')->count(),
-            'total_amount' => Quotation::sum('grand_total'),
-            'latest_created' => Quotation::max('created_at'),
+            'archived_quotations' => Quotation::whereNotNull('archived_at')->count(),
+            'latest_archived' => Quotation::whereNotNull('archived_at')->max('archived_at'),
         ];
 
         $quotations = $query
-            ->latest()
+            ->latest('archived_at')
             ->paginate(10)
             ->withQueryString();
 
-        return view('hr.quotations.index', compact('quotations', 'summary'));
+        return view('hr.quotations.archived', compact('quotations', 'summary'));
     }
+
+public function archive(Quotation $quotation)
+{
+    $quotation->archived_at = now();
+    $quotation->archive_reason = 'Manually archived by HR';
+    $quotation->save();
+
+    return redirect()
+        ->route('hr.quotations.index')
+        ->with('success', 'Quotation archived successfully.');
+}
+
+public function restore(Quotation $quotation)
+{
+    $quotation->archived_at = null;
+    $quotation->archive_reason = null;
+    $quotation->save();
+
+    return redirect()
+        ->route('hr.quotations.archived')
+        ->with('success', 'Quotation restored successfully.');
+}
 
     public function create(QuotationRequest $quotationRequest)
     {
-        $quotationRequest->load('worker', 'quotation');
+        $quotationRequest->load([
+            'worker',
+            'quotation',
+            'inspectionReport.materialItems',
+            'inspectionReport.inspector',
+        ]);
 
         if ($quotationRequest->quotation) {
             return redirect()
@@ -64,7 +170,57 @@ class QuotationController extends Controller
                 ->with('info', 'A quotation already exists for this request.');
         }
 
-        return view('hr.quotations.create', compact('quotationRequest'));
+        $inspectionReport = $quotationRequest->inspectionReport;
+
+        $prefillItems = collect();
+
+        if ($inspectionReport && $inspectionReport->status === 'submitted') {
+            foreach ($inspectionReport->materialItems as $material) {
+                $prefillItems->push([
+                    'description' => $material->item_name,
+                    'item_category' => 'material',
+                    'quantity' => (float) $material->quantity,
+                    'unit' => $material->unit,
+                    'unit_price' => (float) $material->unit_cost,
+                ]);
+            }
+
+            if ((float) $inspectionReport->estimated_labor_cost > 0) {
+                $prefillItems->push([
+                    'description' => 'Labor',
+                    'item_category' => 'labor',
+                    'quantity' => 1,
+                    'unit' => 'service',
+                    'unit_price' => (float) $inspectionReport->estimated_labor_cost,
+                ]);
+            }
+
+            if ((float) $inspectionReport->estimated_miscellaneous_cost > 0) {
+                $prefillItems->push([
+                    'description' => 'Miscellaneous',
+                    'item_category' => 'misc',
+                    'quantity' => 1,
+                    'unit' => 'lot',
+                    'unit_price' => (float) $inspectionReport->estimated_miscellaneous_cost,
+                ]);
+            }
+        }
+
+        if ($prefillItems->isEmpty()) {
+            $prefillItems->push([
+                'description' => '',
+                'item_category' => 'material',
+                'quantity' => 1,
+                'unit' => 'pcs',
+                'unit_price' => 0,
+            ]);
+        }
+
+        return view('hr.quotations.create', compact(
+            'quotationRequest',
+            'inspectionReport',
+            'prefillItems'
+        ));
     }
 
     public function store(Request $request)
@@ -72,13 +228,12 @@ class QuotationController extends Controller
         $validated = $request->validate([
             'quotation_request_id' => ['required', 'exists:quotation_requests,id'],
             'notes' => ['nullable', 'string'],
-            'payment_plan' => ['required', 'in:auto,5050,30303010'],
-            'tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-
+            'payment_plan' => ['required', 'in:auto,full,5050,30303010'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.item_category' => ['required', 'in:material,labor,misc'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'items.*.unit' => ['required', 'string', 'max:50'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
         ]);
 
@@ -104,6 +259,7 @@ class QuotationController extends Controller
                 'description' => $item['description'],
                 'item_category' => $item['item_category'],
                 'quantity' => $item['quantity'],
+                'unit' => $item['unit'],
                 'unit_price' => $item['unit_price'],
                 'total_price' => $lineTotal,
             ];
@@ -116,7 +272,7 @@ class QuotationController extends Controller
         $misc = round($categoryTotals['misc'], 2);
         $subtotal = round($materials + $labor + $misc, 2);
 
-        $taxRate = round((float) ($validated['tax_rate'] ?? 0), 2);
+        $taxRate = 12.00;
         $taxAmount = round(($subtotal * $taxRate) / 100, 2);
         $grandTotal = round($subtotal + $taxAmount, 2);
 
@@ -247,17 +403,23 @@ class QuotationController extends Controller
             $planKey = $total >= 100000 ? '30303010' : '5050';
         }
 
-        $phases = $planKey === '30303010'
-            ? [
+        if ($planKey === 'full') {
+            $phases = [
+                ['label' => 'Full Payment', 'percent' => 100],
+            ];
+        } elseif ($planKey === '30303010') {
+            $phases = [
                 ['label' => 'Downpayment', 'percent' => 30],
                 ['label' => 'Progress 1', 'percent' => 30],
                 ['label' => 'Progress 2', 'percent' => 30],
                 ['label' => 'Retention', 'percent' => 10],
-            ]
-            : [
+            ];
+        } else {
+            $phases = [
                 ['label' => 'Downpayment', 'percent' => 50],
                 ['label' => 'Final', 'percent' => 50],
             ];
+        }
 
         $running = 0;
 

@@ -5,16 +5,18 @@
     --wr-surface: #ffffff;
     --wr-border: #e3ebf3;
     --wr-text: #1f2a37;
-    --wr-muted: #6b7280;
+    --wr-muted: #64748b;
     --wr-success: #16a34a;
     --wr-warning: #f59e0b;
     --wr-danger: #ef4444;
-    --wr-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-    --wr-radius-lg: 22px;
-    --wr-radius-md: 16px;
-    --wr-radius-sm: 12px;
-    --sidebar-width: 240px;
-    --sidebar-collapsed-width: 86px;
+
+    --wr-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    --wr-radius-lg: 18px;
+    --wr-radius-md: 14px;
+    --wr-radius-sm: 10px;
+
+    --sidebar-width: 232px;
+    --sidebar-collapsed-width: 76px;
 }
 
 * {
@@ -36,34 +38,84 @@ body {
 }
 
 /* ================================
-   Shared Panels / Cards
+   KISS Base Typography
    ================================ */
-.panel {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+    margin-top: 0;
+}
+
+h1,
+.topbar-title,
+.page-title {
+    font-size: 1.45rem !important;
+    line-height: 1.2 !important;
+    font-weight: 850 !important;
+    color: #0f172a;
+}
+
+h2 {
+    font-size: 1.28rem !important;
+}
+
+h3 {
+    font-size: 1.12rem !important;
+}
+
+h4 {
+    font-size: 1rem !important;
+}
+
+h5 {
+    font-size: 0.95rem !important;
+}
+
+h6 {
+    font-size: 0.86rem !important;
+}
+
+.text-muted,
+.topbar-subtitle,
+.page-subtitle {
+    color: var(--wr-muted) !important;
+}
+
+/* ================================
+   KISS Layout Spacing
+   ================================ */
+.content,
+.main-content,
+.admin-content,
+.client-content {
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
+}
+
+.page-header,
+.page-header-card {
     background: var(--wr-surface);
     border: 1px solid var(--wr-border);
     border-radius: var(--wr-radius-lg);
     box-shadow: var(--wr-shadow);
-    overflow: hidden;
+    padding: 16px 18px;
+    margin-bottom: 16px;
 }
 
-.panel-header {
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--wr-border);
-    background: #fbfdff;
+.page-header h1,
+.page-header-card h2 {
+    margin-bottom: 4px;
 }
 
-.panel-header h5,
-.panel-header h4 {
-    margin: 0;
-    font-weight: 800;
-}
-
-.panel-body {
-    padding: 20px 22px;
-}
-
-.card,
+/* ================================
+   KISS Cards and Panels
+   ================================ */
 .panel,
+.card,
 .q-card,
 .action-card,
 .audit-card,
@@ -73,43 +125,94 @@ body {
 .request-action-card,
 .client-card,
 .info-card {
-    border-radius: 16px;
+    background: var(--wr-surface);
+    border: 1px solid var(--wr-border) !important;
+    border-radius: var(--wr-radius-lg) !important;
+    box-shadow: var(--wr-shadow);
+}
+
+.panel,
+.card {
+    overflow: hidden;
+}
+
+.panel-header,
+.card-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--wr-border);
+    background: #fbfdff;
+}
+
+.panel-header h5,
+.panel-header h4,
+.card-header h5,
+.card-header h4 {
+    margin: 0;
+    font-weight: 850;
+}
+
+.panel-body,
+.card-body,
+.audit-card-body {
+    padding: 16px !important;
+}
+
+.card-body > :last-child,
+.panel-body > :last-child {
+    margin-bottom: 0;
 }
 
 /* ================================
-   Shared Tables
+   KISS Tables
    ================================ */
 .table {
     margin-bottom: 0;
 }
 
+.table-responsive {
+    border-radius: var(--wr-radius-md);
+}
+
 .table thead th {
     background: #f8fbff;
-    color: #334155;
-    font-size: 0.78rem;
-    font-weight: 800;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 850;
     border-bottom: 1px solid var(--wr-border);
-    padding: 11px 12px;
+    padding: 10px 12px;
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.035em;
 }
 
 .table tbody td {
-    padding: 11px 12px;
+    padding: 10px 12px;
     vertical-align: middle;
     border-color: #edf2f7;
     font-size: 0.84rem;
 }
 
+.table-hover tbody tr:hover {
+    background: #f8fbff;
+}
+
 /* ================================
-   Shared Badges
+   KISS Badges
    ================================ */
-.badge-soft {
+.badge-soft,
+.role-badge,
+.status-badge,
+.verify-badge {
     display: inline-flex;
     align-items: center;
-    padding: 6px 10px;
+    justify-content: center;
+    padding: 5px 9px;
     border-radius: 999px;
-    font-weight: 700;
-    font-size: 0.74rem;
+    font-weight: 850;
+    font-size: 0.68rem;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: uppercase;
 }
 
 .badge-soft.blue {
@@ -117,7 +220,10 @@ body {
     color: #1d4ed8;
 }
 
-.badge-soft.green {
+.badge-soft.green,
+.badge-active,
+.status-active,
+.verify-ok {
     background: #ecfdf3;
     color: #15803d;
 }
@@ -127,7 +233,10 @@ body {
     color: #c2410c;
 }
 
-.badge-soft.red {
+.badge-soft.red,
+.badge-inactive,
+.status-inactive,
+.verify-no {
     background: #fee2e2;
     color: #b91c1c;
 }
@@ -138,242 +247,117 @@ body {
 }
 
 /* ================================
-   Shared Buttons / Forms
+   KISS Buttons and Forms
    ================================ */
-.btn-primary {
-    background: linear-gradient(90deg, #1d9bf0, #3bb6ff);
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    padding: 8px 14px;
-}
-
-.btn-outline-secondary,
-.btn-outline-primary,
-.btn-outline-danger,
-.btn-outline-success {
-    border-radius: 12px;
-    font-weight: 700;
-    padding: 8px 14px;
-}
-
 .btn {
-    min-height: 38px;
+    min-height: 36px;
+    border-radius: var(--wr-radius-sm) !important;
     font-size: 0.84rem;
+    font-weight: 750;
+    padding: 7px 12px;
 }
 
 .btn-sm {
     min-height: 30px;
     padding: 5px 9px;
-    font-size: 0.74rem;
+    font-size: 0.76rem;
+}
+
+.btn-primary {
+    background: var(--wr-primary);
+    border-color: var(--wr-primary);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: #118be0;
+    border-color: #118be0;
+}
+
+.btn-outline-primary {
+    color: var(--wr-primary-dark);
+    border-color: #b7d9f4;
+}
+
+.btn-outline-primary:hover {
+    background: #eaf4ff;
+    color: var(--wr-primary-dark);
+    border-color: #93c5fd;
+}
+
+.btn-outline-secondary {
+    border-color: var(--wr-border);
+    color: #475569;
+}
+
+.btn-outline-danger {
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.btn-outline-success {
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.btn-clean {
+    box-shadow: none !important;
+}
+
+.form-label {
+    color: #334155;
+    font-size: 0.76rem;
+    margin-bottom: 5px;
+    font-weight: 750;
 }
 
 .form-control,
 .form-select,
 textarea {
-    border-radius: 12px !important;
+    border-radius: var(--wr-radius-sm) !important;
     border: 1px solid var(--wr-border) !important;
-    padding: 9px 12px !important;
     box-shadow: none !important;
-    font-size: 0.84rem !important;
+    font-size: 0.86rem !important;
 }
 
 .form-control,
 .form-select {
     min-height: 38px;
+    padding: 8px 11px !important;
 }
 
 textarea.form-control {
-    min-height: 72px;
-}
-
-.form-label {
-    font-size: 0.78rem;
-    margin-bottom: 5px;
-    font-weight: 700;
+    min-height: 82px;
+    padding: 9px 11px !important;
+    resize: vertical;
 }
 
 .form-control:focus,
 .form-select:focus,
 textarea:focus {
     border-color: #7dd3fc !important;
-    box-shadow: 0 0 0 0.15rem rgba(29, 155, 240, 0.14) !important;
+    box-shadow: 0 0 0 0.15rem rgba(29, 155, 240, 0.13) !important;
 }
 
 .alert {
-    border: none;
-    border-radius: 16px;
+    border: 0;
+    border-radius: var(--wr-radius-md);
     box-shadow: var(--wr-shadow);
 }
 
 /* ================================
-   Safe Global Compact Density
-   Does not alter app-shell/sidebar/main widths.
-   Layout widths stay controlled by each role layout CSS.
+   KISS Modal and Dropdown
    ================================ */
-.topbar {
-    min-height: 64px !important;
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
+.modal-content {
+    border: 1px solid var(--wr-border);
+    border-radius: var(--wr-radius-lg);
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.18);
 }
 
-.topbar-title,
-.page-title,
-h1 {
-    font-size: 1.65rem !important;
-    line-height: 1.15 !important;
-}
-
-h2 {
-    font-size: 1.45rem !important;
-}
-
-h3 {
-    font-size: 1.25rem !important;
-}
-
-h4 {
-    font-size: 1.08rem !important;
-}
-
-h5 {
-    font-size: 0.98rem !important;
-}
-
-h6 {
-    font-size: 0.88rem !important;
-}
-
-.topbar-subtitle,
-.page-subtitle {
-    font-size: 0.84rem !important;
-}
-
-/* Compact content spacing only; do not control layout widths */
-.content,
-.main-content,
-.admin-content,
-.client-content {
-    padding-top: 18px !important;
-    padding-bottom: 18px !important;
-}
-
-/* Sidebar visual density only; do not change sidebar width */
-.sidebar-link {
-    min-height: 42px !important;
-    padding-top: 9px !important;
-    padding-bottom: 9px !important;
-    font-size: 0.86rem !important;
-}
-
-.sidebar-link span,
-.logout-btn span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.sidebar-label {
-    font-size: 0.7rem !important;
-}
-
-.brand-wrap {
-    padding-top: 18px !important;
-    padding-bottom: 18px !important;
-}
-
-.brand-logo {
-    width: 38px !important;
-    height: 38px !important;
-}
-
-.brand-title {
-    font-size: 1rem !important;
-}
-
-.brand-subtitle {
-    font-size: 0.76rem !important;
-}
-
-.logout-btn {
-    min-height: 42px !important;
-    font-size: 0.86rem !important;
-}
-
-/* Shared cards/panels density */
-.card-body,
-.panel-body,
-.q-card,
-.action-card,
-.audit-card-body,
-.q-filter-body,
-.q-list-head,
-.q-list-body,
-.dashboard-card,
-.request-action-card,
-.client-card,
-.info-card {
-    padding: 14px 16px !important;
-}
-
-/* Dashboard / quotation / audit density */
-.dashboard-grid,
-.stats-grid,
-.q-stats-grid,
-.summary-clean-grid,
-.simple-progress,
-.mini-status-grid {
-    gap: 12px !important;
-}
-
-.q-stat-card,
-.summary-clean-box,
-.simple-step,
-.next-action-panel,
-.guided-recommendation,
-.system-decision-card {
-    padding: 11px 13px !important;
-    border-radius: 14px !important;
-}
-
-.q-stat-value {
-    font-size: 1.05rem !important;
-}
-
-.q-stat-label,
-.summary-clean-box span,
-.summary-meta-label,
-.action-label {
-    font-size: 0.68rem !important;
-}
-
-.summary-clean-box strong,
-.summary-meta-value,
-.simple-step strong {
-    font-size: 0.8rem !important;
-}
-
-.simple-step span,
-.guided-recommendation p,
-.system-decision-card p,
-.next-action-header p {
-    font-size: 0.72rem !important;
-}
-
-.audit-card-header {
-    padding: 14px 16px !important;
-}
-
-.audit-card-title {
-    font-size: 1rem !important;
-}
-
-.audit-card-subtitle {
-    font-size: 0.8rem !important;
-}
-
-/* Modal compact */
-.modal-header {
+.modal-header,
+.modal-footer {
     padding: 14px 18px !important;
 }
 
@@ -382,58 +366,54 @@ h6 {
 }
 
 .modal-title {
-    font-size: 1.05rem !important;
+    font-size: 1rem !important;
+    font-weight: 850;
+}
+
+.dropdown-menu {
+    border: 1px solid var(--wr-border);
+    border-radius: var(--wr-radius-md);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+    padding: 8px;
+}
+
+.dropdown-item {
+    border-radius: 10px;
+    font-size: 0.84rem;
+    font-weight: 650;
+    padding: 8px 10px;
 }
 
 /* ================================
-   Mobile Responsive Base Fixes
+   Mobile Base
    ================================ */
 @media (max-width: 767.98px) {
     body {
         font-size: 14px;
-        overflow-x: hidden;
     }
 
     .content,
     .main-content,
     .admin-content,
     .client-content {
-        padding: 16px !important;
+        padding: 14px !important;
     }
 
     .page-header,
-    .page-header-card {
-        padding: 18px !important;
-        border-radius: 18px !important;
-        margin-bottom: 16px !important;
+    .page-header-card,
+    .panel-header,
+    .panel-body,
+    .card-body {
+        padding: 14px !important;
     }
 
     .page-header h1,
     .page-header-card h2,
     .topbar-title {
-        font-size: 1.35rem !important;
-        line-height: 1.25 !important;
-    }
-
-    .page-header p,
-    .page-header-card p,
-    .topbar-subtitle {
-        font-size: 0.9rem !important;
-    }
-
-    .panel,
-    .card {
-        border-radius: 18px !important;
-    }
-
-    .panel-header,
-    .panel-body,
-    .card-body {
-        padding: 16px !important;
+        font-size: 1.25rem !important;
     }
 
     .table-responsive {
-        border-radius: 16px;
         overflow-x: auto;
     }
 
@@ -441,23 +421,16 @@ h6 {
         min-width: 720px;
     }
 
-    .btn {
-        border-radius: 12px;
-    }
-
-    .mobile-full-btn,
-    .d-grid .btn {
-        width: 100%;
-    }
-
     .form-control,
     .form-select,
     textarea {
+        min-height: 44px;
         font-size: 0.95rem !important;
-        min-height: 46px;
     }
 
-    .row.g-4 {
-        --bs-gutter-y: 1rem;
+    .btn,
+    .mobile-full-btn,
+    .d-grid .btn {
+        width: 100%;
     }
 }

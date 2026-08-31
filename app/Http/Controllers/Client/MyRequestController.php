@@ -200,6 +200,8 @@ class MyRequestController extends Controller
             'preferred_time' => ['nullable', 'date_format:H:i'],
             'address' => ['required', 'string', 'max:255'],
             'details' => ['required', 'string', 'max:2000'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
 
         $flow = $this->resolveServiceFlow($validated['service_type']);
@@ -228,6 +230,8 @@ class MyRequestController extends Controller
             'details' => $validated['details'],
             'status' => 'pending',
             'appointment_status' => 'pending',
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
         ]);
 
         AlertService::sendToRole(

@@ -1,0 +1,174 @@
+.quotation-request-card,
+    .quotation-form-card,
+    .quotation-cost-card {
+        background: #fff;
+        border: 1px solid rgba(15, 76, 129, 0.12);
+        border-radius: 24px;
+        box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
+        padding: 22px;
+    }
+
+    .request-service-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 8px 13px;
+        background: #eaf6ff;
+        color: #0f4c81;
+        font-weight: 900;
+        font-size: 0.84rem;
+    }
+
+    .request-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .summary-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 14px;
+    }
+
+    .summary-box.wide { grid-column: span 2; }
+    .summary-box.full { grid-column: 1 / -1; }
+
+    .summary-label {
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+    }
+
+    .summary-value {
+        color: #0f172a;
+        font-weight: 850;
+        line-height: 1.5;
+    }
+
+    .quotation-item-row {
+        border: 1px solid #dbe5f1;
+        border-radius: 22px;
+        padding: 18px;
+        margin-bottom: 16px;
+        background: #f8fbff;
+    }
+
+    .quotation-round-btn,
+    .quotation-submit-btn {
+        border-radius: 14px;
+        font-weight: 900;
+    }
+
+    .form-label { font-weight: 850; color: #334155; }
+    .form-control,
+    .form-select { border-radius: 14px; padding: 11px 14px; }
+
+    .quotation-cost-card { position: sticky; top: 96px; }
+
+    .cost-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 10px;
+        color: #334155;
+    }
+
+    .grand-total-box {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        background: linear-gradient(135deg, #0f4c81, #102a43);
+        color: #fff;
+        border-radius: 18px;
+        padding: 16px;
+        font-weight: 950;
+        margin-top: 12px;
+    }
+
+    .payment-breakdown-box {
+        border: 1px solid #dbe5f1;
+        border-radius: 18px;
+        background: #f8fafc;
+        padding: 14px;
+        color: #334155;
+    }
+
+    @media (max-width: 991.98px) {
+        .request-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .summary-box.wide { grid-column: span 1; }
+        .quotation-cost-card { position: static; }
+    }
+
+    @media (max-width: 575.98px) {
+        .request-summary-grid { grid-template-columns: 1fr; }
+    }
+
+.vat-rate-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 13px 14px;
+    margin-bottom: 14px;
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    background: #eff6ff;
+}
+
+.vat-rate-card span,
+.vat-rate-card small {
+    display: block;
+}
+
+.vat-rate-card span {
+    color: #0f172a;
+    font-weight: 900;
+}
+
+.vat-rate-card small {
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.vat-rate-card strong {
+    color: #0f4c81;
+    font-size: 1.15rem;
+    font-weight: 950;
+}
+
+
+.quotation-item-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.7fr)
+        minmax(0, 1.15fr)
+        minmax(90px, 0.85fr)
+        minmax(95px, 0.9fr)
+        minmax(110px, 1fr)
+        minmax(115px, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+.quotation-item-grid > [class*="col-"] {
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    padding: 0;
+}
+
+.quotation-item-grid .form-control,
+.quotation-item-grid .form-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.quotation-item-grid .item-total-display {
+    min-width: 0;
+}

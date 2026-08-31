@@ -1,0 +1,950 @@
+/* ============================================================
+   WRPlumb Admin - Inspector Availability Polished UI
+   Place: public/css/admin/inspector-availability.css
+   ============================================================ */
+:root {
+    --ia-primary: #1d9bf0;
+    --ia-primary-dark: #0f4c81;
+    --ia-navy: #0f172a;
+    --ia-text: #1f2937;
+    --ia-muted: #64748b;
+    --ia-border: #dbe7f3;
+    --ia-soft: #f8fbff;
+    --ia-surface: #ffffff;
+    --ia-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    --ia-radius: 20px;
+}
+
+.ia-page {
+    display: grid;
+    gap: 14px;
+    color: var(--ia-text);
+    font-size: 0.88rem;
+}
+
+.ia-top-grid {
+    display: grid;
+    grid-template-columns: minmax(420px, 1fr) minmax(420px, 0.72fr);
+    gap: 14px;
+    align-items: stretch;
+}
+
+.ia-filter-card,
+.ia-stats-row,
+.ia-panel {
+    background: var(--ia-surface);
+    border: 1px solid var(--ia-border);
+    border-radius: var(--ia-radius);
+    box-shadow: var(--ia-shadow);
+}
+
+.ia-filter-card {
+    display: grid;
+    grid-template-columns: minmax(190px, 0.8fr) minmax(210px, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+    padding: 14px 16px;
+}
+
+.ia-filter-card .form-label,
+.ia-day-form .form-label {
+    color: var(--ia-navy);
+    font-size: 0.72rem;
+    font-weight: 900;
+    margin-bottom: 6px;
+}
+
+.ia-input-icon {
+    position: relative;
+}
+
+.ia-input-icon > i {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    transform: translateY(-50%);
+    color: #64748b;
+    z-index: 1;
+}
+
+.ia-input-icon .form-control {
+    padding-left: 38px !important;
+}
+
+.ia-input-icon.right > i {
+    left: auto;
+    right: 13px;
+}
+
+.ia-input-icon.right .form-control {
+    padding-left: 12px !important;
+    padding-right: 38px !important;
+}
+
+.ia-filter-card .form-control,
+.ia-filter-card .form-select,
+.ia-day-form .form-control,
+.ia-day-form .form-select {
+    min-height: 42px;
+    border-radius: 13px;
+    border-color: #d7e3f0;
+    font-size: 0.86rem;
+}
+
+.ia-filter-actions {
+    display: inline-flex;
+    gap: 8px;
+}
+
+.ia-filter-actions .btn,
+.ia-day-actions .btn {
+    min-height: 42px;
+    border-radius: 13px;
+    font-weight: 900;
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.ia-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding: 10px;
+}
+
+.ia-mini-stat {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #edf3f8;
+    border-radius: 16px;
+    background: #fbfdff;
+}
+
+.ia-mini-icon {
+    grid-row: span 2;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    font-size: 0.95rem;
+}
+
+.ia-mini-icon.blue { background: #eaf3ff; color: #0b5ed7; }
+.ia-mini-icon.green { background: #ecfdf3; color: #15803d; }
+.ia-mini-icon.orange { background: #fff7ed; color: #c2410c; }
+.ia-mini-icon.red { background: #fee2e2; color: #b91c1c; }
+
+.ia-mini-stat span {
+    color: var(--ia-muted);
+    font-size: 0.67rem;
+    font-weight: 950;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ia-mini-stat strong {
+    color: var(--ia-navy);
+    font-size: 1.15rem;
+    font-weight: 950;
+    line-height: 1.1;
+}
+
+.ia-workspace {
+    display: grid;
+    grid-template-columns: 300px minmax(540px, 1fr) 300px;
+    gap: 14px;
+    align-items: stretch;
+}
+
+.ia-panel {
+    overflow: hidden;
+}
+
+.ia-panel-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px 18px;
+    border-bottom: 1px solid #edf3f8;
+    background: #ffffff;
+}
+
+.ia-panel-head.compact {
+    padding-bottom: 12px;
+    border-bottom: 0;
+}
+
+.ia-panel-head h5 {
+    margin: 0;
+    color: var(--ia-navy);
+    font-size: 1.04rem;
+    font-weight: 950;
+}
+
+.ia-panel-head p {
+    margin: 3px 0 0;
+    color: var(--ia-muted);
+    font-size: 0.78rem;
+}
+
+.ia-search-wrap {
+    position: relative;
+    padding: 0 14px 12px;
+}
+
+.ia-search-wrap i {
+    position: absolute;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+}
+
+.ia-search-wrap .form-control {
+    min-height: 42px;
+    border-radius: 13px;
+    padding-right: 38px;
+}
+
+.ia-inspector-list {
+    display: grid;
+    gap: 12px;
+    padding: 0 14px 14px;
+    max-height: calc(100vh - 320px);
+    overflow: auto;
+}
+
+.ia-inspector-card {
+    position: relative;
+    width: 100%;
+    border: 1px solid var(--ia-border);
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 14px;
+    text-align: left;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.ia-inspector-card:hover {
+    transform: translateY(-1px);
+    border-color: #9ecdf5;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.ia-inspector-card.active {
+    border-color: var(--ia-primary);
+    background: #f0f9ff;
+    box-shadow: 0 16px 34px rgba(29, 155, 240, 0.15);
+}
+
+.ia-inspector-active-dot {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+}
+
+.ia-inspector-main {
+    display: flex;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ia-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: linear-gradient(135deg, #0ea5e9, #0f4c81);
+    color: #ffffff;
+    font-weight: 950;
+}
+
+.ia-avatar.lg {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+}
+
+.ia-inspector-copy {
+    min-width: 0;
+    padding-right: 16px;
+}
+
+.ia-inspector-copy strong {
+    display: block;
+    color: var(--ia-navy);
+    font-weight: 950;
+    line-height: 1.2;
+}
+
+.ia-inspector-copy span,
+.ia-inspector-copy small {
+    display: block;
+    color: var(--ia-muted);
+    font-size: 0.76rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ia-inspector-counts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 12px;
+}
+
+.ia-inspector-counts div {
+    padding: 8px;
+    border: 1px solid #e8eef6;
+    border-radius: 13px;
+    background: #ffffff;
+}
+
+.ia-inspector-counts strong {
+    display: block;
+    color: var(--ia-navy);
+    font-weight: 950;
+}
+
+.ia-inspector-counts span {
+    display: block;
+    color: var(--ia-muted);
+    font-size: 0.62rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ia-calendar-panel {
+    padding: 0;
+}
+
+.ia-calendar-profile {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid #edf3f8;
+}
+
+.ia-calendar-profile h4 {
+    margin: 0;
+    color: var(--ia-navy);
+    font-size: 1.12rem;
+    font-weight: 950;
+}
+
+.ia-calendar-profile p {
+    margin: 2px 0 0;
+    color: var(--ia-muted);
+    font-size: 0.82rem;
+}
+
+.ia-record-pill {
+    border-radius: 999px;
+    background: #eaf3ff;
+    color: var(--ia-primary-dark);
+    padding: 8px 12px;
+    font-size: 0.74rem;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.ia-calendar-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 18px 10px;
+}
+
+.ia-month-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.ia-month-nav h3 {
+    margin: 0;
+    min-width: 132px;
+    text-align: center;
+    color: var(--ia-navy);
+    font-size: 1.12rem;
+    font-weight: 950;
+}
+
+.ia-icon-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--ia-border);
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: #ffffff;
+    color: var(--ia-primary-dark);
+    text-decoration: none;
+    transition: all 0.18s ease;
+}
+
+.ia-icon-btn:hover {
+    background: #eaf3ff;
+    color: #0b5ed7;
+}
+
+.ia-today-btn {
+    border-radius: 12px !important;
+    font-weight: 900 !important;
+}
+
+.ia-legend {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    color: #475569;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.ia-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.ia-legend i,
+.ia-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+.ia-legend .available,
+.ia-status-dot.available { background: #16a34a; }
+.ia-legend .on_duty,
+.ia-status-dot.on_duty { background: #1d9bf0; }
+.ia-legend .off_duty,
+.ia-status-dot.off_duty { background: #ef4444; }
+.ia-legend .on_leave,
+.ia-status-dot.on_leave { background: #a855f7; }
+.ia-legend .no_record,
+.ia-status-dot.no_record { background: #cbd5e1; }
+
+.ia-weekdays,
+.ia-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.ia-weekdays {
+    padding-top: 4px;
+    padding-bottom: 7px;
+}
+
+.ia-weekdays span {
+    text-align: center;
+    color: var(--ia-muted);
+    font-size: 0.68rem;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
+.ia-calendar-grid {
+    padding-bottom: 18px;
+}
+
+.ia-day {
+    min-height: 82px;
+    border: 1px solid var(--ia-border);
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 9px;
+    text-align: left;
+    transition: all 0.18s ease;
+    position: relative;
+}
+
+.ia-day:not(.empty) {
+    cursor: pointer;
+}
+
+.ia-day:not(.empty):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.ia-day.empty {
+    pointer-events: none;
+    background: transparent;
+    border-color: transparent;
+}
+
+.ia-day.selected {
+    border-color: var(--ia-primary) !important;
+    box-shadow: 0 0 0 2px rgba(29, 155, 240, 0.18);
+}
+
+.ia-day.selected::after {
+    content: "\f00c";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: var(--ia-primary);
+    color: #ffffff;
+    font-size: 0.55rem;
+}
+
+.ia-day.day-available { background: #f0fdf4; border-color: #bbf7d0; }
+.ia-day.day-on_duty { background: #f0f9ff; border-color: #bae6fd; }
+.ia-day.day-off_duty { background: #fef2f2; border-color: #fecaca; }
+.ia-day.day-on_leave { background: #faf5ff; border-color: #e9d5ff; }
+.ia-day.day-no_record { background: #ffffff; border-color: #e2e8f0; }
+
+.ia-day-number {
+    display: block;
+    color: var(--ia-navy);
+    font-weight: 950;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.ia-day-status {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    font-weight: 950;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.ia-day-status.available { background: #dcfce7; color: #166534; }
+.ia-day-status.on_duty { background: #eaf4ff; color: #1d4ed8; }
+.ia-day-status.off_duty { background: #fee2e2; color: #b91c1c; }
+.ia-day-status.on_leave { background: #f3e8ff; color: #7e22ce; }
+.ia-day-status.no_record { background: #eef2f7; color: #64748b; }
+
+.ia-day-time {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 0.68rem;
+    line-height: 1.25;
+}
+
+.ia-day-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.ia-day-head h5 {
+    font-size: 1rem;
+}
+
+.ia-close-details {
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.ia-day-form {
+    padding: 16px 18px 12px;
+}
+
+.ia-status-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    border-radius: 14px;
+    padding: 9px 12px;
+    margin-bottom: 16px;
+    font-weight: 950;
+}
+
+.ia-status-preview.available { background: #f0fdf4; color: #166534; }
+.ia-status-preview.on_duty { background: #f0f9ff; color: #1d4ed8; }
+.ia-status-preview.off_duty { background: #fef2f2; color: #b91c1c; }
+.ia-status-preview.on_leave { background: #faf5ff; color: #7e22ce; }
+.ia-status-preview.no_record { background: #f8fafc; color: #64748b; }
+
+.ia-last-updated {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.78rem;
+    padding: 10px 0 14px;
+    border-top: 1px solid #edf3f8;
+}
+
+.ia-day-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 10px;
+}
+
+.ia-help-box {
+    display: flex;
+    gap: 10px;
+    margin: auto 18px 18px;
+    padding: 12px;
+    border-radius: 14px;
+    background: #f8fbff;
+    border: 1px solid #edf3f8;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.ia-help-box i {
+    color: var(--ia-primary);
+    margin-top: 2px;
+}
+
+.ia-empty-state {
+    padding: 56px 20px;
+    text-align: center;
+    color: var(--ia-muted);
+}
+
+.ia-empty-icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 14px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: #eaf3ff;
+    color: #0b5ed7;
+    font-size: 1.35rem;
+}
+
+.ia-empty-state strong {
+    display: block;
+    color: var(--ia-navy);
+    font-weight: 950;
+}
+
+.ia-toast-stack {
+    position: fixed;
+    top: 88px;
+    right: 24px;
+    z-index: 1095;
+    display: grid;
+    gap: 10px;
+}
+
+.ia-toast {
+    min-width: 320px;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: #ffffff;
+    border-left: 4px solid #16a34a;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+}
+
+.ia-toast > i {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.ia-toast strong,
+.ia-toast span {
+    display: block;
+}
+
+.ia-toast strong {
+    color: var(--ia-navy);
+    font-weight: 950;
+}
+
+.ia-toast span {
+    color: #64748b;
+    font-size: 0.84rem;
+}
+
+/* Fix unwanted inspector list scrollbars */
+.inspector-panel,
+.inspector-list-card,
+.inspector-list-body {
+    overflow-x: hidden !important;
+}
+
+.inspector-list-body {
+    max-height: none !important;
+    overflow-y: visible !important;
+}
+
+/* Make inspector cards fit inside panel */
+.inspector-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+/* Prevent email/text from forcing horizontal scroll */
+.inspector-card *,
+.inspector-card-top,
+.inspector-copy,
+.inspector-meta {
+    min-width: 0 !important;
+}
+
+.inspector-meta,
+.inspector-email {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Make mini stats smaller */
+.inspector-mini-stats,
+.mini-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+}
+
+.inspector-mini-stat,
+.mini-stat {
+    padding: 7px 6px !important;
+    min-width: 0 !important;
+}
+
+.inspector-mini-stat span,
+.mini-stat-label {
+    font-size: 0.58rem !important;
+    white-space: nowrap !important;
+}
+
+.inspector-mini-stat strong,
+.mini-stat-value {
+    font-size: 0.85rem !important;
+}
+
+@media (max-width: 1400px) {
+    .ia-top-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ia-workspace {
+        grid-template-columns: 280px minmax(520px, 1fr) 286px;
+    }
+
+    .ia-day {
+        min-height: 76px;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .ia-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .ia-inspector-list {
+        max-height: none;
+    }
+
+    .ia-day-panel {
+        min-height: auto;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .ia-filter-card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ia-filter-actions {
+        grid-column: span 2;
+    }
+
+    .ia-stats-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ia-calendar-profile,
+    .ia-calendar-topline {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ia-record-pill {
+        justify-self: start;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ia-filter-card,
+    .ia-stats-row,
+    .ia-filter-actions,
+    .ia-day-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .ia-filter-actions {
+        grid-column: auto;
+    }
+
+    .ia-weekdays,
+    .ia-calendar-grid {
+        gap: 5px;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .ia-day {
+        min-height: 60px;
+        padding: 7px;
+        border-radius: 12px;
+    }
+
+    .ia-day-status,
+    .ia-day-time {
+        display: none;
+    }
+
+    .ia-toast-stack {
+        left: 16px;
+        right: 16px;
+    }
+
+    .ia-toast {
+        min-width: 0;
+    }
+}
+
+
+
+/* ============================================================
+   Final Inspector List Overflow Fix
+   The page uses .ia-* classes. This removes the inner horizontal
+   scrollbar and keeps only a clean vertical inspector list scroll.
+   ============================================================ */
+.ia-panel,
+.ia-inspector-panel,
+.ia-inspector-list,
+.ia-inspector-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.ia-inspector-list {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding-right: 10px !important;
+    scrollbar-gutter: stable !important;
+}
+
+.ia-inspector-list::-webkit-scrollbar {
+    width: 7px !important;
+    height: 0 !important;
+}
+
+.ia-inspector-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 999px !important;
+}
+
+.ia-inspector-card {
+    overflow: hidden !important;
+}
+
+.ia-inspector-card *,
+.ia-inspector-main,
+.ia-inspector-copy,
+.ia-inspector-counts,
+.ia-inspector-counts div {
+    min-width: 0 !important;
+}
+
+.ia-inspector-copy strong,
+.ia-inspector-copy span,
+.ia-inspector-copy small {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.ia-inspector-counts {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+}
+
+.ia-inspector-counts div {
+    padding: 7px 6px !important;
+    overflow: hidden !important;
+}
+
+.ia-inspector-counts strong {
+    font-size: 0.9rem !important;
+    line-height: 1.1 !important;
+}
+
+.ia-inspector-counts span {
+    font-size: 0.56rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Hide browser default X in search input if the field uses type="search" */
+.ia-search-wrap input[type="search"]::-webkit-search-cancel-button,
+.ia-search-wrap input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    display: none !important;
+}
+
+/* If Bootstrap/page containers accidentally create x-scroll, suppress it only on this module. */
+.ia-page {
+    overflow-x: hidden !important;
+}

@@ -23,20 +23,22 @@
 <div class="app-shell">
     @unless($isSupportWidget)
         <aside class="sidebar" id="clientSidebar">
-            <div class="brand-wrap">
-                <img
-                    src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}"
-                    alt="WRPlumb Logo"
-                    class="brand-logo"
-                >
-                <div>
-                    <div class="brand-title">WRPlumb</div>
-                    <div class="brand-subtitle">Client Panel</div>
-                </div>
+<div class="brand-wrap">
+    <img
+        src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}"
+        alt="WRPlumb Logo"
+        class="brand-logo"
+    >
+
+    <div class="brand-text">
+        <div class="brand-title">WRPlumb</div>
+        <div class="brand-subtitle">Client Panel</div>
+    </div>
+</div>
+
+            <div class="sidebar-label">
+                <span>Navigation</span>
             </div>
-
-            <div class="sidebar-label">Navigation</div>
-
             <a href="{{ route('client.dashboard') }}" class="sidebar-link {{ request()->routeIs('client.dashboard') ? 'active' : '' }}">
                 <i class="fas fa-house"></i>
                 <span>Dashboard</span>
@@ -119,19 +121,141 @@
                 </div>
 
                 @php
-                    /** @var \App\Models\User $currentUser */
-                    $currentUser = auth()->user();
-                    $clientUnreadAlerts = $currentUser ? $currentUser->alerts()->where('is_read', false)->count() : 0;
-                @endphp
+            /** @var \App\Models\User $currentUser */
+            $currentUser = auth()->user();
+
+            $clientUnreadAlerts = $currentUser
+                ? $currentUser->alerts()->where('is_read', false)->count()
+                : 0;
+
+            $clientRecentAlerts = $currentUser
+                ? $currentUser->alerts()->latest()->limit(5)->get()
+                : collect();
+        @endphp
 
                 <div class="topbar-actions d-flex align-items-center gap-2">
-                    <a href="{{ route('client.alerts.index') }}" class="topbar-user text-decoration-none">
-                        <i class="fas fa-bell"></i>
-                        <span>Alerts</span>
-                        @if ($clientUnreadAlerts > 0)
-                            <span class="badge bg-danger rounded-pill">{{ $clientUnreadAlerts }}</span>
-                        @endif
-                    </a>
+<div class="client-alert-dropdown">
+    <button
+        type="button"
+        class="topbar-user client-alert-toggle"
+        id="clientAlertToggle"
+        aria-expanded="false"
+        aria-label="Open notifications"
+    >
+        <span class="client-alert-bell">
+            <i class="fas fa-bell"></i>
+
+            @if ($clientUnreadAlerts > 0)
+                <span class="client-alert-count">
+                    {{ $clientUnreadAlerts > 99 ? '99+' : $clientUnreadAlerts }}
+                </span>
+            @endif
+        </span>
+
+        <span>Alerts</span>
+    </button>
+
+    <div
+        class="client-alert-menu"
+        id="clientAlertMenu"
+        aria-hidden="true"
+    >
+        <div class="client-alert-header">
+            <div>
+                <strong>Notifications</strong>
+                <small>
+                    {{ $clientUnreadAlerts }}
+                    {{ $clientUnreadAlerts === 1 ? 'unread alert' : 'unread alerts' }}
+                </small>
+            </div>
+
+            @if ($clientUnreadAlerts > 0)
+                <form
+                    method="POST"
+                    action="{{ route('client.alerts.mark-all-read') }}"
+                >
+                    @csrf
+                    @method('PATCH')
+
+                    <button type="submit" class="client-alert-mark-all">
+                        Mark all as read
+                    </button>
+                </form>
+            @endif
+        </div>
+
+        <div class="client-alert-list">
+            @forelse ($clientRecentAlerts as $alert)
+                @php
+                    $alertIcon = match ($alert->type) {
+                        'payment_due' => 'fa-file-invoice-dollar',
+                        'payment' => 'fa-circle-check',
+                        'quotation' => 'fa-file-lines',
+                        'contract' => 'fa-file-signature',
+                        'job_order' => 'fa-clipboard-check',
+                        'request' => 'fa-screwdriver-wrench',
+                        'support' => 'fa-headset',
+                        default => 'fa-bell',
+                    };
+                @endphp
+
+                <form
+                    method="POST"
+                    action="{{ route('client.alerts.mark-read', $alert) }}"
+                    class="client-alert-form"
+                >
+                    @csrf
+                    @method('PATCH')
+
+                    <button
+                        type="submit"
+                        class="client-alert-item {{ $alert->is_read ? '' : 'unread' }}"
+                    >
+                        <span class="client-alert-icon alert-type-{{ $alert->type }}">
+                            <i class="fas {{ $alertIcon }}"></i>
+                        </span>
+
+                        <span class="client-alert-content">
+                            <strong>{{ $alert->title }}</strong>
+
+                            <span>
+                                {{ $alert->message }}
+                            </span>
+
+                            <small>
+                                {{ $alert->created_at->diffForHumans() }}
+                            </small>
+                        </span>
+
+                        @unless ($alert->is_read)
+                            <span class="client-alert-dot"></span>
+                        @endunless
+                    </button>
+                </form>
+            @empty
+                <div class="client-alert-empty">
+                    <span>
+                        <i class="fas fa-bell-slash"></i>
+                    </span>
+
+                    <strong>No notifications yet</strong>
+
+                    <p>
+                        Payment reminders and account updates will appear here.
+                    </p>
+                </div>
+            @endforelse
+        </div>
+
+        <a
+            href="{{ route('client.alerts.index') }}"
+            class="client-alert-view-all"
+        >
+            View all notifications
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+</div>
 
                     <div class="topbar-user">
                         <i class="fas fa-user"></i>
@@ -236,7 +360,50 @@
                 }
             });
         });
-    </script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const alertToggle = document.getElementById('clientAlertToggle');
+        const alertMenu = document.getElementById('clientAlertMenu');
+
+        if (!alertToggle || !alertMenu) {
+            return;
+        }
+
+        function closeAlertMenu() {
+            alertMenu.classList.remove('open');
+            alertMenu.setAttribute('aria-hidden', 'true');
+            alertToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        alertToggle.addEventListener('click', function (event) {
+            event.stopPropagation();
+
+            const isOpen = alertMenu.classList.toggle('open');
+
+            alertMenu.setAttribute(
+                'aria-hidden',
+                isOpen ? 'false' : 'true'
+            );
+
+            alertToggle.setAttribute(
+                'aria-expanded',
+                isOpen ? 'true' : 'false'
+            );
+        });
+
+        alertMenu.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', closeAlertMenu);
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeAlertMenu();
+            }
+        });
+    });
+</script>
 @endunless
+@stack('scripts')
 </body>
 </html>

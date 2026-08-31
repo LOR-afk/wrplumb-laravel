@@ -1,0 +1,594 @@
+.client-job-show-page {
+    display: grid;
+    gap: 14px;
+}
+
+.client-job-hero,
+.client-job-summary,
+.client-job-card {
+    border: 1px solid #dbe7f3;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
+}
+
+.client-job-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.client-job-hero-copy > span {
+    display: block;
+    margin-bottom: 4px;
+    color: #0b63f6;
+    font-size: .57rem;
+    font-weight: 950;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.client-job-title-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.client-job-title-row h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.24rem;
+    font-weight: 950;
+    letter-spacing: -.025em;
+}
+
+.client-job-hero-copy p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: .69rem;
+}
+
+.client-job-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: .52rem;
+    font-style: normal;
+    font-weight: 950;
+}
+
+.client-job-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.client-job-status.blue { background: #eaf4ff; color: #1d4ed8; }
+.client-job-status.orange { background: #fff7ed; color: #c2410c; }
+.client-job-status.green { background: #ecfdf3; color: #15803d; }
+.client-job-status.gray { background: #f1f5f9; color: #475569; }
+
+.client-job-btn {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border-radius: 10px;
+    font-size: .66rem;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.client-job-btn.secondary {
+    border: 1px solid #dbe7f3;
+    background: #fff;
+    color: #334155;
+}
+
+.client-job-summary {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: hidden;
+}
+
+.client-job-summary article {
+    min-width: 0;
+    padding: 12px 14px;
+    border-right: 1px solid #edf2f7;
+}
+
+.client-job-summary article:last-child {
+    border-right: 0;
+}
+
+.client-job-summary span,
+.client-job-detail-grid span,
+.client-job-notes-grid span,
+.warranty-summary-grid span,
+.warranty-latest-claim > div > span {
+    display: block;
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: .5rem;
+    font-weight: 950;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.client-job-summary strong,
+.client-job-detail-grid strong,
+.warranty-summary-grid strong {
+    display: block;
+    overflow: hidden;
+    color: #0f172a;
+    font-size: .68rem;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.client-job-main-grid {
+    display: grid;
+    grid-template-columns: 1.25fr .75fr;
+    gap: 14px;
+}
+
+.client-job-card {
+    overflow: hidden;
+}
+
+.client-job-card-head {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid #edf2f7;
+    background: #fbfdff;
+}
+
+.client-job-card-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    font-size: .78rem;
+}
+
+.client-job-card-icon.blue { background: #eaf4ff; color: #0b63f6; }
+.client-job-card-icon.violet { background: #f3e8ff; color: #7c3aed; }
+.client-job-card-icon.green { background: #ecfdf3; color: #16a34a; }
+
+.client-job-card-head h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: .84rem;
+    font-weight: 950;
+}
+
+.client-job-card-head p {
+    margin: 2px 0 0;
+    color: #64748b;
+    font-size: .62rem;
+}
+
+.client-job-card-body {
+    padding: 14px;
+}
+
+.client-job-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.client-job-detail-grid > div,
+.warranty-summary-grid article {
+    min-width: 0;
+    padding: 10px 11px;
+    border: 1px solid #edf2f7;
+    border-radius: 11px;
+    background: #fbfdff;
+}
+
+.client-job-notes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 10px;
+}
+
+.client-job-notes-grid article {
+    min-width: 0;
+    padding: 10px 11px;
+    border: 1px solid #edf2f7;
+    border-radius: 11px;
+    background: #fbfdff;
+}
+
+.client-job-notes-grid p {
+    margin: 0;
+    color: #334155;
+    font-size: .65rem;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.client-job-progress-summary {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.client-job-progress-summary span {
+    display: block;
+    color: #64748b;
+    font-size: .52rem;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
+.client-job-progress-summary strong {
+    display: block;
+    margin-top: 2px;
+    color: #0f172a;
+    font-size: 1.25rem;
+    font-weight: 950;
+}
+
+.client-job-progress-summary em {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: .52rem;
+    font-style: normal;
+    font-weight: 900;
+}
+
+.client-job-progress-track {
+    height: 7px;
+    margin: 10px 0 14px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.client-job-progress-track i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0b63f6, #22c55e);
+}
+
+.client-job-progress-steps {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 10px;
+    align-items: start;
+    width: 100%;
+}
+
+.client-job-progress-steps > div {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    min-width: 0;
+    text-align: center;
+}
+
+.client-job-progress-steps > div > span {
+    width: 32px;
+    height: 32px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 32px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: .62rem;
+    line-height: 1;
+}
+
+.client-job-progress-steps > div > small {
+    display: block;
+    color: #64748b;
+    font-size: .52rem;
+    font-weight: 850;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+/* Completed previous steps */
+.client-job-progress-steps > div.done > span {
+    background: #dcfce7 !important;
+    color: #16a34a !important;
+}
+
+.client-job-progress-steps > div.done > small {
+    color: #15803d !important;
+    font-weight: 900;
+}
+
+/* Current active step */
+.client-job-progress-steps > div.current > span {
+    background: #eaf4ff !important;
+    color: #0b63f6 !important;
+    box-shadow: 0 0 0 4px rgba(11, 99, 246, .10);
+}
+
+.client-job-progress-steps > div.current > small {
+    color: #0b63f6 !important;
+    font-weight: 950;
+}
+
+/* Future steps */
+.client-job-progress-steps > div.pending > span {
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+}
+
+.client-job-progress-steps > div.pending > small {
+    color: #64748b !important;
+}
+
+.warranty-head {
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+}
+
+.warranty-status-badge,
+.claim-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: .52rem;
+    font-style: normal;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.warranty-status-badge.success {
+    background: #ecfdf3;
+    color: #15803d;
+}
+
+.warranty-status-badge.secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.warranty-status-badge.danger {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.warranty-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.warranty-latest-claim {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-top: 10px;
+    padding: 11px 12px;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    background: #fbfdff;
+}
+
+.warranty-latest-claim strong {
+    display: block;
+    color: #0f172a;
+    font-size: .7rem;
+    font-weight: 950;
+}
+
+.warranty-latest-claim p {
+    margin: 4px 0 0;
+    color: #475569;
+    font-size: .63rem;
+    line-height: 1.45;
+}
+
+.warranty-latest-claim small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: .56rem;
+}
+
+.claim-status-pill.pending,
+.claim-status-pill.scheduled,
+.claim-status-pill.in_progress {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.claim-status-pill.approved,
+.claim-status-pill.resolved {
+    background: #ecfdf3;
+    color: #15803d;
+}
+
+.claim-status-pill.rejected,
+.claim-status-pill.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.warranty-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid;
+    border-radius: 11px;
+    font-size: .63rem;
+    line-height: 1.45;
+}
+
+.warranty-message.success {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.warranty-message.warning {
+    border-color: #fed7aa;
+    background: #fff7ed;
+    color: #9a3412;
+}
+
+.warranty-message.neutral {
+    border-color: #dbe7f3;
+    background: #f8fafc;
+    color: #475569;
+}
+
+.warranty-message.danger {
+    border-color: #fecaca;
+    background: #fff7f7;
+    color: #b91c1c;
+}
+
+.warranty-form-clean {
+    margin-top: 12px;
+}
+
+.warranty-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #334155;
+    font-size: .62rem;
+    font-weight: 900;
+}
+
+.warranty-field .form-control {
+    border: 1px solid #dbe7f3;
+    border-radius: 10px;
+    font-size: .67rem;
+    box-shadow: none;
+}
+
+.warranty-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.warranty-field small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: .55rem;
+}
+
+.warranty-date-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 10px;
+}
+
+.warranty-submit-btn {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 12px;
+    padding: 7px 12px;
+    border: 1px solid #0b63f6;
+    border-radius: 10px;
+    background: #0b63f6;
+    color: #fff;
+    font-size: .64rem;
+    font-weight: 900;
+}
+
+@media (max-width: 1100px) {
+    .client-job-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .client-job-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .client-job-notes-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .client-job-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .client-job-hero-actions,
+    .client-job-btn {
+        width: 100%;
+    }
+
+    .client-job-summary,
+    .client-job-detail-grid,
+    .warranty-summary-grid,
+    .warranty-date-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .client-job-summary article {
+        border-right: 0;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .warranty-head {
+        grid-template-columns: 38px minmax(0, 1fr);
+    }
+
+    .warranty-status-badge {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+
+    .client-job-progress-steps {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    .warranty-latest-claim {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .client-job-progress-steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        row-gap: 12px;
+    }
+}

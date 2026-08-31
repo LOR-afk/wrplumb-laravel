@@ -99,6 +99,63 @@ textarea.form-control { min-height: 100px; }
 .address-suggestion { width: 100%; padding: 10px 12px; border: 0; border-bottom: 1px solid rgba(15, 42, 67, 0.08); background: transparent; color: var(--wr-text); text-align: left; }
 .address-suggestion:hover { background: var(--wr-primary-soft); }
 
+.request-cta {
+    background: linear-gradient(135deg, #4dabf7, #1c7ed6) !important;
+    color: #fff !important;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 10px 18px;
+    box-shadow: 0 8px 20px rgba(76, 171, 247, 0.25);
+    transition: all 0.2s ease-in-out;
+}
+
+.request-cta:hover {
+    background: linear-gradient(135deg, #1c7ed6, #1971c2) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(28, 126, 214, 0.35);
+    color: #fff !important;
+}
+
+.create-cta,
+.btn.wr-btn-light {
+    color: #0d1b2a !important;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+/* IMPORTANT: prevent text disappearing */
+.create-cta:hover,
+.btn.wr-btn-light:hover {
+    color: #0d1b2a !important;
+    opacity: 1 !important;
+    transform: translateY(-2px);
+}
+
+.request-cta,
+.request-cta:hover {
+    color: #fff !important;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.15rem rgba(220,53,69,.15);
+}
+
+.form-control.is-valid {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.15rem rgba(25,135,84,.15);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.15rem rgba(220,53,69,.15);
+}
+
+.form-control.is-valid {
+    border-color: #198754;
+}
+
 @media (max-width: 991.98px) {
     .navbar-home { padding: 10px 0; }
     .navbar-home .navbar-toggler { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--wr-border); border-radius: 14px; background: #ffffff; box-shadow: var(--wr-shadow-soft); padding: 0; }
@@ -135,3 +192,62 @@ textarea.form-control { min-height: 100px; }
     .navbar-home .navbar-brand strong { font-size: 1rem; }
     .logo-img { width: 36px; height: 36px; }
 }
+
+
+/* ============================================================
+   WRPlumb legal links + consent styling
+   ============================================================ */
+
+.footer-legal-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+}
+
+.footer-legal-links a {
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.footer-legal-links span {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.footer-legal-links a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.legal-consent-check {
+    padding: 12px 14px 12px 38px;
+    border: 1px solid #dbe7f3;
+    border-radius: 12px;
+    background: #f8fbff;
+}
+
+.legal-consent-check .form-check-label {
+    color: #475569;
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+.legal-consent-check a {
+    color: var(--wr-primary-dark);
+    font-weight: 850;
+    text-decoration: none;
+}
+
+.legal-consent-check a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 767.98px) {
+    .footer-legal-links {
+        width: 100%;
+        justify-content: center;
+    }
+}
+

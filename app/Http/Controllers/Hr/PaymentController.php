@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
@@ -7,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentSchedule;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -14,20 +14,21 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
+        $paidSubquery = "(select coalesce(sum(amount), 0) from payments where payments.invoice_id = invoices.id and payments.status = 'confirmed')";
+
         $invoiceQuery = Invoice::with([
-                'quotation.request',
-                'paymentSchedules',
-                'payments' => function ($query) {
-                    $query->latest('payment_date')->latest('id');
-                },
-                'payments.paymentSchedule',
-                'payments.receiver',
-                'payments.receipt',
-            ])
-            ->whereHas('payments');
+            'quotation.request',
+            'paymentSchedules',
+            'payments' => function ($query) {
+                $query->latest('payment_date')->latest('id');
+            },
+            'payments.paymentSchedule',
+            'payments.receiver',
+            'payments.receipt',
+        ]);
 
         if ($request->filled('search')) {
-            $search = trim($request->input('search'));
+            $search = trim((string) $request->input('search'));
 
             $invoiceQuery->where(function ($query) use ($search) {
                 $query->where('invoice_no', 'like', "%{$search}%")
@@ -39,7 +40,8 @@ class PaymentController extends Controller
                         $requestQuery->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%")
-                            ->orWhere('phone', 'like', "%{$search}%");
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('service_type', 'like', "%{$search}%");
                     });
             });
         }
@@ -57,13 +59,14 @@ class PaymentController extends Controller
         }
 
         if ($request->filled('schedule')) {
-            $schedule = trim($request->input('schedule'));
+            $schedule = trim((string) $request->input('schedule'));
 
-            $invoiceQuery->whereHas('payments', function ($query) use ($schedule) {
-                $query->where('payment_type', 'like', "%{$schedule}%")
-                    ->orWhereHas('paymentSchedule', function ($scheduleQuery) use ($schedule) {
-                        $scheduleQuery->where('label', 'like', "%{$schedule}%");
-                    });
+            $invoiceQuery->where(function ($query) use ($schedule) {
+                $query->whereHas('payments', function ($paymentQuery) use ($schedule) {
+                    $paymentQuery->where('payment_type', 'like', "%{$schedule}%");
+                })->orWhereHas('paymentSchedules', function ($scheduleQuery) use ($schedule) {
+                    $scheduleQuery->where('label', 'like', "%{$schedule}%");
+                });
             });
         }
 
@@ -79,20 +82,142 @@ class PaymentController extends Controller
             });
         }
 
-        $paymentInvoices = $invoiceQuery
+        $tab = $request->input('tab', 'all');
+
+        if ($tab === 'needs_payment') {
+            $invoiceQuery->whereRaw("$paidSubquery <= 0");
+        } elseif ($tab === 'partial') {
+            $invoiceQuery->whereRaw("$paidSubquery > 0 and $paidSubquery < invoices.total_amount");
+        } elseif ($tab === 'fully_paid') {
+            $invoiceQuery->whereRaw("$paidSubquery >= invoices.total_amount and invoices.total_amount > 0");
+        }
+
+        $matchingInvoices = $invoiceQuery
             ->latest('updated_at')
-            ->paginate(10)
-            ->withQueryString();
+            ->get();
+
+$clientGroups = $matchingInvoices
+    ->groupBy(function (Invoice $invoice) {
+        return 'invoice-' . $invoice->id;
+    })
+            ->map(function ($invoices, $groupKey) {
+                $firstInvoice = $invoices->first();
+                $requestData = $firstInvoice?->quotation?->request;
+
+                $clientName = $requestData?->full_name
+                    ?? trim(
+                        ($requestData?->first_name ?? '') . ' ' .
+                        ($requestData?->last_name ?? '')
+                    )
+                    ?: 'Unknown Client';
+
+                $payments = $invoices
+                    ->flatMap(fn (Invoice $invoice) => $invoice->payments)
+                    ->sortByDesc(function (Payment $payment) {
+                        return optional($payment->payment_date)->timestamp
+                            ?? optional($payment->created_at)->timestamp
+                            ?? 0;
+                    })
+                    ->values();
+
+                $totalAmount = round((float) $invoices->sum('total_amount'), 2);
+                $paidAmount = round((float) $payments
+                    ->where('status', 'confirmed')
+                    ->sum('amount'), 2);
+                $remainingAmount = round(max(0, $totalAmount - $paidAmount), 2);
+                $progress = $totalAmount > 0
+                    ? round(min(($paidAmount / $totalAmount) * 100, 100), 2)
+                    : 0;
+
+                $hasRejected = $payments->where('status', 'rejected')->isNotEmpty();
+
+                $statusKey = $hasRejected
+                    ? 'needs_review'
+                    : ($remainingAmount <= 0
+                        ? 'fully_paid'
+                        : ($paidAmount > 0 ? 'partial' : 'needs_payment'));
+
+                $statusLabel = match ($statusKey) {
+                    'fully_paid' => 'Fully Paid',
+                    'partial' => 'Partial',
+                    'needs_review' => 'Needs Review',
+                    default => 'Needs Payment',
+                };
+
+                $latestPayment = $payments->first();
+                $nextInvoice = $invoices->first(
+                    fn (Invoice $invoice) => (float) $invoice->remaining_balance > 0
+                );
+
+                return [
+                    'key' => md5((string) $groupKey),
+                    'client_name' => $clientName,
+                    'client_email' => $requestData?->email ?? 'No email',
+                    'client_phone' => $requestData?->phone,
+                    'service_types' => $invoices
+                        ->map(fn (Invoice $invoice) => $invoice->quotation?->request?->service_type)
+                        ->filter()
+                        ->unique()
+                        ->values(),
+                    'invoice_count' => $invoices->count(),
+                    'payment_count' => $payments->count(),
+                    'total_amount' => $totalAmount,
+                    'paid_amount' => $paidAmount,
+                    'remaining_amount' => $remainingAmount,
+                    'progress' => $progress,
+                    'status_key' => $statusKey,
+                    'status_label' => $statusLabel,
+                    'latest_payment' => $latestPayment,
+                    'next_invoice' => $nextInvoice,
+                    'invoices' => $invoices->values(),
+                    'payments' => $payments,
+                ];
+            })
+            ->sortByDesc(function (array $group) {
+                return optional($group['latest_payment']?->payment_date)->timestamp
+                    ?? $group['invoices']->max(fn (Invoice $invoice) => optional($invoice->updated_at)->timestamp)
+                    ?? 0;
+            })
+            ->values();
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 8;
+
+        $clientPaymentGroups = new LengthAwarePaginator(
+            $clientGroups->forPage($page, $perPage)->values(),
+            $clientGroups->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        $invoiceStats = Invoice::query()
+            ->selectRaw('count(*) as total_invoices')
+            ->selectRaw("sum(case when $paidSubquery >= invoices.total_amount and invoices.total_amount > 0 then 1 else 0 end) as fully_paid_count")
+            ->selectRaw("sum(case when $paidSubquery > 0 and $paidSubquery < invoices.total_amount then 1 else 0 end) as partial_count")
+            ->selectRaw("sum(case when $paidSubquery <= 0 then 1 else 0 end) as needs_payment_count")
+            ->first();
 
         $paymentStats = [
+            'total_invoices' => (int) ($invoiceStats->total_invoices ?? 0),
+            'fully_paid_count' => (int) ($invoiceStats->fully_paid_count ?? 0),
+            'partial_count' => (int) ($invoiceStats->partial_count ?? 0),
+            'needs_payment_count' => (int) ($invoiceStats->needs_payment_count ?? 0),
             'total_payments' => Payment::count(),
             'confirmed_count' => Payment::where('status', 'confirmed')->count(),
             'pending_count' => Payment::whereIn('status', ['pending', 'pending_verification'])->count(),
             'rejected_count' => Payment::where('status', 'rejected')->count(),
-            'collected_amount' => Payment::where('status', 'confirmed')->sum('amount'),
+            'collected_amount' => (float) Payment::where('status', 'confirmed')->sum('amount'),
         ];
 
-        return view('hr.payments.index', compact('paymentInvoices', 'paymentStats'));
+        return view('hr.payments.index', compact(
+            'clientPaymentGroups',
+            'paymentStats',
+            'tab'
+        ));
     }
 
     public function create(Invoice $invoice)
@@ -107,8 +232,7 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'invoice_id' => ['required', 'exists:invoices,id'],
             'payment_schedule_id' => ['nullable', 'exists:payment_schedules,id'],
-            'payment_type' => ['nullable', 'string', 'max:100'],
-            'payment_method' => ['nullable', 'string', 'max:100'],
+            'payment_method' => ['required', 'string', 'max:100'],
             'reference_number' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'payment_date' => ['required', 'date'],
@@ -116,22 +240,37 @@ class PaymentController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $invoice = Invoice::with(['paymentSchedules', 'payments'])->findOrFail($validated['invoice_id']);
+        $invoice = Invoice::with(['paymentSchedules', 'payments'])
+            ->findOrFail($validated['invoice_id']);
+
+        if (
+            $validated['status'] === 'confirmed'
+            && (float) $validated['amount'] > ((float) $invoice->remaining_balance + 0.01)
+        ) {
+            return back()->withErrors([
+                'amount' => 'Payment amount cannot exceed the remaining balance.',
+            ])->withInput();
+        }
 
         $schedule = null;
+
         if (!empty($validated['payment_schedule_id'])) {
             $schedule = PaymentSchedule::where('invoice_id', $invoice->id)
                 ->findOrFail($validated['payment_schedule_id']);
         }
+
+        $payment = null;
 
         DB::transaction(function () use ($validated, $invoice, $schedule, &$payment) {
             $payment = Payment::create([
                 'invoice_id' => $invoice->id,
                 'payment_schedule_id' => $schedule?->id,
                 'received_by' => Auth::id(),
+                'verified_by' => $validated['status'] === 'confirmed' ? Auth::id() : null,
+                'verified_at' => $validated['status'] === 'confirmed' ? now() : null,
                 'payment_no' => $this->generatePaymentNumber(),
-                'payment_type' => $validated['payment_type'] ?? ($schedule?->label),
-                'payment_method' => $validated['payment_method'] ?? null,
+                'payment_type' => $schedule?->label ?? 'Unscheduled Payment',
+                'payment_method' => $validated['payment_method'],
                 'reference_number' => $validated['reference_number'] ?? null,
                 'amount' => $validated['amount'],
                 'payment_date' => $validated['payment_date'],
@@ -140,20 +279,27 @@ class PaymentController extends Controller
             ]);
 
             if ($schedule && $payment->status === 'confirmed') {
-                $newPaidAmount = round((float) $schedule->amount_paid + (float) $payment->amount, 2);
+                $newPaidAmount = round(
+                    (float) $schedule->amount_paid + (float) $payment->amount,
+                    2
+                );
                 $amountDue = (float) $schedule->amount_due;
+                $isPaid = $newPaidAmount >= $amountDue;
 
                 $schedule->update([
                     'amount_paid' => $newPaidAmount,
-                    'status' => $newPaidAmount >= $amountDue ? 'paid' : 'partial',
+                    'status' => $isPaid ? 'paid' : 'partial',
+                    'milestone_status' => $isPaid
+                        ? 'paid'
+                        : $schedule->milestone_status,
                 ]);
             }
 
-            $this->syncInvoiceStatus($invoice->fresh()->load('paymentSchedules'));
+            $this->syncInvoiceStatus($invoice->fresh()->load('payments'));
         });
 
         return redirect()
-            ->route('hr.payments.show', $payment)
+            ->route('hr.payments.index')
             ->with('success', 'Payment recorded successfully.');
     }
 
@@ -193,20 +339,27 @@ class PaymentController extends Controller
             if ($payment->paymentSchedule) {
                 $schedule = $payment->paymentSchedule->fresh();
 
-                $newPaidAmount = round((float) $schedule->amount_paid + (float) $payment->amount, 2);
+                $newPaidAmount = round(
+                    (float) $schedule->amount_paid + (float) $payment->amount,
+                    2
+                );
                 $amountDue = (float) $schedule->amount_due;
+                $isPaid = $newPaidAmount >= $amountDue;
 
                 $schedule->update([
                     'amount_paid' => $newPaidAmount,
-                    'status' => $newPaidAmount >= $amountDue ? 'paid' : 'partial',
+                    'status' => $isPaid ? 'paid' : 'partial',
+                    'milestone_status' => $isPaid
+                        ? 'paid'
+                        : $schedule->milestone_status,
                 ]);
             }
 
-            $this->syncInvoiceStatus($payment->invoice->fresh()->load('paymentSchedules'));
+            $this->syncInvoiceStatus($payment->invoice->fresh()->load('payments'));
         });
 
         return redirect()
-            ->route('hr.payments.show', $payment)
+            ->route('hr.payments.index')
             ->with('success', 'Payment confirmed successfully.');
     }
 
@@ -230,7 +383,7 @@ class PaymentController extends Controller
         ]);
 
         return redirect()
-            ->route('hr.payments.show', $payment)
+            ->route('hr.payments.index')
             ->with('success', 'Payment rejected successfully.');
     }
 
@@ -238,37 +391,39 @@ class PaymentController extends Controller
     {
         $nextId = (Payment::max('id') ?? 0) + 1;
 
-        return 'PAY-' . now()->format('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
+        return 'PAY-' . now()->format('Y') . '-' .
+            str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
     }
 
     protected function syncInvoiceStatus(Invoice $invoice): void
     {
-        $schedules = $invoice->paymentSchedules;
+        $paid = round((float) $invoice->payments()
+            ->where('status', 'confirmed')
+            ->sum('amount'), 2);
 
-        if ($schedules->isEmpty()) {
+        $total = round((float) $invoice->total_amount, 2);
+
+        if ($paid <= 0) {
+            $invoice->update([
+                'status' => 'unpaid',
+                'paid_at' => null,
+            ]);
+
             return;
         }
 
-        $paidCount = $schedules->where('status', 'paid')->count();
-        $partialCount = $schedules->where('status', 'partial')->count();
-
-        if ($paidCount === $schedules->count()) {
+        if ($paid < $total) {
             $invoice->update([
-                'status' => 'paid',
-                'paid_at' => now(),
+                'status' => 'partially_paid',
+                'paid_at' => null,
             ]);
-            return;
-        }
 
-        if ($paidCount > 0 || $partialCount > 0) {
-            $invoice->update([
-                'status' => 'partial',
-            ]);
             return;
         }
 
         $invoice->update([
-            'status' => 'unpaid',
+            'status' => 'paid',
+            'paid_at' => $invoice->paid_at ?? now(),
         ]);
     }
 }
