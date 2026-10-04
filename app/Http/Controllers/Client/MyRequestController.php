@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\InspectorAvailability;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MyRequestController extends Controller
 {
@@ -202,6 +203,8 @@ class MyRequestController extends Controller
             'details' => ['required', 'string', 'max:2000'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'problem_images' => ['nullable', 'array', 'max:5'],
+            'problem_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $flow = $this->resolveServiceFlow($validated['service_type']);
@@ -211,28 +214,54 @@ class MyRequestController extends Controller
         $firstName = $user->first_name ?? ($nameParts[0] ?? 'Client');
         $lastName = $user->last_name ?? (count($nameParts) > 1 ? end($nameParts) : 'User');
 
-        $quotation = QuotationRequest::create([
-            'first_name' => $firstName,
-            'middle_initial' => null,
-            'last_name' => $lastName,
-            'email' => $user->email,
-            'phone' => $user->phone ?? 'N/A',
-            'service_category' => $validated['service_category'],
-            'service_type' => $validated['service_type'],
-            'service_flow' => $flow['service_flow'],
-            'visit_purpose' => $flow['visit_purpose'],
-            'flow_source' => $flow['flow_source'],
-            'flow_override_reason' => null,
-            'project_type' => $validated['project_type'],
-            'preferred_date' => $validated['preferred_date'] ?? null,
-            'preferred_time' => $validated['preferred_time'] ?? null,
-            'address' => $validated['address'],
-            'details' => $validated['details'],
-            'status' => 'pending',
-            'appointment_status' => 'pending',
-            'latitude' => $validated['latitude'] ?? null,
-            'longitude' => $validated['longitude'] ?? null,
-        ]);
+        $quotation = DB::transaction(function () use (
+            $request,
+            $user,
+            $validated,
+            $flow,
+            $firstName,
+            $lastName
+        ) {
+            $quotation = QuotationRequest::create([
+                'first_name' => $firstName,
+                'middle_initial' => null,
+                'last_name' => $lastName,
+                'email' => $user->email,
+                'phone' => $user->phone ?? 'N/A',
+                'service_category' => $validated['service_category'],
+                'service_type' => $validated['service_type'],
+                'service_flow' => $flow['service_flow'],
+                'visit_purpose' => $flow['visit_purpose'],
+                'flow_source' => $flow['flow_source'],
+                'flow_override_reason' => null,
+                'project_type' => $validated['project_type'],
+                'preferred_date' => $validated['preferred_date'] ?? null,
+                'preferred_time' => $validated['preferred_time'] ?? null,
+                'address' => $validated['address'],
+                'details' => $validated['details'],
+                'status' => 'pending',
+                'appointment_status' => 'pending',
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+            ]);
+
+            foreach ($request->file('problem_images', []) as $image) {
+                $path = $image->store(
+                    'quotation-request-images/' . $quotation->id,
+                    'public'
+                );
+
+                $quotation->images()->create([
+                    'uploaded_by' => $user->id,
+                    'file_path' => $path,
+                    'original_name' => $image->getClientOriginalName(),
+                    'mime_type' => $image->getMimeType(),
+                    'file_size' => $image->getSize(),
+                ]);
+            }
+
+            return $quotation;
+        });
 
         AlertService::sendToRole(
             'admin',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
+use App\Models\Quotation;
 use App\Models\SupportConversation;
 use Illuminate\Support\Facades\Schema;
 
@@ -46,13 +47,35 @@ class DashboardController extends Controller
                 return $conversation;
             });
 
+        $quotationQuery = Quotation::query();
+
+        if (Schema::hasColumn('quotations', 'archived_at')) {
+            $quotationQuery->whereNull('archived_at');
+        } elseif (Schema::hasColumn('quotations', 'is_archived')) {
+            $quotationQuery->where('is_archived', false);
+        }
+
+        $totalQuotations = (clone $quotationQuery)->count();
+
+        $sentQuotations = (clone $quotationQuery)
+            ->where('status', 'sent')
+            ->count();
+
+        $acceptedQuotations = (clone $quotationQuery)
+            ->whereIn('status', ['accepted', 'approved'])
+            ->count();
+
+        $invoiceReadyQuotations = (clone $quotationQuery)
+            ->whereIn('status', ['accepted', 'approved'])
+            ->whereHas('invoice')
+            ->count();
+
         return view('hr.dashboard', [
             'openCount' => $openCount,
             'routedCount' => $routedCount,
             'resolvedCount' => $resolvedCount,
             'pendingFollowups' => $pendingFollowups,
             'receivedCount' => $receivedCount,
-
 
             'openPercent' => max(12, min(100, round(($openCount / $totalForPercent) * 100))),
             'routedPercent' => max(25, min(100, round(($routedCount / $totalForPercent) * 100))),
@@ -62,6 +85,11 @@ class DashboardController extends Controller
             'averageResponseTime' => '1h 24m',
             'slaCompliance' => '96%',
             'recentConversations' => $recentConversations,
+
+            'totalQuotations' => $totalQuotations,
+            'sentQuotations' => $sentQuotations,
+            'acceptedQuotations' => $acceptedQuotations,
+            'invoiceReadyQuotations' => $invoiceReadyQuotations,
         ]);
     }
 }

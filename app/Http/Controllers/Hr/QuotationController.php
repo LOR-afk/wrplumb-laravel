@@ -382,7 +382,7 @@ public function restore(Quotation $quotation)
                     $client,
                     'Quotation sent',
                     'A quotation has been prepared for your service request.',
-                    route('client.quotations.show', $quotation),
+                    route('client.quotations.show', $quotation, false),
                     'info'
                 );
             }

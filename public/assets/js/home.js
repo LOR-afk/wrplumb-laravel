@@ -118,75 +118,7 @@ function initHomeScrollReveal() {
     });
 }
 
-function initFreeQuotationServicePicker() {
-    const categorySelect = document.getElementById('fq-service-category');
-    const serviceTypeSelect = document.getElementById('fq-service-type');
-    if (!categorySelect || !serviceTypeSelect) return;
 
-    const SERVICES = {
-        plumbing: [
-            'Residential Plumbing & Repair',
-            'Waste Line Installation',
-            'Water Line Installation',
-            'Downspout & Sewer Line Installation',
-            'Transfer & Jockey Pump Installation',
-            'Plumbing Fixtures & Accessories Installation',
-            'Fire Sprinkler System Installation'
-        ],
-        construction: [
-            'New Home & Commercial Building & Renovation',
-            'Masonry Works',
-            'Carpentry',
-            'Finishing Works',
-            'Tile Installation',
-            'Steel Works',
-            'New & Renovation Paint Works'
-        ]
-    };
-
-    function resetServiceTypeSelect(placeholderText) {
-        serviceTypeSelect.innerHTML = '';
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = placeholderText || 'Select a service';
-        opt.disabled = true;
-        opt.selected = true;
-        serviceTypeSelect.appendChild(opt);
-        serviceTypeSelect.disabled = true;
-    }
-
-    function populateServiceTypes(category) {
-        const list = SERVICES[category] || [];
-
-        serviceTypeSelect.innerHTML = '';
-
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'Select a service';
-        placeholder.disabled = true;
-        placeholder.selected = true;
-        serviceTypeSelect.appendChild(placeholder);
-
-        list.forEach(function (name) {
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
-            serviceTypeSelect.appendChild(opt);
-        });
-
-        serviceTypeSelect.disabled = list.length === 0;
-    }
-
-    resetServiceTypeSelect('Select a category first');
-
-    categorySelect.addEventListener('change', function () {
-        populateServiceTypes(categorySelect.value);
-    });
-
-    if (categorySelect.value) {
-        populateServiceTypes(categorySelect.value);
-    }
-}
 
 function initFreeQuotationAddressSuggest() {
     const addressInput = document.getElementById('fq-address');
@@ -243,10 +175,24 @@ function initFreeQuotationAddressSuggest() {
         }
         activeController = new AbortController();
 
-        const res = await fetch('api/public/address_suggest.php?q=' + encodeURIComponent(q), {
+        const endpoint = document.body?.dataset?.addressSuggestUrl || '';
+
+        if (!endpoint) {
+            return { success: false, results: [] };
+        }
+
+        const separator = endpoint.includes('?') ? '&' : '?';
+
+        const res = await fetch(endpoint + separator + 'q=' + encodeURIComponent(q), {
             signal: activeController.signal,
+            credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
+
+        if (!res.ok) {
+            return { success: false, results: [] };
+        }
+
         return res.json();
     }
 
@@ -406,18 +352,29 @@ function initFreeQuotationServicePicker() {
     }
 
     async function loadServicesCatalog() {
+        const endpoint = document.body?.dataset?.servicesCatalogUrl || '';
+
+        if (!endpoint) {
+            return;
+        }
+
         try {
-            const response = await fetch('api/public/services_catalog.php', {
+            const response = await fetch(endpoint, {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' }
             });
+
+            if (!response.ok) {
+                return;
+            }
+
             const data = await response.json();
+
             if (data && data.success && data.services) {
-                const loaded = normalizeCatalog(data.services);
-                servicesCatalog = loaded;
+                servicesCatalog = normalizeCatalog(data.services);
             }
         } catch (e) {
-            // Keep fallback values when API is unavailable.
+            // Keep fallback values when the optional API is unavailable.
         }
     }
 
@@ -460,19 +417,31 @@ function initFreeQuotationServicePicker() {
  * Load homepage data from API
  */
 function loadHomepageData() {
-    fetch('api/public/home.php')
-        .then(response => response.json())
+    const endpoint = document.body?.dataset?.homeApiUrl || '';
+
+    if (!endpoint) {
+        return;
+    }
+
+    fetch(endpoint, {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Homepage API returned ${response.status}`);
+            }
+
+            return response.json();
+        })
         .then(data => {
-            if (data.success) {
-                // Update statistics
-                updateStatistics(data.stats);
-                
-                // Display featured projects
-                displayFeaturedProjects(data.featured_projects);
+            if (data && data.success) {
+                updateStatistics(data.stats || {});
+                displayFeaturedProjects(data.featured_projects || []);
             }
         })
         .catch(error => {
-            console.error('Error loading homepage data:', error);
+            console.warn('Homepage data API unavailable:', error);
         });
 }
 

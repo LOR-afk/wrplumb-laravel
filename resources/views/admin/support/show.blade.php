@@ -1,11 +1,11 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Support Conversation - WRPlumb')
-@section('topbar_title', 'Support Conversation')
+@section('title', 'Support Ticket - WRPlumb')
+@section('topbar_title', 'Support Center')
 @section('topbar_subtitle', 'Review the concern and respond as Admin.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/support.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/support.css') }}?v=admin-support-ref-01">
 @endpush
 
 @section('content')
@@ -20,7 +20,10 @@
         ->map(fn ($part) => strtoupper(substr($part, 0, 1)))
         ->implode('') ?: 'C';
 
-    $ticketNo = 'SR-' . optional($conversation->created_at)->format('Ymd') . '-' . str_pad((string) $conversation->id, 4, '0', STR_PAD_LEFT);
+    $ticketNo = 'SR-' .
+        optional($conversation->created_at)->format('Ymd') .
+        '-' .
+        str_pad((string) $conversation->id, 4, '0', STR_PAD_LEFT);
 
     $statusClass = match ($conversation->status) {
         'open' => 'open',
@@ -28,33 +31,67 @@
         'resolved' => 'resolved',
         default => 'default',
     };
+
+    $priority = match (true) {
+        ($conversation->status ?? null) === 'routed' && ($conversation->current_queue ?? null) === 'admin'
+            => ['Urgent', 'urgent'],
+        ($conversation->status ?? null) === 'resolved'
+            => ['Low', 'low'],
+        default
+            => ['Normal', 'normal'],
+    };
+
+    $latestClientMessage = $conversation->messages->where('sender_type', 'client')->last();
+
+    $ticketSubject = $latestClientMessage
+        ? \Illuminate\Support\Str::limit(
+            preg_replace('/\s+/', ' ', trim($latestClientMessage->message)),
+            78
+        )
+        : 'Client support concern';
 @endphp
 
-<div class="support-command-page">
-    <section class="support-show-layout">
-        <main class="support-conversation-panel standalone">
-            <div class="support-conversation-head">
-                <div>
-                    <a href="{{ route('admin.support.index', ['conversation' => $conversation->id]) }}" class="support-back-link">
-                        <i class="fas fa-arrow-left me-1"></i> Back to Support Queue
-                    </a>
-                    <div class="support-ticket-id">Ticket #{{ $ticketNo }}</div>
-                    <h4>{{ $clientName }}</h4>
-                    <p>Admin-level support conversation and escalation handling.</p>
-                </div>
+<div class="support-ticket-page">
+    <div class="support-ticket-detail-head">
+        <div>
+            <a href="{{ route('admin.support.index') }}" class="support-back-link">
+                <i class="fas fa-arrow-left"></i> Back to Support Center
+            </a>
 
-                <div class="support-head-badges">
-                    <span class="support-status {{ $statusClass }}">{{ ucfirst($conversation->status ?? 'open') }}</span>
-                    <span class="support-status {{ $conversation->current_queue === 'admin' ? 'open' : 'resolved' }}">
-                        {{ ucfirst($conversation->current_queue ?? 'admin') }} Queue
-                    </span>
-                </div>
+            <div class="support-ticket-heading-meta">
+                <span>#{{ $ticketNo }}</span>
+                <span class="ticket-priority {{ $priority[1] }}">{{ $priority[0] }}</span>
+                <span class="ticket-status {{ $statusClass }}">
+                    {{ ucfirst($conversation->status ?? 'open') }}
+                </span>
             </div>
 
-            <div class="support-thread show-thread" id="adminSupportChatBody">
-                @foreach ($conversation->messages as $message)
+            <h2>{{ $ticketSubject }}</h2>
+        </div>
+
+        <div class="support-ticket-actions">
+            @if ($conversation->status !== 'resolved')
+                <form method="POST" action="{{ route('admin.support.resolve', $conversation) }}">
+                    @csrf
+                    <button type="submit" class="support-status-action">
+                        <i class="far fa-circle-check"></i> Mark as Resolved
+                    </button>
+                </form>
+            @else
+                <span class="support-resolved-pill">
+                    <i class="fas fa-circle-check"></i> Resolved
+                </span>
+            @endif
+        </div>
+    </div>
+
+    <section class="support-ticket-detail-grid">
+        <main class="support-message-panel">
+            <div class="support-message-thread" id="adminSupportChatBody">
+                @forelse ($conversation->messages as $message)
                     @php
                         $sender = $message->sender_type;
+
                         $senderLabel = match ($sender) {
                             'admin' => 'Admin',
                             'client' => $clientName,
@@ -62,7 +99,8 @@
                             'system' => 'System',
                             default => 'Support Bot',
                         };
-                        $bubbleClass = match ($sender) {
+
+                        $senderClass = match ($sender) {
                             'admin' => 'admin',
                             'client' => 'client',
                             'hr' => 'hr',
@@ -72,103 +110,134 @@
                     @endphp
 
                     @if ($sender === 'system')
-                        <div class="support-system-note">
+                        <div class="support-system-message">
                             <span>{{ $message->message }}</span>
-                            <small>{{ $message->created_at->format('M d, h:i A') }}</small>
+                            <small>{{ $message->created_at->format('M d, Y h:i A') }}</small>
                         </div>
                     @else
-                        <div class="support-message-row {{ $sender === 'admin' ? 'right' : 'left' }}">
-                            <div class="support-message-avatar {{ $bubbleClass }}">
-                                {{ strtoupper(substr($senderLabel, 0, 1)) }}
-                            </div>
-                            <div class="support-message-wrap">
-                                <div class="support-sender-label">{{ $senderLabel }}</div>
-                                <div class="support-bubble {{ $bubbleClass }}">{{ $message->message }}</div>
-                                <small>{{ $message->created_at->format('M d, h:i A') }}</small>
-                            </div>
-                        </div>
+                        <article class="support-message-card {{ $senderClass }}">
+                            <header>
+                                <span class="support-message-avatar {{ $senderClass }}">
+                                    {{ strtoupper(substr($senderLabel, 0, 1)) }}
+                                </span>
+                                <div>
+                                    <strong>{{ $senderLabel }}</strong>
+                                    <small>{{ $message->created_at->diffForHumans() }}</small>
+                                </div>
+                            </header>
+
+                            <div class="support-message-copy">{!! nl2br(e($message->message)) !!}</div>
+
+                            @if (!empty($message->attachment_path))
+                                <a href="{{ asset('storage/' . $message->attachment_path) }}"
+                                   target="_blank"
+                                   rel="noopener"
+                                   class="support-attachment">
+                                    <i class="far fa-image"></i>
+                                    <span>
+                                        <strong>{{ $message->attachment_name ?? 'Attachment' }}</strong>
+                                        @if(!empty($message->attachment_size))
+                                            <small>{{ number_format($message->attachment_size / 1024, 0) }} KB</small>
+                                        @endif
+                                    </span>
+                                    <i class="fas fa-arrow-up-right-from-square"></i>
+                                </a>
+                            @endif
+                        </article>
                     @endif
-                @endforeach
+                @empty
+                    <div class="support-empty-state compact">
+                        <span><i class="fas fa-comments"></i></span>
+                        <strong>No messages yet</strong>
+                        <p>This ticket has no recorded conversation.</p>
+                    </div>
+                @endforelse
             </div>
 
             @if ($conversation->current_queue === 'admin' && $conversation->status !== 'resolved')
-                <form method="POST" action="{{ route('admin.support.reply', $conversation) }}" class="support-reply-box">
+                <form method="POST"
+                      action="{{ route('admin.support.reply', $conversation) }}"
+                      class="support-reply-composer">
                     @csrf
-                    <div class="support-reply-tabs">
-                        <span class="active">Reply to Client</span>
-                    </div>
 
-                    <div class="support-reply-control">
-                        <textarea name="message" rows="3" placeholder="Type your reply here..." required></textarea>
-                        <button class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i> Send Reply
+                    <label for="adminSupportReply">Reply to Client</label>
+                    <textarea id="adminSupportReply"
+                              name="message"
+                              rows="4"
+                              placeholder="Type your reply here..."
+                              required></textarea>
+
+                    <div class="support-composer-actions">
+                        <span>Reply will be sent as Admin.</span>
+                        <button type="submit">
+                            <i class="fas fa-paper-plane"></i> Send Reply
                         </button>
                     </div>
                 </form>
+            @elseif($conversation->status === 'resolved')
+                <div class="support-closed-note">
+                    <i class="fas fa-circle-check"></i>
+                    This support ticket has already been resolved.
+                </div>
             @endif
         </main>
 
-        <aside class="support-action-panel">
-            <div class="support-details-card">
-                <div class="support-selected-client">
-                    <div class="support-ticket-avatar lg">{{ $initials }}</div>
+        <aside class="support-ticket-sidebar">
+            <section class="support-requester-card">
+                <span class="support-sidebar-label">Requester</span>
+
+                <div class="support-requester-head">
+                    <span class="support-requester-avatar">{{ $initials }}</span>
                     <div>
-                        <h5>{{ $clientName }}</h5>
-                        <p>{{ $conversation->client?->email ?? 'No email listed' }}</p>
+                        <strong>{{ $clientName }}</strong>
+                        <span>{{ $conversation->client?->email ?? 'No email listed' }}</span>
                     </div>
                 </div>
 
-                <div class="support-detail-row">
-                    <span>Ticket ID</span>
-                    <strong>{{ $ticketNo }}</strong>
-                </div>
-                <div class="support-detail-row">
-                    <span>Username</span>
-                    <strong>{{ $conversation->client?->username ?? '—' }}</strong>
-                </div>
-                <div class="support-detail-row">
-                    <span>Created</span>
-                    <strong>{{ $conversation->created_at->format('M d, Y h:i A') }}</strong>
-                </div>
-                <div class="support-detail-row">
-                    <span>Routed At</span>
-                    <strong>{{ optional($conversation->routed_at)->format('M d, Y h:i A') ?? '—' }}</strong>
-                </div>
-                <div class="support-detail-row">
-                    <span>Resolved At</span>
-                    <strong>{{ optional($conversation->resolved_at)->format('M d, Y h:i A') ?? '—' }}</strong>
-                </div>
-            </div>
+                <div class="support-sidebar-divider"></div>
 
-            <div class="support-actions-card">
-                <h5>Conversation Actions</h5>
+                <span class="support-sidebar-label">Details</span>
 
-                @if ($conversation->status !== 'resolved')
-                    <form method="POST" action="{{ route('admin.support.resolve', $conversation) }}">
-                        @csrf
-                        <button class="btn btn-outline-success w-100">
-                            <i class="fas fa-circle-check me-1"></i> Mark as Resolved
-                        </button>
-                    </form>
-                @else
-                    <div class="support-resolved-note compact">
-                        <i class="fas fa-circle-check"></i>
-                        This conversation has already been resolved.
+                <dl class="support-ticket-details">
+                    <div>
+                        <dt>Ticket ID</dt>
+                        <dd>{{ $ticketNo }}</dd>
                     </div>
-                @endif
-            </div>
+                    <div>
+                        <dt>Username</dt>
+                        <dd>{{ $conversation->client?->username ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt>Queue</dt>
+                        <dd>{{ ucfirst($conversation->current_queue ?? 'admin') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Status</dt>
+                        <dd>
+                            <span class="ticket-status {{ $statusClass }}">
+                                {{ ucfirst($conversation->status ?? 'open') }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Created</dt>
+                        <dd>{{ $conversation->created_at->format('M d, Y h:i A') }}</dd>
+                    </div>
+                    <div>
+                        <dt>Routed At</dt>
+                        <dd>{{ optional($conversation->routed_at)->format('M d, Y h:i A') ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt>Resolved At</dt>
+                        <dd>{{ optional($conversation->resolved_at)->format('M d, Y h:i A') ?? '—' }}</dd>
+                    </div>
+                </dl>
+            </section>
         </aside>
     </section>
 </div>
+@endsection
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const chatBody = document.getElementById('adminSupportChatBody');
-        if (chatBody) {
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
-    });
-</script>
+    <script src="{{ asset('js/admin/support.js') }}?v=admin-support-ref-01"></script>
 @endpush
-@endsection

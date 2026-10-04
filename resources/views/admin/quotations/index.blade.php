@@ -551,7 +551,7 @@
                                                             <span>
                                                                 <i class="fas fa-calendar-check"></i>
                                                                 Completed on
-                                                                <strong>{{ optional($taskCompletedAt)->format('M d, Y 	 h:i A') }}</strong>
+                                                                <strong>{{ optional($taskCompletedAt)->format('M d, Y h:i A') }}</strong>
                                                             </span>
                                                         @endif
                                                     </div>
@@ -649,6 +649,121 @@
                                                             <span>{{ $taskCompletedAt ? optional($taskCompletedAt)->format('M d, Y h:i A') : 'Completed' }}</span>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            @php
+                                                $alreadySentToHr = !empty($quotation->ready_for_quotation_at);
+                                                $hasExistingQuotation = !empty($quotation->quotation);
+
+                                                $inspectionCompleted = $flow !== 'inspection_required'
+                                                    || (
+                                                        $quotation->jobOrder
+                                                        && $quotation->jobOrder->status === 'completed'
+                                                    );
+
+                                                $canSendToHr = !$alreadySentToHr
+                                                    && !$hasExistingQuotation
+                                                    && $hasAssigned
+                                                    && $hasScheduled
+                                                    && $inspectionCompleted;
+                                            @endphp
+
+                                            <div
+                                                class="quotation-handoff-card {{ $alreadySentToHr ? 'is-sent' : '' }}"
+                                                data-quotation-handoff-card
+                                            >
+                                                <div class="quotation-handoff-icon">
+                                                    @if ($alreadySentToHr)
+                                                        <i class="fas fa-circle-check"></i>
+                                                    @else
+                                                        <i class="fas fa-file-circle-check"></i>
+                                                    @endif
+                                                </div>
+
+                                                <div class="quotation-handoff-content">
+                                                    @if ($alreadySentToHr)
+                                                        <span class="quotation-handoff-eyebrow">
+                                                            Ready for Quotation
+                                                        </span>
+
+                                                        <h6>Sent to HR</h6>
+
+                                                        <p>
+                                                            This service request was forwarded to HR on
+                                                            <strong>
+                                                                {{ optional($quotation->ready_for_quotation_at)
+                                                                    ->format('M d, Y h:i A') }}
+                                                            </strong>.
+                                                        </p>
+
+                                                        <div class="quotation-handoff-success">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            HR has been notified
+                                                        </div>
+                                                    @elseif ($hasExistingQuotation)
+                                                        <span class="quotation-handoff-eyebrow">
+                                                            Quotation Prepared
+                                                        </span>
+
+                                                        <h6>Quotation already created</h6>
+
+                                                        <p>
+                                                            HR has already created a quotation for this service request.
+                                                        </p>
+                                                    @else
+                                                        <span class="quotation-handoff-eyebrow">
+                                                            Quotation Handoff
+                                                        </span>
+
+                                                        <h6>Send request to HR</h6>
+
+                                                        <p>
+                                                            The job order is complete. Forward this request to HR
+                                                            so the official quotation can be prepared.
+                                                        </p>
+
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('admin.quotations.send-to-hr', $quotation) }}"
+                                                            class="js-workflow-ajax-form"
+                                                            data-workflow-action="send-to-hr"
+                                                            data-success-message="Request sent to HR successfully."
+                                                        >
+                                                            @csrf
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label">
+                                                                    Handoff Notes
+                                                                    <span class="text-muted">(Optional)</span>
+                                                                </label>
+
+                                                                <textarea
+                                                                    name="quotation_handoff_notes"
+                                                                    class="form-control"
+                                                                    rows="3"
+                                                                    placeholder="Add quotation instructions, findings, or important project details..."
+                                                                >{{ old(
+                                                                    'quotation_handoff_notes',
+                                                                    $quotation->quotation_handoff_notes
+                                                                ) }}</textarea>
+                                                            </div>
+
+                                                            <button
+                                                                type="submit"
+                                                                class="btn btn-primary w-100"
+                                                                @disabled(!$canSendToHr)
+                                                            >
+                                                                <i class="fas fa-paper-plane me-1"></i>
+                                                                Send to HR for Quotation
+                                                            </button>
+
+                                                            <small class="quotation-handoff-helper">
+                                                                This will mark the request as Ready for Quotation
+                                                                and notify all active HR accounts.
+                                                            </small>
+                                                        </form>
+                                                    @endif
                                                 </div>
                                             </div>
                                         @else
@@ -985,9 +1100,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         stepButtons.forEach(function (button) {
-            button.addEventListener('click', function () {
-                showStep(button.dataset.stepTarget);
-            });
+            button.setAttribute('aria-disabled', 'true');
+            button.setAttribute('tabindex', '-1');
+            button.style.pointerEvents = 'none';
+            button.style.cursor = 'default';
         });
 
         if (backButton) {
@@ -1095,48 +1211,48 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        if (action === 'send-to-hr') {
+            const card = form.closest('[data-quotation-handoff-card]');
+
+            if (card) {
+                card.classList.add('is-sent');
+
+                card.innerHTML = `
+                    <div class="quotation-handoff-icon">
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+
+                    <div class="quotation-handoff-content">
+                        <span class="quotation-handoff-eyebrow">
+                            Ready for Quotation
+                        </span>
+
+                        <h6>Sent to HR</h6>
+
+                        <p>
+                            This service request was forwarded to HR on
+                            <strong>
+                                ${escapeWorkflowHtml(
+                                    data.ready_for_quotation_at || 'Just now'
+                                )}
+                            </strong>.
+                        </p>
+
+                        <div class="quotation-handoff-success">
+                            <i class="fas fa-check-circle"></i>
+                            HR has been notified
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         if (data.next_step) {
             modal.dispatchEvent(new CustomEvent('workflow:show-step', {
                 detail: { step: Number(data.next_step) }
             }));
         }
     }
-
-    if (action === 'send-to-hr') {
-    const card = form.closest('[data-quotation-handoff-card]');
-
-    if (card) {
-        card.classList.add('is-sent');
-
-        card.innerHTML = `
-            <div class="quotation-handoff-icon">
-                <i class="fas fa-circle-check"></i>
-            </div>
-
-            <div class="quotation-handoff-content">
-                <span class="quotation-handoff-eyebrow">
-                    Ready for Quotation
-                </span>
-
-                <h6>Sent to HR</h6>
-
-                <p>
-                    This service request was forwarded to HR on
-                    <strong>
-                        ${escapeWorkflowHtml(
-                            data.ready_for_quotation_at || 'Just now'
-                        )}
-                    </strong>.
-                </p>
-
-                <div class="quotation-handoff-success">
-                    <i class="fas fa-check-circle"></i>
-                    HR has been notified
-                </div>
-            </div>
-        `;
-    }
-}
 
     document.querySelectorAll('.js-workflow-ajax-form').forEach(function (form) {
         form.addEventListener('submit', async function (event) {

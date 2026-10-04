@@ -5,7 +5,7 @@
 @section('topbar_subtitle', 'Submit a new service request for review and scheduling.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/client/client-req-form.css') }}?v=20260818a">
+    <link rel="stylesheet" href="{{ asset('css/client/client-req-form.css') }}?v=20260904-final">
 @endpush
 
 @section('content')
@@ -14,7 +14,7 @@
         <div>
             <span class="client-request-kicker">New Service Request</span>
             <h2>Tell us what you need help with.</h2>
-            <p>Provide the service, preferred schedule, location, and problem details. You can review everything before submitting.</p>
+            <p>Provide the service, preferred schedule, location, and problem details before submitting your request.</p>
         </div>
 
         <div class="client-request-intro-badge">
@@ -26,7 +26,7 @@
         </div>
     </section>
 
-    <form method="POST" action="{{ route('client.requests.store') }}" class="client-request-form">
+    <form method="POST" action="{{ route('client.requests.store') }}" class="client-request-form" enctype="multipart/form-data">
         @csrf
 
         <section class="request-form-card">
@@ -114,37 +114,41 @@
                 </div>
             </div>
 
-            <div class="request-field">
-                <label for="address">Service Address</label>
-                <input
-                    type="text"
-                    id="address"
-                    name="address"
-                    class="form-control"
-                    value="{{ old('address') }}"
-                    placeholder="House no., street, barangay, city"
-                    required
-                >
+            <div class="request-field service-address-field">
+                <div class="service-address-label-row">
+                    <label for="address">Service Address</label>
+
+                    <button
+                        type="button"
+                        class="location-icon-button"
+                        id="captureLocationButton"
+                        title="Use current location"
+                        aria-label="Use current location"
+                    >
+                        <i class="fas fa-location-crosshairs"></i>
+                    </button>
+                </div>
+
+                <div class="service-address-input-wrap">
+                    <input
+                        type="text"
+                        id="address"
+                        name="address"
+                        class="form-control"
+                        value="{{ old('address') }}"
+                        placeholder="House no., street, barangay, city"
+                        autocomplete="off"
+                        required
+                    >
+
+                    <div id="addressSuggestions" class="address-suggestions" role="listbox"></div>
+                </div>
+
+                <span id="locationStatus" class="request-location-status compact">
+                    No exact location captured yet.
+                </span>
+
                 @error('address')<small class="text-danger">{{ $message }}</small>@enderror
-            </div>
-
-            <div class="request-location-box">
-                <div class="request-location-icon">
-                    <i class="fas fa-location-crosshairs"></i>
-                </div>
-
-                <div class="request-location-copy">
-                    <strong>Pin your exact service location</strong>
-                    <p>Use this while you are physically at the service address. This helps the team locate the site accurately.</p>
-                    <span id="locationStatus" class="request-location-status">
-                        No exact location captured yet.
-                    </span>
-                </div>
-
-                <button type="button" class="btn request-location-btn" id="captureLocationButton">
-                    <i class="fas fa-crosshairs"></i>
-                    Use Current Location
-                </button>
             </div>
 
             <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
@@ -155,12 +159,17 @@
         </section>
 
         <section class="request-form-card">
-            <div class="request-form-section-head">
+            <div class="request-form-section-head problem-details-head">
                 <span class="request-section-icon orange"><i class="fas fa-message"></i></span>
                 <div>
                     <h3>Problem Details</h3>
                     <p>Describe the issue clearly so the team can prepare before reviewing your request.</p>
                 </div>
+
+                <button type="button" class="problem-image-button" id="addProblemImageButton" title="Add problem images">
+                    <i class="fas fa-plus"></i>
+                    Add Image
+                </button>
             </div>
 
             <div class="request-field">
@@ -175,6 +184,30 @@
                 >{{ old('details') }}</textarea>
                 @error('details')<small class="text-danger">{{ $message }}</small>@enderror
             </div>
+
+            <input
+                type="file"
+                id="problemImages"
+                name="problem_images[]"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                hidden
+            >
+
+            <div id="problemImagePreview" class="problem-image-preview"></div>
+
+            <div class="problem-image-meta" id="problemImageMeta">
+                <span><i class="fas fa-image"></i> Optional</span>
+                <span id="problemImageCount">0/5 images</span>
+            </div>
+
+            @error('problem_images')
+                <small class="text-danger problem-image-error">{{ $message }}</small>
+            @enderror
+
+            @error('problem_images.*')
+                <small class="text-danger problem-image-error">{{ $message }}</small>
+            @enderror
         </section>
 
         <section class="request-form-actions">
@@ -250,11 +283,284 @@ document.addEventListener('DOMContentLoaded', function () {
         serviceCategory.addEventListener('change', populateServiceTypes);
     }
 
+
+    const addProblemImageButton = document.getElementById('addProblemImageButton');
+    const problemImagesInput = document.getElementById('problemImages');
+    const problemImagePreview = document.getElementById('problemImagePreview');
+    const problemImageCount = document.getElementById('problemImageCount');
+    const problemImageMeta = document.getElementById('problemImageMeta');
+
+    let selectedProblemFiles = [];
+
+    function syncProblemImageInput() {
+        if (!problemImagesInput) return;
+
+        const transfer = new DataTransfer();
+
+        selectedProblemFiles.forEach(function (file) {
+            transfer.items.add(file);
+        });
+
+        problemImagesInput.files = transfer.files;
+    }
+
+    function renderProblemImagePreview() {
+        if (!problemImagePreview) return;
+
+        problemImagePreview.innerHTML = '';
+
+        if (problemImageCount) {
+            problemImageCount.textContent = selectedProblemFiles.length + '/5 images';
+        }
+
+        if (problemImageMeta) {
+            problemImageMeta.classList.toggle('has-images', selectedProblemFiles.length > 0);
+        }
+
+        selectedProblemFiles.forEach(function (file, index) {
+            const item = document.createElement('div');
+            item.className = 'problem-image-preview-item';
+
+            const image = document.createElement('img');
+            image.alt = file.name;
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                image.src = event.target.result;
+            };
+
+            reader.readAsDataURL(file);
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'problem-image-remove';
+            removeButton.setAttribute('aria-label', 'Remove image');
+            removeButton.innerHTML = '<i class="fas fa-xmark"></i>';
+
+            removeButton.addEventListener('click', function () {
+                selectedProblemFiles.splice(index, 1);
+                syncProblemImageInput();
+                renderProblemImagePreview();
+            });
+
+            item.appendChild(image);
+            item.appendChild(removeButton);
+            problemImagePreview.appendChild(item);
+        });
+    }
+
+    if (addProblemImageButton && problemImagesInput) {
+        addProblemImageButton.addEventListener('click', function () {
+            problemImagesInput.click();
+        });
+
+        problemImagesInput.addEventListener('change', function () {
+            const files = Array.from(problemImagesInput.files || []);
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            const maxSize = 5 * 1024 * 1024;
+
+            files.forEach(function (file) {
+                if (!allowedTypes.includes(file.type)) {
+                    return;
+                }
+
+                if (file.size > maxSize) {
+                    return;
+                }
+
+                if (selectedProblemFiles.length >= 5) {
+                    return;
+                }
+
+                const duplicate = selectedProblemFiles.some(function (selectedFile) {
+                    return selectedFile.name === file.name &&
+                        selectedFile.size === file.size &&
+                        selectedFile.lastModified === file.lastModified;
+                });
+
+                if (!duplicate) {
+                    selectedProblemFiles.push(file);
+                }
+            });
+
+            syncProblemImageInput();
+            renderProblemImagePreview();
+        });
+    }
+
     const captureButton = document.getElementById('captureLocationButton');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
     const locationStatus = document.getElementById('locationStatus');
     const addressInput = document.getElementById('address');
+    const addressSuggestions = document.getElementById('addressSuggestions');
+
+    let addressSearchTimer = null;
+    let addressSearchController = null;
+
+    function hideAddressSuggestions() {
+        if (!addressSuggestions) return;
+        addressSuggestions.classList.remove('show');
+        addressSuggestions.innerHTML = '';
+    }
+
+    function renderAddressSuggestions(items) {
+        if (!addressSuggestions) return;
+
+        addressSuggestions.innerHTML = '';
+
+        if (!items.length) {
+            hideAddressSuggestions();
+            return;
+        }
+
+        items.forEach(function (item) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'address-suggestion-item';
+            button.setAttribute('role', 'option');
+
+            const icon = document.createElement('span');
+            icon.className = 'address-suggestion-icon';
+            icon.innerHTML = '<i class="fas fa-location-dot"></i>';
+
+            const copy = document.createElement('span');
+            copy.className = 'address-suggestion-copy';
+
+            const title = document.createElement('strong');
+            const detail = document.createElement('small');
+
+            const parts = item.display_name.split(',').map(function (part) {
+                return part.trim();
+            }).filter(Boolean);
+
+            title.textContent = parts.slice(0, 2).join(', ');
+            detail.textContent = parts.slice(2).join(', ');
+
+            copy.appendChild(title);
+
+            if (detail.textContent) {
+                copy.appendChild(detail);
+            }
+
+            button.appendChild(icon);
+            button.appendChild(copy);
+
+            button.addEventListener('click', function () {
+                addressInput.value = item.display_name;
+                latitudeInput.value = item.lat;
+                longitudeInput.value = item.lon;
+                addressInput.classList.add('location-filled');
+
+                locationStatus.innerHTML =
+                    '<i class="fas fa-circle-check"></i> ' +
+                    'Service Address selected and exact coordinates saved.';
+
+                locationStatus.className =
+                    'request-location-status compact success';
+
+                captureButton.innerHTML = '<i class="fas fa-check"></i>';
+                captureButton.classList.add('location-captured');
+                captureButton.title = 'Location selected';
+
+                hideAddressSuggestions();
+            });
+
+            addressSuggestions.appendChild(button);
+        });
+
+        addressSuggestions.classList.add('show');
+    }
+
+    async function searchAddresses(query) {
+        if (!addressSuggestions) return;
+
+        if (addressSearchController) {
+            addressSearchController.abort();
+        }
+
+        addressSearchController = new AbortController();
+
+        const endpoint =
+            'https://nominatim.openstreetmap.org/search' +
+            '?format=jsonv2' +
+            '&addressdetails=1' +
+            '&limit=5' +
+            '&countrycodes=ph' +
+            '&q=' + encodeURIComponent(query);
+
+        addressSuggestions.innerHTML =
+            '<div class="address-suggestions-loading">' +
+            '<i class="fas fa-spinner fa-spin"></i>' +
+            '<span>Searching locations...</span>' +
+            '</div>';
+
+        addressSuggestions.classList.add('show');
+
+        try {
+            const response = await fetch(endpoint, {
+                headers: {
+                    'Accept': 'application/json'
+                },
+                signal: addressSearchController.signal
+            });
+
+            if (!response.ok) {
+                throw new Error('Unable to search addresses.');
+            }
+
+            const results = await response.json();
+
+            renderAddressSuggestions(
+                Array.isArray(results) ? results.slice(0, 5) : []
+            );
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                return;
+            }
+
+            hideAddressSuggestions();
+        }
+    }
+
+    if (addressInput && addressSuggestions) {
+        addressInput.addEventListener('input', function () {
+            const query = addressInput.value.trim();
+
+            clearTimeout(addressSearchTimer);
+
+            if (query.length < 3) {
+                hideAddressSuggestions();
+                return;
+            }
+
+            addressSearchTimer = setTimeout(function () {
+                searchAddresses(query);
+            }, 450);
+        });
+
+        addressInput.addEventListener('focus', function () {
+            if (addressSuggestions.children.length > 0) {
+                addressSuggestions.classList.add('show');
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (
+                !event.target.closest('.service-address-input-wrap') &&
+                !event.target.closest('.location-icon-button')
+            ) {
+                hideAddressSuggestions();
+            }
+        });
+
+        addressInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                hideAddressSuggestions();
+            }
+        });
+    }
 
     if (!captureButton) return;
 
@@ -283,14 +589,16 @@ document.addEventListener('DOMContentLoaded', function () {
     captureButton.addEventListener('click', function () {
         if (!navigator.geolocation) {
             locationStatus.textContent = 'Location services are not supported by this browser.';
-            locationStatus.className = 'request-location-status error';
+            locationStatus.className = 'request-location-status compact error';
             return;
         }
 
         captureButton.disabled = true;
-        captureButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting Location';
+        captureButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        captureButton.classList.remove('location-captured');
+        captureButton.title = 'Getting current location';
         locationStatus.textContent = 'Finding your current location...';
-        locationStatus.className = 'request-location-status';
+        locationStatus.className = 'request-location-status compact loading';
 
         navigator.geolocation.getCurrentPosition(
             async function (position) {
@@ -318,16 +626,20 @@ document.addEventListener('DOMContentLoaded', function () {
                             'Exact location captured. Please confirm the Service Address.';
                     }
 
-                    locationStatus.className = 'request-location-status success';
-                    captureButton.innerHTML = '<i class="fas fa-check"></i> Location Captured';
+                    locationStatus.className = 'request-location-status compact success';
+                    captureButton.innerHTML = '<i class="fas fa-check"></i>';
+                    captureButton.classList.add('location-captured');
+                    captureButton.title = 'Location captured';
                 } catch (error) {
                     locationStatus.innerHTML =
                         '<i class="fas fa-circle-check"></i> ' +
                         'Exact location captured, but the street address could not be detected. ' +
                         'Please enter or confirm the Service Address manually.';
 
-                    locationStatus.className = 'request-location-status success';
-                    captureButton.innerHTML = '<i class="fas fa-check"></i> Location Captured';
+                    locationStatus.className = 'request-location-status compact success';
+                    captureButton.innerHTML = '<i class="fas fa-check"></i>';
+                    captureButton.classList.add('location-captured');
+                    captureButton.title = 'Location captured';
                 } finally {
                     captureButton.disabled = false;
                 }
@@ -344,10 +656,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 locationStatus.textContent = message;
-                locationStatus.className = 'request-location-status error';
+                locationStatus.className = 'request-location-status compact error';
 
                 captureButton.disabled = false;
-                captureButton.innerHTML = '<i class="fas fa-crosshairs"></i> Try Again';
+                captureButton.innerHTML = '<i class="fas fa-location-crosshairs"></i>';
+                captureButton.classList.remove('location-captured');
+                captureButton.title = 'Try current location again';
             },
             {
                 enableHighAccuracy: true,

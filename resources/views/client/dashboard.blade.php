@@ -2,11 +2,10 @@
 
 @section('title', 'Client Dashboard - WRPlumb')
 @section('topbar_title', 'Dashboard')
-@section('topbar_subtitle', 'Home / Dashboard')
+@section('topbar_subtitle', 'Track your requests, schedules, invoices, and account activity.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/client/dashboard.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/client/dashboard.css') }}?v=client-dashboard-modern-01">
 @endpush
 
 @section('content')
@@ -25,156 +24,137 @@
 @endphp
 
 <div class="client-dashboard">
-    <section class="dashboard-hero">
-        <div class="dashboard-hero-content">
-            <span class="hero-label">Client Portal</span>
+    <section class="dashboard-greeting">
+        <div class="dashboard-greeting-copy">
+            <span class="greeting-label">Good day,</span>
 
-            <h1>
-                Welcome back,
-                {{ $user->first_name ?? $user->name ?? 'Client' }}
-                <span class="wave">👋</span>
-            </h1>
+            <h2>{{ $user->first_name ?? $user->name ?? 'Client' }}!</h2>
 
             <p>
-                Here’s what’s happening with your projects and account today.
+                Here is a quick overview of your service requests, schedules, and billing activity.
             </p>
 
-            <div class="hero-actions">
-                <a href="{{ route('client.requests.create') }}" class="hero-primary-btn">
-                    <i class="fas fa-calendar-plus"></i>
-                    Book a Service
-                </a>
+            <div class="greeting-meta">
+                <span>
+                    <i class="far fa-calendar"></i>
+                    {{ now()->format('M d, Y') }}
+                </span>
 
-                <a href="{{ route('client.requests.index') }}" class="hero-secondary-btn">
-                    View Requests
-                    <i class="fas fa-arrow-right"></i>
-                </a>
+                <span>
+                    <i class="far fa-clock"></i>
+                    {{ now()->format('h:i A') }}
+                </span>
             </div>
         </div>
 
-        <div class="dashboard-hero-visual">
-            <div class="hero-circle hero-circle-one"></div>
-            <div class="hero-circle hero-circle-two"></div>
+        <div class="dashboard-greeting-actions">
+            <a href="{{ route('client.requests.create') }}" class="greeting-primary-btn">
+                <i class="fas fa-plus"></i>
+                Book a Service
+            </a>
 
-            <div class="hero-house">
-                <i class="fas fa-house-chimney"></i>
-            </div>
+            <a href="{{ route('client.requests.index') }}" class="greeting-secondary-btn">
+                My Requests
+                <i class="fas fa-arrow-right"></i>
+            </a>
 
-            <div class="hero-city">
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-
-            <div class="hero-van">
-                <div class="van-body">
-                    <div class="van-window"></div>
-
-                    <div class="van-brand">
-                        <strong>WR</strong>
-                        <span>Plumb</span>
-                    </div>
-                </div>
-
-                <div class="van-wheel wheel-left"></div>
-                <div class="van-wheel wheel-right"></div>
-            </div>
+            <span class="greeting-art" aria-hidden="true">
+                <i class="fas fa-faucet-drip"></i>
+            </span>
         </div>
     </section>
 
     <section class="dashboard-stats">
         <a href="{{ route('client.requests.index') }}" class="stat-card">
-            <div class="stat-icon stat-icon-blue">
-                <i class="fas fa-clipboard-list"></i>
-            </div>
-
-            <div class="stat-content">
+            <div>
                 <span class="stat-label">Active Requests</span>
                 <strong>{{ $activeRequests }}</strong>
-                <small>View service progress</small>
+                <small>Requests currently being processed</small>
             </div>
+
+            <span class="stat-icon stat-icon-blue">
+                <i class="fas fa-clipboard-list"></i>
+            </span>
         </a>
 
         <a href="{{ route('client.job-orders.index') }}" class="stat-card">
-            <div class="stat-icon stat-icon-purple">
-                <i class="fas fa-calendar-check"></i>
+            <div>
+                <span class="stat-label">Appointments</span>
+                <strong>{{ $upcomingAppointments }}</strong>
+                <small>Upcoming scheduled visits</small>
             </div>
 
-            <div class="stat-content">
-                <span class="stat-label">Upcoming Appointments</span>
-                <strong>{{ $upcomingAppointments }}</strong>
-                <small>Scheduled service visits</small>
-            </div>
+            <span class="stat-icon stat-icon-purple">
+                <i class="fas fa-calendar-check"></i>
+            </span>
         </a>
 
         <a href="{{ route('client.invoices.index') }}" class="stat-card">
-            <div class="stat-icon stat-icon-orange">
-                <i class="fas fa-file-invoice-dollar"></i>
-            </div>
-
-            <div class="stat-content">
+            <div>
                 <span class="stat-label">Open Invoices</span>
                 <strong>{{ $openInvoices }}</strong>
-                <small>Review billing details</small>
+                <small>Invoices requiring review</small>
             </div>
+
+            <span class="stat-icon stat-icon-orange">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </span>
         </a>
 
         <a href="{{ route('client.job-orders.index') }}" class="stat-card">
-            <div class="stat-icon stat-icon-green">
-                <i class="fas fa-circle-check"></i>
-            </div>
-
-            <div class="stat-content">
+            <div>
                 <span class="stat-label">Completed Jobs</span>
                 <strong>{{ $completedJobs }}</strong>
-                <small>Successfully completed</small>
+                <small>Finished service requests</small>
             </div>
+
+            <span class="stat-icon stat-icon-green">
+                <i class="fas fa-circle-check"></i>
+            </span>
         </a>
     </section>
 
     <section class="dashboard-main-grid">
         <div class="dashboard-left-column">
-            <div class="dashboard-panel requests-panel">
-                <div class="panel-header">
+            <article class="dashboard-panel requests-panel">
+                <header class="panel-header">
                     <div>
-                        <span class="panel-eyebrow">Service monitoring</span>
-                        <h2>Service Requests in Progress</h2>
+                        <h2>Ongoing Service Requests</h2>
+                        <p>Current requests and their progress.</p>
                     </div>
 
                     <a href="{{ route('client.requests.index') }}" class="panel-link">
-                        View all requests
-                        <i class="fas fa-arrow-right"></i>
+                        View all
+                        <i class="fas fa-chevron-right"></i>
                     </a>
-                </div>
+                </header>
 
                 <div class="request-progress-list">
                     @forelse($ongoingRequests->take(3) as $request)
                         @php
-                            $status = strtolower($request->status ?? 'submitted');
+                            $status = strtolower(str_replace('-', '_', $request->status ?? 'submitted'));
 
-                            $submittedComplete = true;
-                            $assignedComplete = in_array($status, [
-                                'assigned',
-                                'scheduled',
-                                'in progress',
-                                'in_progress',
-                                'completed',
-                            ]);
+                            $currentStep = match ($status) {
+                                'assigned', 'scheduled' => 2,
+                                'in progress', 'in_progress', 'ongoing' => 3,
+                                'completed', 'done' => 4,
+                                default => 1,
+                            };
 
-                            $progressComplete = in_array($status, [
-                                'in progress',
-                                'in_progress',
-                                'completed',
-                            ]);
-
-                            $completedComplete = $status === 'completed';
+                            $isFinished = in_array($status, ['completed', 'done'], true);
                         @endphp
 
-                        <div class="request-progress-item">
-                            <div class="request-service-icon">
+                        <div
+                            class="request-progress-item"
+                            data-client-search="{{ strtolower(
+                                ($request->service_type ?? $request->service_name ?? '') . ' ' .
+                                ($request->request_no ?? '') . ' ' .
+                                ($request->status ?? '')
+                            ) }}"
+                        >
+                            <span class="request-service-icon">
                                 <i class="fas fa-screwdriver-wrench"></i>
-                            </div>
+                            </span>
 
                             <div class="request-information">
                                 <strong>
@@ -189,58 +169,42 @@
                             </div>
 
                             <div class="request-stepper">
-                                <div class="request-step completed">
-                                    <span>
-                                        <i class="fas fa-check"></i>
-                                    </span>
-                                    <small>Submitted</small>
-                                </div>
+                                @foreach ([
+                                    1 => 'Submitted',
+                                    2 => 'Assigned',
+                                    3 => 'In Progress',
+                                    4 => 'Completed',
+                                ] as $stepNumber => $stepLabel)
+                                    @php
+                                        $stepClass = $isFinished || $stepNumber < $currentStep
+                                            ? 'done'
+                                            : ($stepNumber === $currentStep ? 'current' : 'future');
+                                    @endphp
 
-                                <div class="step-line {{ $assignedComplete ? 'completed' : '' }}"></div>
+                                    <div class="request-step {{ $stepClass }}">
+                                        <span>
+                                            @if($stepClass === 'done')
+                                                <i class="fas fa-check"></i>
+                                            @endif
+                                        </span>
+                                        <small>{{ $stepLabel }}</small>
+                                    </div>
 
-                                <div class="request-step {{ $assignedComplete ? 'completed' : '' }}">
-                                    <span>
-                                        @if($assignedComplete)
-                                            <i class="fas fa-check"></i>
-                                        @endif
-                                    </span>
-                                    <small>Assigned</small>
-                                </div>
-
-                                <div class="step-line {{ $progressComplete ? 'completed' : '' }}"></div>
-
-                                <div class="request-step {{ $progressComplete ? 'completed' : '' }}">
-                                    <span>
-                                        @if($progressComplete)
-                                            <i class="fas fa-check"></i>
-                                        @endif
-                                    </span>
-                                    <small>In Progress</small>
-                                </div>
-
-                                <div class="step-line {{ $completedComplete ? 'completed success' : '' }}"></div>
-
-                                <div class="request-step {{ $completedComplete ? 'completed success' : '' }}">
-                                    <span>
-                                        @if($completedComplete)
-                                            <i class="fas fa-check"></i>
-                                        @endif
-                                    </span>
-                                    <small>Completed</small>
-                                </div>
+                                    @if($stepNumber < 4)
+                                        <div class="step-line {{ $isFinished || $stepNumber < $currentStep ? 'done' : 'future' }}"></div>
+                                    @endif
+                                @endforeach
                             </div>
 
-                            <div class="request-status">
-                                <span class="status-badge status-{{ str_replace([' ', '_'], '-', $status) }}">
-                                    {{ ucfirst(str_replace('_', ' ', $request->status ?? 'Submitted')) }}
-                                </span>
-                            </div>
+                            <span class="status-badge status-{{ str_replace([' ', '_'], '-', $status) }}">
+                                {{ ucfirst(str_replace('_', ' ', $request->status ?? 'Submitted')) }}
+                            </span>
                         </div>
                     @empty
                         <div class="dashboard-empty-state">
-                            <div class="empty-state-icon">
+                            <span class="empty-state-icon">
                                 <i class="fas fa-clipboard-check"></i>
-                            </div>
+                            </span>
 
                             <h3>No active service requests</h3>
                             <p>You currently have no service requests in progress.</p>
@@ -251,29 +215,20 @@
                         </div>
                     @endforelse
                 </div>
+            </article>
 
-                @if($ongoingRequests->count() > 0)
-                    <div class="panel-footer">
-                        <a href="{{ route('client.requests.index') }}">
-                            View all requests
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </div>
-                @endif
-            </div>
-
-            <div class="dashboard-panel recent-invoices-panel">
-                <div class="panel-header">
+            <article class="dashboard-panel recent-invoices-panel">
+                <header class="panel-header">
                     <div>
-                        <span class="panel-eyebrow">Billing overview</span>
                         <h2>Recent Invoices</h2>
+                        <p>Your latest billing records.</p>
                     </div>
 
                     <a href="{{ route('client.invoices.index') }}" class="panel-link">
-                        View all invoices
-                        <i class="fas fa-arrow-right"></i>
+                        View all
+                        <i class="fas fa-chevron-right"></i>
                     </a>
-                </div>
+                </header>
 
                 <div class="dashboard-table-wrapper">
                     <table class="dashboard-table">
@@ -293,6 +248,7 @@
                             @forelse($recentInvoices->take(4) as $invoice)
                                 @php
                                     $invoiceStatus = strtolower($invoice->status ?? 'unpaid');
+
                                     $dueSoon = $invoice->due_date
                                         && \Carbon\Carbon::parse($invoice->due_date)->isBetween(
                                             today(),
@@ -300,7 +256,13 @@
                                         );
                                 @endphp
 
-                                <tr>
+                                <tr
+                                    data-client-search="{{ strtolower(
+                                        ($invoice->invoice_no ?? '') . ' ' .
+                                        ($invoice->description ?? '') . ' ' .
+                                        ($invoice->status ?? '')
+                                    ) }}"
+                                >
                                     <td>
                                         <strong>
                                             {{ $invoice->invoice_no ?? 'INV-' . str_pad($invoice->id ?? 0, 5, '0', STR_PAD_LEFT) }}
@@ -317,9 +279,7 @@
 
                                     <td>
                                         @if($dueSoon && $invoiceStatus !== 'paid')
-                                            <span class="table-status due-soon">
-                                                Due Soon
-                                            </span>
+                                            <span class="table-status due-soon">Due Soon</span>
                                         @else
                                             <span class="table-status {{ str_replace(' ', '-', $invoiceStatus) }}">
                                                 {{ ucfirst($invoiceStatus) }}
@@ -328,7 +288,7 @@
                                     </td>
 
                                     <td>
-                                        ₱{{ number_format($invoice->total_amount ?? $invoice->amount ?? 0, 2) }}
+                                        PHP {{ number_format((float) ($invoice->total_amount ?? $invoice->amount ?? 0), 2) }}
                                     </td>
 
                                     <td>
@@ -357,66 +317,55 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </article>
         </div>
 
         <aside class="dashboard-right-column">
-            <div class="invoice-reminder-card {{ $dueInvoice ? '' : 'no-due-invoice' }}">
-                <div class="invoice-reminder-header">
-                    <div class="invoice-reminder-icon">
+            <article class="billing-summary-card {{ $dueInvoice ? 'has-due-invoice' : '' }}">
+                <header>
+                    <span class="billing-icon">
                         <i class="fas fa-file-invoice-dollar"></i>
-                    </div>
+                    </span>
 
-                    @if($dueInvoice)
-                        <span class="due-badge">
-                            Due Soon
-                        </span>
-                    @endif
-                </div>
+                    <div>
+                        <h2>Billing</h2>
+                        <p>{{ $dueInvoice ? 'Upcoming payment' : 'Account status' }}</p>
+                    </div>
+                </header>
 
                 @if($dueInvoice)
-                    <div class="invoice-reminder-content">
-                        <span class="reminder-label">Invoice Due Soon</span>
+                    <span class="billing-label">Invoice Due Soon</span>
 
-                        <h3>
-                            {{ $dueInvoice->invoice_no ?? 'Invoice' }}
-                        </h3>
+                    <strong class="billing-reference">
+                        {{ $dueInvoice->invoice_no ?? 'Invoice' }}
+                    </strong>
 
-                        <p>
-                            Due on
-                            {{ \Carbon\Carbon::parse($dueInvoice->due_date)->format('F d, Y') }}
-                        </p>
+                    <span class="billing-date">
+                        Due {{ \Carbon\Carbon::parse($dueInvoice->due_date)->format('M d, Y') }}
+                    </span>
 
-                        <strong class="invoice-amount">
-                            ₱{{ number_format($dueInvoice->total_amount ?? $dueInvoice->amount ?? 0, 2) }}
-                        </strong>
-
-                        <a href="{{ route('client.invoices.index') }}" class="invoice-button">
-                            View Invoice
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
+                    <strong class="billing-amount">
+                        PHP {{ number_format((float) ($dueInvoice->total_amount ?? $dueInvoice->amount ?? 0), 2) }}
+                    </strong>
                 @else
-                    <div class="invoice-reminder-content empty-reminder">
-                        <span class="reminder-label">Invoice Status</span>
-                        <h3>No payment due soon</h3>
-                        <p>Your account currently has no upcoming payment deadline.</p>
-
-                        <a href="{{ route('client.invoices.index') }}" class="invoice-button">
-                            View Invoices
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
+                    <span class="billing-label">Payment Status</span>
+                    <strong class="billing-reference">No payment due soon</strong>
+                    <span class="billing-date">Your account has no upcoming payment deadline.</span>
                 @endif
-            </div>
 
-            <div class="dashboard-panel recent-activity-panel">
-                <div class="panel-header">
+                <a href="{{ route('client.invoices.index') }}" class="billing-action">
+                    View Invoices
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </article>
+
+            <article class="dashboard-panel recent-activity-panel">
+                <header class="panel-header">
                     <div>
-                        <span class="panel-eyebrow">Account updates</span>
                         <h2>Recent Activity</h2>
+                        <p>Latest account updates.</p>
                     </div>
-                </div>
+                </header>
 
                 <div class="activity-list">
                     @forelse($recentActivities->take(5) as $activity)
@@ -433,15 +382,23 @@
                             };
                         @endphp
 
-                        <a href="#" class="activity-item">
-                            <div class="activity-icon activity-icon-{{ $activityType }}">
+                        <a
+                            href="#"
+                            class="activity-item"
+                            data-client-search="{{ strtolower(
+                                ($activity->title ?? '') . ' ' .
+                                ($activity->message ?? '') . ' ' .
+                                $activityType
+                            ) }}"
+                        >
+                            <span class="activity-icon activity-icon-{{ $activityType }}">
                                 <i class="fas {{ $activityIcon }}"></i>
-                            </div>
+                            </span>
 
-                            <div class="activity-content">
+                            <span class="activity-content">
                                 <strong>{{ $activity->title ?? 'System update' }}</strong>
                                 <span>{{ $activity->message ?? 'Your account has a new update.' }}</span>
-                            </div>
+                            </span>
 
                             <time>
                                 {{ optional($activity->created_at)->diffForHumans() ?? 'Recently' }}
@@ -449,62 +406,63 @@
                         </a>
                     @empty
                         <div class="activity-empty-state">
-                            <div class="empty-state-icon">
+                            <span class="empty-state-icon">
                                 <i class="fas fa-bell"></i>
-                            </div>
+                            </span>
 
                             <h3>No recent activity</h3>
                             <p>Your latest account updates will appear here.</p>
                         </div>
                     @endforelse
                 </div>
-            </div>
+            </article>
 
-            <div class="quick-actions-panel">
-                <h2>Quick Actions</h2>
+            <article class="dashboard-panel quick-actions-panel">
+                <header class="panel-header">
+                    <div>
+                        <h2>Quick Actions</h2>
+                        <p>Common client tasks.</p>
+                    </div>
+                </header>
 
                 <div class="quick-action-list">
                     <a href="{{ route('client.requests.create') }}" class="quick-action">
-                        <span>
-                            <i class="fas fa-screwdriver-wrench"></i>
-                        </span>
-
-                        <div>
-                            <strong>Book a Service</strong>
-                            <small>Submit a new request</small>
-                        </div>
-
+                        <span><i class="fas fa-screwdriver-wrench"></i></span>
+                        <strong>Book a Service</strong>
                         <i class="fas fa-chevron-right"></i>
                     </a>
 
                     <a href="{{ route('client.payments.index') }}" class="quick-action">
-                        <span>
-                            <i class="fas fa-credit-card"></i>
-                        </span>
-
-                        <div>
-                            <strong>View Payments</strong>
-                            <small>Check payment records</small>
-                        </div>
-
+                        <span><i class="fas fa-credit-card"></i></span>
+                        <strong>Payments</strong>
                         <i class="fas fa-chevron-right"></i>
                     </a>
 
-                    <a href="{{ route('client.support.index') }}" class="quick-action">
-                        <span>
-                            <i class="fas fa-headset"></i>
-                        </span>
-
-                        <div>
-                            <strong>Contact Support</strong>
-                            <small>Get customer assistance</small>
-                        </div>
-
+                    <button
+                        type="button"
+                        class="quick-action"
+                        id="clientDashboardSupportButton"
+                    >
+                        <span><i class="fas fa-headset"></i></span>
+                        <strong>Customer Support</strong>
                         <i class="fas fa-chevron-right"></i>
-                    </a>
+                    </button>
                 </div>
-            </div>
+            </article>
         </aside>
     </section>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('clientDashboardSupportButton');
+    const supportToggle = document.getElementById('clientSupportToggle');
+
+    button?.addEventListener('click', function () {
+        supportToggle?.click();
+    });
+});
+</script>
+@endpush

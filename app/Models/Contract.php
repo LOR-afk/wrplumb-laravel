@@ -14,6 +14,7 @@ class Contract extends Model
         'start_date',
         'end_date',
         'status',
+        'revision_no',
         'client_name',
         'client_address',
         'project_address',
@@ -25,6 +26,9 @@ class Contract extends Model
         'sent_at',
         'client_accepted_at',
         'finalized_at',
+        'void_reason',
+        'voided_at',
+        'voided_by',
     ];
 
     protected function casts(): array
@@ -35,9 +39,11 @@ class Contract extends Model
             'end_date' => 'date',
             'payment_terms' => 'array',
             'total_contract_price' => 'decimal:2',
+            'revision_no' => 'integer',
             'sent_at' => 'datetime',
             'client_accepted_at' => 'datetime',
             'finalized_at' => 'datetime',
+            'voided_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -51,5 +57,10 @@ class Contract extends Model
     public function generator()
     {
         return $this->belongsTo(User::class, 'generated_by');
+    }
+
+    public function voider()
+    {
+        return $this->belongsTo(User::class, 'voided_by');
     }
 }

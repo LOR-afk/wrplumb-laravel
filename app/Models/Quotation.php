@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -60,6 +59,12 @@ class Quotation extends Model
     public function items()
     {
         return $this->hasMany(QuotationItem::class, 'quotation_id');
+    }
+
+    public function scopeItems()
+    {
+        return $this->hasMany(QuotationScopeItem::class, 'quotation_id')
+            ->orderBy('sort_order');
     }
 
     public function preparedBy()

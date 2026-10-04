@@ -3,7 +3,7 @@
 @section('title', 'Create Quotation')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/hr/quotation-create.css') }}?v=quotation-create-03">
+<link rel="stylesheet" href="{{ asset('css/hr/quotation-create.css') }}?v=quotation-create-04">
 <link rel="stylesheet" href="{{ asset('css/hr/inspection-reports.css') }}?v=inspection-reports-01">
 @endpush
 
@@ -93,6 +93,62 @@
 
     <div class="row g-4">
         <div class="col-lg-8">
+
+            @php
+                $scopeRows = old('scope_items', ['']);
+            @endphp
+
+            <div class="quotation-form-card quotation-scope-card mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1">Scope of Works</h5>
+                        <p class="text-muted mb-0 small">
+                            List the work activities included in this quotation.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary quotation-round-btn"
+                        id="addScopeItemBtn"
+                    >
+                        Add Scope Item
+                    </button>
+                </div>
+
+                <div id="scopeItemsContainer">
+                    @foreach ($scopeRows as $scopeIndex => $scopeItem)
+                        <div class="scope-work-row">
+                            <div class="scope-work-number">
+                                {{ $loop->iteration }}
+                            </div>
+
+                            <div class="scope-work-field">
+                                <label class="form-label">
+                                    Work Description
+                                </label>
+
+                                <textarea
+                                    name="scope_items[]"
+                                    class="form-control scope-work-input"
+                                    rows="2"
+                                    maxlength="2000"
+                                    placeholder="Example: Installation of PE pipe from water meter to the main water supply line."
+                                    required
+                                >{{ $scopeItem }}</textarea>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="btn btn-outline-danger remove-scope-btn"
+                                aria-label="Remove scope item"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
             <div class="quotation-form-card">
                 <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
                     <div>
@@ -257,10 +313,70 @@
 document.addEventListener('DOMContentLoaded', function () {
     const container = document.getElementById('quotationItemsContainer');
     const addItemBtn = document.getElementById('addItemBtn');
+    const scopeContainer = document.getElementById('scopeItemsContainer');
+    const addScopeItemBtn = document.getElementById('addScopeItemBtn');
     const taxRateInput = document.getElementById('taxRate');
     const paymentPlan = document.getElementById('paymentPlan');
 
     let itemIndex = document.querySelectorAll('.quotation-item-row').length;
+
+
+    function renumberScopeItems() {
+        scopeContainer.querySelectorAll('.scope-work-row').forEach((row, index) => {
+            row.querySelector('.scope-work-number').textContent = index + 1;
+        });
+    }
+
+    function attachScopeRowEvents(row) {
+        const removeBtn = row.querySelector('.remove-scope-btn');
+
+        removeBtn.addEventListener('click', function () {
+            const rows = scopeContainer.querySelectorAll('.scope-work-row');
+
+            if (rows.length > 1) {
+                row.remove();
+                renumberScopeItems();
+            }
+        });
+    }
+
+    addScopeItemBtn.addEventListener('click', function () {
+        const row = document.createElement('div');
+        row.className = 'scope-work-row';
+
+        row.innerHTML = `
+            <div class="scope-work-number"></div>
+
+            <div class="scope-work-field">
+                <label class="form-label">Work Description</label>
+
+                <textarea
+                    name="scope_items[]"
+                    class="form-control scope-work-input"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="Describe the work activity included in this quotation."
+                    required
+                ></textarea>
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-outline-danger remove-scope-btn"
+                aria-label="Remove scope item"
+            >
+                Remove
+            </button>
+        `;
+
+        scopeContainer.appendChild(row);
+        attachScopeRowEvents(row);
+        renumberScopeItems();
+        row.querySelector('.scope-work-input').focus();
+    });
+
+    scopeContainer.querySelectorAll('.scope-work-row').forEach(attachScopeRowEvents);
+    renumberScopeItems();
 
     function formatMoney(value) {
         return 'PHP ' + new Intl.NumberFormat('en-PH', {

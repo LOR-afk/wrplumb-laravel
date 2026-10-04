@@ -1,117 +1,113 @@
 @extends('inspector.layouts.app')
 
 @section('title', 'Inspector Dashboard - WRPlumb')
-@section('topbar_title', 'Inspector Dashboard')
-@section('topbar_subtitle', 'Monitor assigned service requests and field activity.')
+@section('topbar_title', 'Dashboard')
+@section('topbar_subtitle', 'Monitor assigned requests, schedules, and field activity.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/inspector/dashboard.css') }}?v=inspector-dashboard-01">
+    <link rel="stylesheet" href="{{ asset('css/inspector/dashboard.css') }}?v=inspector-dashboard-modern-01">
 @endpush
 
 @section('content')
 <div class="inspector-dashboard">
-    <section class="inspector-welcome-card">
-        <div class="inspector-welcome-main">
-            <div class="inspector-welcome-icon">
-                <i class="fas fa-helmet-safety"></i>
-            </div>
+    <section class="dashboard-greeting">
+        <div class="dashboard-greeting-copy">
+            <span class="greeting-label">Good day,</span>
+            <h2>{{ auth()->user()->first_name ?? 'Inspector' }}!</h2>
+            <p>Here is a quick overview of your assigned work and schedule.</p>
 
-            <div>
-                <span class="inspector-eyebrow">Field Operations</span>
-                <h2>Welcome back, {{ auth()->user()->first_name ?? 'Inspector' }}!</h2>
-                <p>Here is an overview of your workload and scheduled field activity for today.</p>
+            <div class="greeting-meta">
+                <span>
+                    <i class="far fa-calendar"></i>
+                    {{ now()->format('M d, Y') }}
+                </span>
+
+                <span>
+                    <i class="far fa-clock"></i>
+                    {{ now()->format('h:i A') }}
+                </span>
             </div>
         </div>
 
-        <div class="inspector-welcome-art">
-            <div class="inspector-van">
-                <i class="fas fa-truck"></i>
-                <span>WR</span>
+        <div class="dashboard-greeting-side">
+            <div class="greeting-status">
+                <span>Availability</span>
+
+                <strong class="{{ $availabilityStatus === 'Available' ? 'is-available' : 'is-busy' }}">
+                    <i class="fas fa-circle"></i>
+                    {{ $availabilityStatus }}
+                </strong>
+
+                <small>{{ $availabilityMessage }}</small>
+
+                <a href="{{ route('inspector.availability.index') }}">
+                    Manage schedule
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-            <div class="inspector-city"></div>
+
+            <div class="greeting-art" aria-hidden="true">
+                <i class="fas fa-faucet-drip"></i>
+            </div>
         </div>
     </section>
 
     <section class="inspector-stat-grid">
         <article class="inspector-stat-card">
-            <div class="inspector-stat-head">
-                <div>
-                    <span>Assigned Requests</span>
-                    <strong>{{ $assignedCount }}</strong>
-                </div>
-
-                <i class="fas fa-clipboard-list stat-blue"></i>
+            <div>
+                <span class="stat-label">Assigned Requests</span>
+                <strong>{{ $assignedCount }}</strong>
+                <small>Waiting for action</small>
             </div>
 
-            <p>Requests assigned to you and waiting for action.</p>
-            <div class="inspector-stat-line blue"><span></span></div>
+            <span class="stat-icon stat-blue">
+                <i class="fas fa-clipboard-list"></i>
+            </span>
         </article>
 
         <article class="inspector-stat-card">
-            <div class="inspector-stat-head">
-                <div>
-                    <span>In Progress</span>
-                    <strong>{{ $inProgressCount }}</strong>
-                </div>
-
-                <i class="fas fa-screwdriver-wrench stat-orange"></i>
+            <div>
+                <span class="stat-label">In Progress</span>
+                <strong>{{ $inProgressCount }}</strong>
+                <small>Active field work</small>
             </div>
 
-            <p>Active field work and ongoing service tasks.</p>
-            <div class="inspector-stat-line orange"><span></span></div>
+            <span class="stat-icon stat-orange">
+                <i class="fas fa-screwdriver-wrench"></i>
+            </span>
         </article>
 
         <article class="inspector-stat-card">
-            <div class="inspector-stat-head">
-                <div>
-                    <span>Completed</span>
-                    <strong>{{ $completedCount }}</strong>
-                </div>
-
-                <i class="fas fa-circle-check stat-green"></i>
+            <div>
+                <span class="stat-label">Completed</span>
+                <strong>{{ $completedCount }}</strong>
+                <small>Finished requests</small>
             </div>
 
-            <p>Finished service requests with completed updates.</p>
-            <div class="inspector-stat-line green"><span></span></div>
+            <span class="stat-icon stat-green">
+                <i class="fas fa-circle-check"></i>
+            </span>
         </article>
 
         <article class="inspector-stat-card">
-            <div class="inspector-stat-head">
-                <div>
-                    <span>Today's Schedule</span>
-                    <strong>{{ $todayScheduleCount }}</strong>
-                </div>
-
-                <i class="fas fa-calendar-day stat-violet"></i>
+            <div>
+                <span class="stat-label">Today's Schedule</span>
+                <strong>{{ $todayScheduleCount }}</strong>
+                <small>Scheduled visits</small>
             </div>
 
-            <p>Scheduled site visits and field appointments today.</p>
-            <div class="inspector-stat-line violet"><span></span></div>
-        </article>
-
-        <article class="inspector-stat-card availability-card">
-            <div class="inspector-stat-head">
-                <div>
-                    <span>Availability Status</span>
-                    <strong class="{{ $availabilityStatus === 'Available' ? 'text-success' : 'text-warning' }}">
-                        <i class="fas fa-circle"></i>
-                        {{ $availabilityStatus }}
-                    </strong>
-                </div>
-
-                <i class="fas fa-user-check stat-green"></i>
-            </div>
-
-            <p>{{ $availabilityMessage }}</p>
+            <span class="stat-icon stat-violet">
+                <i class="fas fa-calendar-day"></i>
+            </span>
         </article>
     </section>
 
-    <section class="inspector-dashboard-grid">
-        <article class="inspector-panel">
-            <header class="inspector-panel-header">
+    <section class="dashboard-work-grid">
+        <article class="dashboard-panel visits-panel">
+            <header class="dashboard-panel-header">
                 <div>
-                    <i class="fas fa-calendar-day"></i>
                     <h5>Today's Assigned Visits</h5>
+                    <p>Scheduled appointments and service requests.</p>
                 </div>
 
                 <a href="{{ route('inspector.quotations.index') }}">
@@ -127,7 +123,7 @@
                             <th>Time</th>
                             <th>Customer</th>
                             <th>Location</th>
-                            <th>Service Type</th>
+                            <th>Service</th>
                             <th>Status</th>
                             <th></th>
                         </tr>
@@ -135,16 +131,26 @@
 
                     <tbody>
                         @forelse ($todayVisits as $visit)
-                            <tr>
+                            <tr
+                                data-inspector-search="{{ strtolower(
+                                    ($visit->full_name ?? '') . ' ' .
+                                    ($visit->address ?? '') . ' ' .
+                                    ($visit->service_type ?? '') . ' ' .
+                                    ($visit->status ?? '')
+                                ) }}"
+                            >
                                 <td>
-                                    <span class="visit-time-dot"></span>
-                                    {{ $visit->appointment_time
-                                        ? \Carbon\Carbon::parse($visit->appointment_time)->format('h:i A')
-                                        : '—' }}
+                                    <span class="visit-time">
+                                        <span class="visit-time-dot"></span>
+
+                                        {{ $visit->appointment_time
+                                            ? \Carbon\Carbon::parse($visit->appointment_time)->format('h:i A')
+                                            : '—' }}
+                                    </span>
                                 </td>
 
                                 <td>
-                                    <strong>{{ $visit->full_name }}</strong>
+                                    <strong class="visit-customer">{{ $visit->full_name }}</strong>
                                 </td>
 
                                 <td>
@@ -166,13 +172,14 @@
                                     </span>
                                 </td>
 
-                                <td>
+                                <td class="text-end">
                                     <a
                                         href="{{ route('inspector.quotations.show', $visit) }}"
                                         class="inspector-row-action"
                                         aria-label="View request"
+                                        title="View request"
                                     >
-                                        <i class="fas fa-ellipsis-vertical"></i>
+                                        <i class="fas fa-chevron-right"></i>
                                     </a>
                                 </td>
                             </tr>
@@ -180,7 +187,10 @@
                             <tr>
                                 <td colspan="6">
                                     <div class="inspector-empty-state">
-                                        <i class="fas fa-calendar-check"></i>
+                                        <span class="empty-icon">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </span>
+
                                         <strong>No assigned visits today</strong>
                                         <span>Your scheduled appointments will appear here.</span>
                                     </div>
@@ -190,96 +200,98 @@
                     </tbody>
                 </table>
             </div>
-
-            <footer class="inspector-panel-note">
-                <i class="fas fa-circle-info"></i>
-                Times are displayed using the system timezone.
-            </footer>
         </article>
 
-        <article class="inspector-panel">
-            <header class="inspector-panel-header">
-                <div>
-                    <i class="fas fa-clock-rotate-left"></i>
-                    <h5>Recent Activity</h5>
-                </div>
-
-                <a href="{{ route('inspector.quotations.index') }}">
-                    View all
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </header>
-
-            <div class="inspector-activity-list">
-                @forelse ($recentActivities as $activity)
-                    @php
-                        $activityClass = match ($activity->status) {
-                            'completed' => 'green',
-                            'in_progress' => 'orange',
-                            'assigned' => 'blue',
-                            default => 'violet',
-                        };
-
-                        $activityIcon = match ($activity->status) {
-                            'completed' => 'fa-circle-check',
-                            'in_progress' => 'fa-screwdriver-wrench',
-                            'assigned' => 'fa-clipboard-list',
-                            default => 'fa-calendar-check',
-                        };
-                    @endphp
-
-                    <a
-                        href="{{ route('inspector.quotations.show', $activity) }}"
-                        class="inspector-activity-item"
-                    >
-                        <span class="activity-icon {{ $activityClass }}">
-                            <i class="fas {{ $activityIcon }}"></i>
-                        </span>
-
-                        <span class="activity-copy">
-                            <strong>
-                                {{ ucwords(str_replace('_', ' ', $activity->status)) }}
-                            </strong>
-                            <small>
-                                {{ $activity->service_type ?? 'Service request' }}
-                                for {{ $activity->full_name }}
-                            </small>
-                        </span>
-
-                        <time>
-                            {{ optional($activity->updated_at)->diffForHumans() }}
-                        </time>
-                    </a>
-                @empty
-                    <div class="inspector-empty-state compact">
-                        <i class="fas fa-clock-rotate-left"></i>
-                        <strong>No recent activity</strong>
-                        <span>Your latest request updates will appear here.</span>
+        <aside class="dashboard-side-column">
+            <article class="dashboard-panel">
+                <header class="dashboard-panel-header">
+                    <div>
+                        <h5>Recent Activity</h5>
+                        <p>Latest request updates.</p>
                     </div>
-                @endforelse
-            </div>
-        </article>
-    </section>
+                </header>
 
-    <section class="inspector-quick-actions">
-        <header>
-            <i class="fas fa-bolt"></i>
-            <h5>Quick Actions</h5>
-        </header>
+                <div class="inspector-activity-list">
+                    @forelse ($recentActivities as $activity)
+                        @php
+                            $activityClass = match ($activity->status) {
+                                'completed' => 'green',
+                                'in_progress' => 'orange',
+                                'assigned' => 'blue',
+                                default => 'violet',
+                            };
 
-        <div>
-            <a href="{{ route('inspector.quotations.index') }}" class="btn btn-primary">
-                <i class="fas fa-clipboard-list"></i>
-                View Assigned Requests
-                <i class="fas fa-arrow-right"></i>
-            </a>
+                            $activityIcon = match ($activity->status) {
+                                'completed' => 'fa-circle-check',
+                                'in_progress' => 'fa-screwdriver-wrench',
+                                'assigned' => 'fa-clipboard-list',
+                                default => 'fa-calendar-check',
+                            };
+                        @endphp
 
-            <a href="{{ route('inspector.availability.index') }}" class="btn btn-outline-primary">
-                <i class="fas fa-calendar-check"></i>
-                Manage Availability
-                <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
+                        <a
+                            href="{{ route('inspector.quotations.show', $activity) }}"
+                            class="inspector-activity-item"
+                            data-inspector-search="{{ strtolower(
+                                ($activity->status ?? '') . ' ' .
+                                ($activity->service_type ?? '') . ' ' .
+                                ($activity->full_name ?? '')
+                            ) }}"
+                        >
+                            <span class="activity-icon {{ $activityClass }}">
+                                <i class="fas {{ $activityIcon }}"></i>
+                            </span>
+
+                            <span class="activity-copy">
+                                <strong>{{ ucwords(str_replace('_', ' ', $activity->status)) }}</strong>
+                                <small>
+                                    {{ $activity->service_type ?? 'Service request' }}
+                                    for {{ $activity->full_name }}
+                                </small>
+                            </span>
+
+                            <time>{{ optional($activity->updated_at)->diffForHumans() }}</time>
+                        </a>
+                    @empty
+                        <div class="inspector-empty-state compact">
+                            <span class="empty-icon">
+                                <i class="fas fa-clock-rotate-left"></i>
+                            </span>
+
+                            <strong>No recent activity</strong>
+                            <span>Your latest updates will appear here.</span>
+                        </div>
+                    @endforelse
+                </div>
+            </article>
+
+            <article class="dashboard-panel quick-actions-panel">
+                <header class="dashboard-panel-header">
+                    <div>
+                        <h5>Quick Actions</h5>
+                        <p>Common inspector tasks.</p>
+                    </div>
+                </header>
+
+                <div class="quick-actions-list">
+                    <a href="{{ route('inspector.quotations.index') }}" class="quick-action-link">
+                        <span>
+                            <i class="fas fa-clipboard-list"></i>
+                            Assigned Requests
+                        </span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+
+                    <a href="{{ route('inspector.availability.index') }}" class="quick-action-link">
+                        <span>
+                            <i class="fas fa-calendar-check"></i>
+                            Availability
+                        </span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+        </aside>
     </section>
 </div>
 @endsection

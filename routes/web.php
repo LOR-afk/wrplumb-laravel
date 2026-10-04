@@ -34,6 +34,7 @@ use App\Http\Controllers\Client\ContractController as ClientContractController;
 use App\Http\Controllers\Client\ReceiptController as ClientReceiptController;
 use App\Http\Controllers\Client\JobOrderController as ClientJobOrderController;
 use App\Http\Controllers\Client\WarrantyClaimController as ClientWarrantyClaimController;
+use App\Http\Controllers\Client\ProfileController as ClientProfileController;
 
 use App\Http\Controllers\Hr\DashboardController as HrDashboardController;
 use App\Http\Controllers\Hr\SupportController as HrSupportController;
@@ -45,11 +46,13 @@ use App\Http\Controllers\Hr\ReceiptController as HrReceiptController;
 use App\Http\Controllers\Hr\ReportController as HrReportController;
 use App\Http\Controllers\Hr\AlertController as HrAlertController;
 use App\Http\Controllers\Hr\InspectionReportController as HrInspectionReportController;
+use App\Http\Controllers\Hr\ProfileController as HrProfileController;
 
 use App\Http\Controllers\Inspector\DashboardController as InspectorDashboardController;
 use App\Http\Controllers\Inspector\QuotationController as InspectorQuotationController;
 use App\Http\Controllers\Inspector\AvailabilityController as InspectorAvailabilityController;
 use App\Http\Controllers\Inspector\AlertController as InspectorAlertController;
+use App\Http\Controllers\Inspector\ProfileController as InspectorProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -165,6 +168,10 @@ Route::post('/email/verification-notification', function (Request $request) {
 */
 Route::middleware(['auth', 'verified', 'client'])->group(function () {
         Route::get('/client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
+
+    Route::put('/client/profile', [ClientProfileController::class, 'update'])
+        ->middleware('throttle:5,1')
+        ->name('client.profile.update');
 
 Route::get('/client/support', [ClientSupportController::class, 'index'])
     ->name('client.support.index');
@@ -359,6 +366,10 @@ Route::middleware(['auth', 'admin', 'admin.otp'])->prefix('admin')->group(functi
 Route::middleware(['auth', 'hr'])->prefix('hr')->group(function () {
     Route::get('/dashboard', [HrDashboardController::class, 'index'])->name('hr.dashboard');
 
+    Route::put('/profile', [HrProfileController::class, 'update'])
+        ->middleware('throttle:10,1')
+        ->name('hr.profile.update');
+
     Route::get('/alerts', [HrAlertController::class, 'index'])
         ->name('hr.alerts.index');
 
@@ -439,9 +450,27 @@ Route::middleware(['auth', 'hr'])->prefix('hr')->group(function () {
 
     Route::get('/contracts', [HrContractController::class, 'index'])->name('hr.contracts.index');
     Route::get('/contracts/create/{quotation}', [HrContractController::class, 'create'])->name('hr.contracts.create');
-    Route::post('/contracts', [HrContractController::class, 'store'])->middleware('throttle:10,1')->name('hr.contracts.store');
-    Route::get('/contracts/{contract}', [HrContractController::class, 'show'])->name('hr.contracts.show');
-    Route::post('/contracts/{contract}/finalize', [HrContractController::class, 'finalize'])->middleware('throttle:10,1')->name('hr.contracts.finalize');
+    Route::post('/contracts', [HrContractController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('hr.contracts.store');
+
+    Route::get('/contracts/{contract}/edit', [HrContractController::class, 'edit'])
+        ->name('hr.contracts.edit');
+
+    Route::put('/contracts/{contract}', [HrContractController::class, 'update'])
+        ->middleware('throttle:10,1')
+        ->name('hr.contracts.update');
+
+    Route::patch('/contracts/{contract}/void', [HrContractController::class, 'void'])
+        ->middleware('throttle:10,1')
+        ->name('hr.contracts.void');
+
+    Route::get('/contracts/{contract}', [HrContractController::class, 'show'])
+        ->name('hr.contracts.show');
+
+    Route::post('/contracts/{contract}/finalize', [HrContractController::class, 'finalize'])
+        ->middleware('throttle:10,1')
+        ->name('hr.contracts.finalize');
 
     Route::get('/receipts', [HrReceiptController::class, 'index'])->name('hr.receipts.index');
     Route::get('/receipts/create/{payment}', [HrReceiptController::class, 'create'])->name('hr.receipts.create');
@@ -476,7 +505,7 @@ Route::middleware(['auth', 'inspector'])->prefix('inspector')->group(function ()
     Route::post('/requests/{quotation}/inspection-photos',[InspectorQuotationController::class, 'uploadInspectionPhotos'])->middleware('throttle:10,1')->name('inspector.quotations.inspection-photos.upload');
     Route::delete('/requests/{quotation}/inspection-photos/{inspectionPhoto}',[InspectorQuotationController::class, 'deleteInspectionPhoto'])->middleware('throttle:20,1')->name('inspector.quotations.inspection-photos.delete');
     Route::post('/requests/{quotation}/inspection-checklist',[InspectorQuotationController::class, 'updateChecklist'])->middleware('throttle:20,1')->name('inspector.quotations.inspection-checklist.update');
-
+    Route::put('/profile', [InspectorProfileController::class, 'update'])->middleware('throttle:10,1')->name('inspector.profile.update');
     Route::get('/alerts', [InspectorAlertController::class, 'index'])->name('inspector.alerts.index');
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('inspector.logout');

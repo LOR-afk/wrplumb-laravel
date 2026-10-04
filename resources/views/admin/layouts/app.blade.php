@@ -1,426 +1,646 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>@yield('title', 'WRPlumb Admin Panel')</title>
+
+
 
     <link rel="icon" type="image/png" href="{{ asset('image/logo.png') }}">
 
-    {{-- Apply the saved desktop sidebar state BEFORE the page paints.
-         This prevents the sidebar from flashing open on every navigation. --}}
-    <script>
-        (function () {
-            if (
-                window.innerWidth >= 992 &&
-                localStorage.getItem('wrAdminSidebarCollapsed') === '1'
-            ) {
-                document.documentElement.classList.add('wr-admin-sidebar-collapsed-initial');
-            }
-
-            document.documentElement.classList.add('wr-sidebar-preload');
-        })();
-    </script>
-
-    <style>
-        /* Pre-paint bridge: mirrors body.admin-sidebar-collapsed before <body> exists. */
-        @media (min-width: 992px) {
-            html.wr-admin-sidebar-collapsed-initial .sidebar {
-                width: 74px !important;
-            }
-
-            html.wr-admin-sidebar-collapsed-initial .sidebar .brand-copy,
-            html.wr-admin-sidebar-collapsed-initial .sidebar .sidebar-label,
-            html.wr-admin-sidebar-collapsed-initial .sidebar .sidebar-link span {
-                display: none !important;
-            }
-
-            html.wr-admin-sidebar-collapsed-initial .main {
-                margin-left: 74px !important;
-            }
-        }
-
-        /* Do not animate the initial state restoration. */
-        html.wr-sidebar-preload .sidebar,
-        html.wr-sidebar-preload .main {
-            transition: none !important;
-        }
-    </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+
+
     <link rel="stylesheet" href="{{ asset('css/common.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/layout.css') }}">
+
+    <link rel="stylesheet" href="{{ asset('css/admin/layout.css') }}?v=admin-modern-01">
+
     @stack('styles')
+
 </head>
+
+
+
 <body>
-<script>
-    (function () {
-        const isDesktop = window.innerWidth >= 992;
-        const collapsed = localStorage.getItem('wrAdminSidebarCollapsed') === '1';
 
-        if (isDesktop && collapsed) {
-            document.body.classList.add('admin-sidebar-collapsed');
-        }
-    })();
-</script>
-<div class="admin-sidebar-overlay" id="adminSidebarOverlay"></div>
+    @php
 
-<div class="app-shell">
-    <aside class="sidebar" id="adminSidebar">
-        <div class="brand-wrap">
-            <button type="button" class="brand-toggle" id="adminSidebarBrandToggle" aria-label="Toggle sidebar">
-                <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb Logo" class="brand-logo">
-            </button>
-            <div class="brand-copy">
-                <div class="brand-title">WRPlumb</div>
-                <div class="brand-subtitle">Admin Panel</div>
-            </div>
-        </div>
+        /** @var \App\Models\User|null $currentUser */
 
-        <div class="sidebar-label">Navigation</div>
+        $currentUser = auth()->user();
 
-        <a href="{{ route('admin.dashboard') }}" data-title="Dashboard" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-            <i class="fas fa-chart-line"></i>
-            <span>Dashboard</span>
-        </a>
+        $adminUnreadAlerts = $currentUser ? $currentUser->alerts()->where('is_read', false)->count() : 0;
 
-        <a href="{{ route('admin.clients.index') }}" data-title="User Management" class="sidebar-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
-            <i class="fas fa-users-gear"></i>
-            <span>User Management</span>
-        </a>
+        $displayName =
+            $currentUser?->name ?:
+            trim(
+                ($currentUser?->first_name ?? '') .
+                    ' ' .
+                    ($currentUser?->middle_initial ?? '') .
+                    ' ' .
+                    ($currentUser?->last_name ?? ''),
+            );
 
-        <a href="{{ route('admin.quotations.index') }}"
-           data-title="Service Requests"
-           class="sidebar-link {{ request()->routeIs('admin.quotations.*') && !request()->routeIs('admin.quotations.archived') ? 'active' : '' }}">
-            <i class="fas fa-list-check"></i>
-            <span>Service Requests</span>
-        </a>
+        $displayName = trim(preg_replace('/\s+/', ' ', $displayName ?: 'Admin User'));
 
-        <a href="{{ route('admin.generated-quotations.index') }}"
-           data-title="Generated Quotations"
-           class="sidebar-link {{ request()->routeIs('admin.generated-quotations.*') ? 'active' : '' }}">
-            <i class="fas fa-file-invoice-dollar"></i>
-            <span>Generated Quotations</span>
-        </a>
+        $displayFirstName = $currentUser?->first_name ?: explode(' ', $displayName)[0] ?? 'Admin';
 
-        <a href="{{ route('admin.quotations.archived') }}" data-title="Archived Records" class="sidebar-link {{ request()->routeIs('admin.quotations.archived') || request()->routeIs('admin.archives.*') ? 'active' : '' }}">
-            <i class="fas fa-box-archive"></i>
-            <span>Archived Records</span>
-        </a>
+        $roleLabel = $currentUser?->role ? ucfirst(str_replace('_', ' ', $currentUser->role)) : 'Administrator';
 
-        <a href="{{ route('admin.job-orders.index') }}" data-title="Job Orders" class="sidebar-link {{ request()->routeIs('admin.job-orders.*') ? 'active' : '' }}">
-            <i class="fas fa-clipboard-list"></i>
-            <span>Job Orders</span>
-        </a>
+        $initials =
+            collect(explode(' ', $displayName))
+                ->filter()
 
-        <a href="{{ route('admin.warranty-claims.index') }}" data-title="Warranty Claims" class="sidebar-link {{ request()->routeIs('admin.warranty-claims.*') ? 'active' : '' }}">
-            <i class="fas fa-shield-alt"></i>
-            <span>Warranty Claims</span>
-        </a>
+                ->take(2)
 
-        <a href="{{ route('admin.backjobs.index') }}" data-title="Backjobs" class="sidebar-link {{ request()->routeIs('admin.backjobs.*') ? 'active' : '' }}">
-            <i class="fas fa-rotate-left"></i>
-            <span>Backjobs</span>
-        </a>
+                ->map(fn($part) => strtoupper(substr($part, 0, 1)))
 
-        <a href="{{ route('admin.inspectors.availability') }}" data-title="Inspector Availability" class="sidebar-link {{ request()->routeIs('admin.inspectors.availability') ? 'active' : '' }}">
-            <i class="fas fa-calendar-check"></i>
-            <span>Inspector Availability</span>
-        </a>
+                ->implode('') ?:
+            'A';
 
-        <a href="{{ route('admin.reports.index') }}" data-title="Reports" class="sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-            <i class="fas fa-chart-column"></i>
-            <span>Reports</span>
-        </a>
-
-        <a href="{{ route('admin.audit-logs.index') }}" data-title="Audit Logs" class="sidebar-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
-            <i class="fas fa-shield-halved"></i>
-            <span>Audit Logs</span>
-        </a>
-
-        <a href="{{ route('admin.support.index') }}" data-title="Support Requests" class="sidebar-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
-            <i class="fas fa-comments"></i>
-            <span>Support Requests</span>
-        </a>
-    </aside>
-
-    <main class="main">
-        @php
-            $currentUser = auth()->user();
-            $adminUnreadAlerts = $currentUser ? $currentUser->alerts()->where('is_read', false)->count() : 0;
-            $displayName = $currentUser?->name
-                ?: trim(($currentUser?->first_name ?? '') . ' ' . ($currentUser?->last_name ?? ''));
-            $displayName = $displayName ?: 'Admin User';
-            $displayFirstName = $currentUser?->first_name ?: explode(' ', $displayName)[0] ?? 'Admin';
-            $roleLabel = $currentUser?->role ? ucfirst(str_replace('_', ' ', $currentUser->role)) : 'Administrator';
-            $initials = collect(explode(' ', $displayName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'A';
-            $profilePhotoUrl = ($currentUser && !empty($currentUser->profile_photo_path))
+        $profilePhotoUrl =
+            $currentUser && !empty($currentUser->profile_photo_path)
                 ? asset('storage/' . $currentUser->profile_photo_path)
                 : null;
-        @endphp
+    @endphp
 
-        <div class="topbar">
-            <div class="topbar-left">
-                <div class="topbar-heading">
-                    <h1 class="topbar-title">@yield('topbar_title', 'Admin Panel')</h1>
-                    <p class="topbar-subtitle">@yield('topbar_subtitle', 'Manage system operations and monitor activity.')</p>
-                </div>
-            </div>
 
-            <div class="topbar-actions">
-                <a href="{{ route('admin.alerts.index') }}" class="topbar-user text-decoration-none">
-                    <i class="fas fa-bell"></i>
-                    <span>Alerts</span>
-                    @if ($adminUnreadAlerts > 0)
-                        <span class="badge bg-danger rounded-pill">{{ $adminUnreadAlerts }}</span>
-                    @endif
+
+    <div class="app-shell">
+
+        <aside class="sidebar" id="adminSidebar" aria-label="Admin navigation">
+
+            <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
+
+                <img src="{{ asset('image/294539416_407599744767669_1937739510480713048_n.jpg') }}" alt="WRPlumb"
+                    class="brand-logo">
+
+
+
+                <span class="brand-copy">
+
+                    <strong>WRPlumb</strong>
+
+                    <small>Admin Panel</small>
+
+                </span>
+
+            </a>
+
+
+
+            <nav class="sidebar-nav">
+
+                <a href="{{ route('admin.dashboard') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+                    data-label="Dashboard" title="Dashboard">
+
+                    <span class="sidebar-icon"><i class="fas fa-table-cells-large"></i></span>
+
+                    <span class="sidebar-text">Dashboard</span>
+
                 </a>
 
-                <div class="dropdown admin-profile-dropdown">
-                    <button class="topbar-user admin-profile-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="admin-avatar-sm">
-                            @if ($profilePhotoUrl)
-                                <img src="{{ $profilePhotoUrl }}" alt="{{ $displayName }}">
-                            @else
-                                {{ $initials }}
-                            @endif
-                        </span>
-                        <span>{{ $displayFirstName }}</span>
+
+
+                <a href="{{ route('admin.clients.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}"
+                    data-label="User Management" title="User Management">
+
+                    <span class="sidebar-icon"><i class="fas fa-users-gear"></i></span>
+
+                    <span class="sidebar-text">User Management</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.quotations.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.quotations.*') && !request()->routeIs('admin.quotations.archived') ? 'active' : '' }}"
+                    data-label="Service Requests" title="Service Requests">
+
+                    <span class="sidebar-icon"><i class="fas fa-list-check"></i></span>
+
+                    <span class="sidebar-text">Service Requests</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.generated-quotations.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.generated-quotations.*') ? 'active' : '' }}"
+                    data-label="Generated Quotations" title="Generated Quotations">
+
+                    <span class="sidebar-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+
+                    <span class="sidebar-text">Generated Quotations</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.quotations.archived') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.quotations.archived') || request()->routeIs('admin.archives.*') ? 'active' : '' }}"
+                    data-label="Archived Records" title="Archived Records">
+
+                    <span class="sidebar-icon"><i class="fas fa-box-archive"></i></span>
+
+                    <span class="sidebar-text">Archived Records</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.job-orders.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.job-orders.*') ? 'active' : '' }}"
+                    data-label="Job Orders" title="Job Orders">
+
+                    <span class="sidebar-icon"><i class="fas fa-clipboard-list"></i></span>
+
+                    <span class="sidebar-text">Job Orders</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.warranty-claims.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.warranty-claims.*') ? 'active' : '' }}"
+                    data-label="Warranty Claims" title="Warranty Claims">
+
+                    <span class="sidebar-icon"><i class="fas fa-shield-halved"></i></span>
+
+                    <span class="sidebar-text">Warranty Claims</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.backjobs.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.backjobs.*') ? 'active' : '' }}"
+                    data-label="Backjobs" title="Backjobs">
+
+                    <span class="sidebar-icon"><i class="fas fa-rotate-left"></i></span>
+
+                    <span class="sidebar-text">Backjobs</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.inspectors.availability') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.inspectors.availability') ? 'active' : '' }}"
+                    data-label="Inspector Availability" title="Inspector Availability">
+
+                    <span class="sidebar-icon"><i class="fas fa-calendar-check"></i></span>
+
+                    <span class="sidebar-text">Inspector Availability</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.reports.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"
+                    data-label="Reports" title="Reports">
+
+                    <span class="sidebar-icon"><i class="fas fa-chart-column"></i></span>
+
+                    <span class="sidebar-text">Reports</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.audit-logs.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}"
+                    data-label="Audit Logs" title="Audit Logs">
+
+                    <span class="sidebar-icon"><i class="fas fa-shield-halved"></i></span>
+
+                    <span class="sidebar-text">Audit Logs</span>
+
+                </a>
+
+
+
+                <a href="{{ route('admin.support.index') }}"
+                    class="sidebar-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}"
+                    data-label="Support Requests" title="Support Requests">
+
+                    <span class="sidebar-icon"><i class="fas fa-comments"></i></span>
+
+                    <span class="sidebar-text">Support Requests</span>
+
+                </a>
+
+            </nav>
+
+        </aside>
+
+
+
+        <button type="button" class="sidebar-backdrop" id="adminSidebarBackdrop" aria-label="Close navigation"
+            tabindex="-1"></button>
+
+
+
+        <main class="main">
+
+            <header class="topbar">
+
+                <div class="topbar-left">
+
+                    <button type="button" class="topbar-menu-btn" id="adminSidebarToggle"
+                        aria-label="Toggle navigation" aria-controls="adminSidebar" aria-expanded="false"
+                        title="Toggle sidebar">
+
+                        <i class="fas fa-bars"></i>
+
                     </button>
 
-                    <div class="dropdown-menu dropdown-menu-end admin-profile-menu">
-                        <div class="admin-profile-menu-head">
-                            <span class="admin-avatar-lg">
+
+
+                    <div class="topbar-search-wrap">
+
+                        <i class="fas fa-magnifying-glass"></i>
+
+                        <input type="search" id="adminGlobalSearch" class="topbar-search"
+                            placeholder="Search this page..." autocomplete="off" aria-label="Search this page">
+
+                        <kbd>Ctrl+K</kbd>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="topbar-actions">
+
+                    <a href="{{ route('admin.alerts.index') }}" class="topbar-icon-btn" title="Notifications"
+                        aria-label="Notifications">
+
+                        <i class="fas fa-bell"></i>
+
+
+
+                        @if ($adminUnreadAlerts > 0)
+                            <span class="topbar-alert-count">
+
+                                {{ $adminUnreadAlerts > 99 ? '99+' : $adminUnreadAlerts }}
+
+                            </span>
+                        @endif
+
+                    </a>
+
+
+
+                    <div class="dropdown admin-profile-dropdown">
+
+                        <button class="topbar-profile admin-profile-trigger dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+
+                            <span class="admin-avatar-sm">
+
                                 @if ($profilePhotoUrl)
                                     <img src="{{ $profilePhotoUrl }}" alt="{{ $displayName }}">
                                 @else
                                     {{ $initials }}
                                 @endif
-                            </span>
-                            <div class="admin-profile-menu-copy">
-                                <strong>{{ $displayName }}</strong>
-                                <span>{{ $currentUser?->email ?? 'No email listed' }}</span>
-                                <em>{{ $roleLabel }}</em>
-                            </div>
-                        </div>
 
-                        <button type="button" class="dropdown-item admin-profile-item" data-bs-toggle="modal" data-bs-target="#adminViewProfileModal">
-                            <i class="fas fa-user"></i>
-                            <span>View Profile</span>
+                            </span>
+
+
+
+                            <span class="admin-profile-copy">
+
+                                <strong>{{ $displayFirstName }}</strong>
+
+                                <small>Admin</small>
+
+                            </span>
+
                         </button>
 
-                        <a href="{{ route('admin.profile.edit') }}" class="dropdown-item admin-profile-item">
-                            <i class="fas fa-sliders"></i>
-                            <span>Account Settings</span>
-                        </a>
 
-                        <div class="dropdown-divider"></div>
 
-                        <form method="POST" action="{{ route('admin.logout') }}">
-                            @csrf
-                            <button type="submit" class="dropdown-item admin-profile-item danger">
-                                <i class="fas fa-right-from-bracket"></i>
-                                <span>Logout</span>
+                        <div class="dropdown-menu dropdown-menu-end admin-profile-menu">
+
+                            <div class="admin-profile-menu-head">
+
+                                <span class="admin-avatar-lg">
+
+                                    @if ($profilePhotoUrl)
+                                        <img src="{{ $profilePhotoUrl }}" alt="{{ $displayName }}">
+                                    @else
+                                        {{ $initials }}
+                                    @endif
+
+                                </span>
+
+
+
+                                <div class="admin-profile-menu-copy">
+
+                                    <strong>{{ $displayName }}</strong>
+
+                                    <span>{{ $currentUser?->email ?? 'No email listed' }}</span>
+
+                                    <em>{{ $roleLabel }}</em>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <button type="button" class="dropdown-item admin-profile-item" data-bs-toggle="modal"
+                                data-bs-target="#adminViewProfileModal">
+
+                                <i class="fas fa-user"></i>
+
+                                <span>View Profile</span>
+
                             </button>
-                        </form>
+
+
+
+                            <a href="{{ route('admin.profile.edit') }}" class="dropdown-item admin-profile-item">
+
+                                <i class="fas fa-sliders"></i>
+
+                                <span>Account Settings</span>
+
+                            </a>
+
+
+
+                            <div class="dropdown-divider"></div>
+
+
+
+                            <form method="POST" action="{{ route('admin.logout') }}">
+
+                                @csrf
+
+                                <button type="submit" class="dropdown-item admin-profile-item danger">
+
+                                    <i class="fas fa-right-from-bracket"></i>
+
+                                    <span>Logout</span>
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
                     </div>
+
                 </div>
-            </div>
-        </div>
 
-        <div class="content">
-            @if (session('success') || session('info') || $errors->any())
-                <div class="wr-toast-stack" id="wrToastStack">
-                    @if (session('success'))
-                        <div class="wr-toast wr-toast-success">
-                            <div class="wr-toast-icon"><i class="fas fa-check-circle"></i></div>
-                            <div class="wr-toast-body">
-                                <div class="wr-toast-title">Success</div>
-                                <div class="wr-toast-message">{{ session('success') }}</div>
+            </header>
+
+
+
+            <div class="content">
+
+                @if (session('success') || session('info') || $errors->any())
+
+                    <div class="wr-toast-stack">
+
+                        @if (session('success'))
+                            <div class="wr-toast wr-toast-success">
+
+                                <span class="wr-toast-icon"><i class="fas fa-circle-check"></i></span>
+
+                                <div class="wr-toast-copy">
+
+                                    <strong>Success</strong>
+
+                                    <span>{{ session('success') }}</span>
+
+                                </div>
+
+                                <button type="button" class="wr-toast-close" data-toast-close
+                                    aria-label="Close notification">
+
+                                    <i class="fas fa-xmark"></i>
+
+                                </button>
+
                             </div>
-                            <button type="button" class="wr-toast-close" onclick="this.closest('.wr-toast').remove()" aria-label="Close notification">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    @endif
-
-                    @if (session('info'))
-                        <div class="wr-toast wr-toast-info">
-                            <div class="wr-toast-icon"><i class="fas fa-info-circle"></i></div>
-                            <div class="wr-toast-body">
-                                <div class="wr-toast-title">Notice</div>
-                                <div class="wr-toast-message">{{ session('info') }}</div>
-                            </div>
-                            <button type="button" class="wr-toast-close" onclick="this.closest('.wr-toast').remove()" aria-label="Close notification">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    @endif
-
-                    @if ($errors->any())
-                        <div class="wr-toast wr-toast-danger">
-                            <div class="wr-toast-icon"><i class="fas fa-exclamation-circle"></i></div>
-                            <div class="wr-toast-body">
-                                <div class="wr-toast-title">Action Needed</div>
-                                <div class="wr-toast-message">{{ $errors->first() }}</div>
-                            </div>
-                            <button type="button" class="wr-toast-close" onclick="this.closest('.wr-toast').remove()" aria-label="Close notification">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    @endif
-                </div>
-            @endif
-
-            @yield('content')
-        </div>
-    </main>
-</div>
-
-<div class="modal fade admin-profile-modal" id="adminViewProfileModal" tabindex="-1" aria-labelledby="adminViewProfileModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content admin-profile-modal-content">
-            <div class="modal-header">
-                <div>
-                    <h5 class="modal-title" id="adminViewProfileModalLabel">View Profile</h5>
-                    <p class="modal-subtitle mb-0">Review your account information.</p>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <div class="modal-body">
-                <div class="admin-profile-preview">
-                    <span class="admin-avatar-xl">
-                        @if ($profilePhotoUrl)
-                            <img src="{{ $profilePhotoUrl }}" alt="{{ $displayName }}">
-                        @else
-                            {{ $initials }}
                         @endif
-                    </span>
-                    <div>
-                        <h4>{{ $displayName }}</h4>
-                        <p>{{ $currentUser?->email ?? 'No email listed' }}</p>
-                        <span class="admin-role-badge">{{ $roleLabel }}</span>
-                    </div>
-                </div>
 
-                <div class="admin-profile-info-grid">
-                    <div class="admin-profile-info-item">
-                        <span>Full Name</span>
-                        <strong>{{ $displayName }}</strong>
+
+
+                        @if (session('info'))
+                            <div class="wr-toast wr-toast-info">
+
+                                <span class="wr-toast-icon"><i class="fas fa-circle-info"></i></span>
+
+                                <div class="wr-toast-copy">
+
+                                    <strong>Notice</strong>
+
+                                    <span>{{ session('info') }}</span>
+
+                                </div>
+
+                                <button type="button" class="wr-toast-close" data-toast-close
+                                    aria-label="Close notification">
+
+                                    <i class="fas fa-xmark"></i>
+
+                                </button>
+
+                            </div>
+                        @endif
+
+
+
+                        @if ($errors->any())
+                            <div class="wr-toast wr-toast-danger">
+
+                                <span class="wr-toast-icon"><i class="fas fa-circle-exclamation"></i></span>
+
+                                <div class="wr-toast-copy">
+
+                                    <strong>Action Needed</strong>
+
+                                    <span>{{ $errors->first() }}</span>
+
+                                </div>
+
+                                <button type="button" class="wr-toast-close" data-toast-close
+                                    aria-label="Close notification">
+
+                                    <i class="fas fa-xmark"></i>
+
+                                </button>
+
+                            </div>
+                        @endif
+
                     </div>
-                    <div class="admin-profile-info-item">
-                        <span>Email Address</span>
-                        <strong>{{ $currentUser?->email ?? '—' }}</strong>
-                    </div>
-                    <div class="admin-profile-info-item">
-                        <span>Phone</span>
-                        <strong>{{ $currentUser?->phone ?? '—' }}</strong>
-                    </div>
-                    <div class="admin-profile-info-item">
-                        <span>Role</span>
-                        <strong>{{ $roleLabel }}</strong>
-                    </div>
-                    <div class="admin-profile-info-item">
-                        <span>Status</span>
-                        <strong>{{ $currentUser?->is_active ? 'Active' : 'Inactive' }}</strong>
-                    </div>
-                    <div class="admin-profile-info-item">
-                        <span>Joined</span>
-                        <strong>{{ optional($currentUser?->created_at)->format('M d, Y') ?? '—' }}</strong>
-                    </div>
-                </div>
+
+                @endif
+
+
+
+                @yield('content')
+
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="{{ route('admin.profile.edit') }}" class="btn btn-primary">
-                    <i class="fas fa-sliders me-1"></i> Account Settings
-                </a>
-            </div>
-        </div>
+        </main>
+
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const body = document.body;
-        const brandToggle = document.getElementById('adminSidebarBrandToggle');
-        const overlay = document.getElementById('adminSidebarOverlay');
-        const mobileBreakpoint = 992;
 
-        function isMobile() {
-            return window.innerWidth < mobileBreakpoint;
-        }
+    <div class="modal fade admin-profile-modal" id="adminViewProfileModal" tabindex="-1"
+        aria-labelledby="adminViewProfileModalLabel" aria-hidden="true">
 
-        function closeMobileSidebar() {
-            body.classList.remove('admin-sidebar-open');
-        }
+        <div class="modal-dialog modal-dialog-centered">
 
-        function toggleSidebar() {
-            if (isMobile()) {
-                body.classList.toggle('admin-sidebar-open');
-                return;
-            }
+            <div class="modal-content admin-profile-modal-content">
 
-            body.classList.toggle('admin-sidebar-collapsed');
-            localStorage.setItem(
-                'wrAdminSidebarCollapsed',
-                body.classList.contains('admin-sidebar-collapsed') ? '1' : '0'
-            );
-        }
+                <div class="modal-header">
 
-        if (brandToggle) {
-            brandToggle.addEventListener('click', toggleSidebar);
-        }
+                    <div>
 
-        if (overlay) {
-            overlay.addEventListener('click', closeMobileSidebar);
-        }
+                        <h5 class="modal-title" id="adminViewProfileModalLabel">View Profile</h5>
 
-        // The correct sidebar state is now applied; re-enable normal transitions.
-        document.documentElement.classList.remove(
-            'wr-sidebar-preload',
-            'wr-admin-sidebar-collapsed-initial'
-        );
+                        <p class="modal-subtitle mb-0">Review your account information.</p>
 
-        document.querySelectorAll('.sidebar-link').forEach(function (link) {
-            link.addEventListener('click', function () {
-                if (isMobile()) {
-                    closeMobileSidebar();
-                }
-            });
-        });
+                    </div>
 
-        window.addEventListener('resize', function () {
-            if (!isMobile()) {
-                body.classList.remove('admin-sidebar-open');
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 
-                if (localStorage.getItem('wrAdminSidebarCollapsed') === '1') {
-                    body.classList.add('admin-sidebar-collapsed');
-                }
-            } else {
-                body.classList.remove('admin-sidebar-collapsed');
-            }
-        });
+                </div>
 
-        setTimeout(function () {
-            document.querySelectorAll('.wr-toast').forEach(function (toast) {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-8px) translateX(12px)';
-                toast.style.transition = 'all 0.25s ease';
 
-                setTimeout(function () {
-                    toast.remove();
-                }, 250);
-            });
-        }, 4500);
-    });
-</script>
 
-@stack('scripts')
+                <div class="modal-body">
+
+                    <div class="admin-profile-preview">
+
+                        <span class="admin-avatar-xl">
+
+                            @if ($profilePhotoUrl)
+                                <img src="{{ $profilePhotoUrl }}" alt="{{ $displayName }}">
+                            @else
+                                {{ $initials }}
+                            @endif
+
+                        </span>
+
+                        <div>
+
+                            <h4>{{ $displayName }}</h4>
+
+                            <p>{{ $currentUser?->email ?? 'No email listed' }}</p>
+
+                            <span class="admin-role-badge">{{ $roleLabel }}</span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="admin-profile-info-grid">
+
+                        <div class="admin-profile-info-item">
+
+                            <span>Full Name</span>
+
+                            <strong>{{ $displayName }}</strong>
+
+                        </div>
+
+                        <div class="admin-profile-info-item">
+
+                            <span>Email Address</span>
+
+                            <strong>{{ $currentUser?->email ?? '—' }}</strong>
+
+                        </div>
+
+                        <div class="admin-profile-info-item">
+
+                            <span>Phone</span>
+
+                            <strong>{{ $currentUser?->phone ?? '—' }}</strong>
+
+                        </div>
+
+                        <div class="admin-profile-info-item">
+
+                            <span>Role</span>
+
+                            <strong>{{ $roleLabel }}</strong>
+
+                        </div>
+
+                        <div class="admin-profile-info-item">
+
+                            <span>Status</span>
+
+                            <strong>{{ $currentUser?->is_active ? 'Active' : 'Inactive' }}</strong>
+
+                        </div>
+
+                        <div class="admin-profile-info-item">
+
+                            <span>Joined</span>
+
+                            <strong>{{ optional($currentUser?->created_at)->format('M d, Y') ?? '—' }}</strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+
+                    <a href="{{ route('admin.profile.edit') }}" class="btn btn-primary">
+
+                        <i class="fas fa-sliders me-1"></i> Account Settings
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="{{ asset('js/admin/layout.js') }}?v=admin-modern-01"></script>
+
+    @stack('scripts')
+
 </body>
+
 </html>

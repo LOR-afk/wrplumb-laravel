@@ -1,207 +1,603 @@
 @extends('hr.layouts.app')
 
+
+
 @section('title', 'HR Dashboard - WRPlumb')
-@section('topbar_title', 'HR Dashboard')
-@section('topbar_subtitle', 'Monitor conversations routed to HR and support operations.')
+
+@section('topbar_title', 'Dashboard')
+
+@section('topbar_subtitle', 'Monitor HR support operations, finance workflows, and routed client concerns.')
+
+
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/hr/dashboard.css') }}">
+
+    <link rel="stylesheet" href="{{ asset('css/hr/dashboard.css') }}?v=hr-dashboard-readable-03">
+
 @endpush
 
+
+
 @section('content')
+
 @php
+
     $hrName = auth()->user()->first_name ?? 'HR';
+
 @endphp
 
+
+
 <div class="hr-dashboard-page">
-    <section class="hr-welcome-card">
-        <div class="hr-welcome-icon">
-            <i class="fas fa-headset"></i>
+
+    <section class="hr-greeting">
+
+        <div class="hr-greeting-copy">
+
+            <span class="hr-greeting-label">Good day,</span>
+
+            <h2>{{ $hrName }}!</h2>
+
+
+
+            <p>
+
+                Here is a quick overview of routed concerns, HR workload, and current support activity.
+
+            </p>
+
+
+
+            <div class="hr-greeting-meta">
+
+                <span>
+
+                    <i class="far fa-calendar"></i>
+
+                    {{ now()->format('M d, Y') }}
+
+                </span>
+
+
+
+                <span>
+
+                    <i class="far fa-clock"></i>
+
+                    {{ now()->format('h:i A') }}
+
+                </span>
+
+            </div>
+
         </div>
 
-        <div class="hr-welcome-main">
-            <span class="hr-kicker">HR Support Operations</span>
-            <h2>Welcome, {{ $hrName }}</h2>
-            <p>Review routed client concerns, monitor HR workload, and keep support conversations moving.</p>
-        </div>
 
-        <div class="hr-welcome-metrics">
+
+        <div class="hr-greeting-metrics">
+
             <div class="hr-mini-metric">
+
                 <span>Avg. Response</span>
+
                 <strong>{{ $averageResponseTime ?? '—' }}</strong>
+
             </div>
+
+
+
             <div class="hr-mini-metric">
+
                 <span>SLA Compliance</span>
+
                 <strong class="success">{{ $slaCompliance ?? '—' }}</strong>
+
             </div>
+
+
+
+            <span class="hr-greeting-art" aria-hidden="true">
+
+                <i class="fas fa-headset"></i>
+
+            </span>
+
         </div>
+
     </section>
+
+
 
     <section class="hr-kpi-grid">
-        <article class="hr-kpi-card blue">
-            <div class="hr-kpi-icon"><i class="fas fa-inbox"></i></div>
-            <div class="hr-kpi-body">
-                <span>Total in HR Queue</span>
-                <strong>{{ $openCount }}</strong>
-                <p>Support conversations currently handled by HR.</p>
-                <div class="hr-kpi-progress"><i style="width: {{ $openPercent ?? 12 }}%"></i></div>
-            </div>
-        </article>
 
-        <article class="hr-kpi-card orange">
-            <div class="hr-kpi-icon"><i class="fas fa-share"></i></div>
-            <div class="hr-kpi-body">
-                <span>Routed to HR</span>
-                <strong>{{ $routedCount }}</strong>
-                <p>Concerns forwarded by the support workflow.</p>
-                <div class="hr-kpi-progress"><i style="width: {{ $routedPercent ?? 25 }}%"></i></div>
-            </div>
-        </article>
+        <article class="hr-kpi-card">
 
-        <article class="hr-kpi-card green">
-            <div class="hr-kpi-icon"><i class="fas fa-circle-check"></i></div>
-            <div class="hr-kpi-body">
-                <span>Resolved Conversations</span>
-                <strong>{{ $resolvedCount }}</strong>
-                <p>Support concerns completed and closed.</p>
-                <div class="hr-kpi-progress"><i style="width: {{ $resolvedPercent ?? 75 }}%"></i></div>
-            </div>
-        </article>
-
-        <article class="hr-kpi-card violet">
-            <div class="hr-kpi-icon"><i class="fas fa-calendar-check"></i></div>
-            <div class="hr-kpi-body">
-                <span>Pending Follow-ups</span>
-                <strong>{{ $pendingFollowups ?? 0 }}</strong>
-                <p>Conversations awaiting action or update.</p>
-                <div class="hr-kpi-progress"><i style="width: {{ $pendingPercent ?? 40 }}%"></i></div>
-            </div>
-        </article>
-    </section>
-
-    <section class="hr-action-panel">
-        <div class="hr-section-head">
             <div>
-                <h5><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
-                <p>Jump to common HR workflows.</p>
+
+                <span class="hr-kpi-label">Total Quotations</span>
+
+                <strong>{{ number_format($totalQuotations ?? 0) }}</strong>
+
+                <small>Current quotation records</small>
+
             </div>
-        </div>
 
-        <div class="hr-action-grid">
-            <a href="{{ route('hr.support.index') }}" class="hr-action-card">
-                <span><i class="fas fa-comments"></i></span>
-                <strong>Open Support Queue</strong>
-                <i class="fas fa-chevron-right"></i>
-            </a>
 
-            <a href="{{ route('hr.quotations.index') }}" class="hr-action-card">
-                <span><i class="fas fa-file-invoice-dollar"></i></span>
-                <strong>View Quotations</strong>
-                <i class="fas fa-chevron-right"></i>
-            </a>
 
-            <a href="{{ route('hr.invoices.index') }}" class="hr-action-card">
-                <span><i class="fas fa-file-invoice"></i></span>
-                <strong>Manage Invoices</strong>
-                <i class="fas fa-chevron-right"></i>
-            </a>
+            <span class="hr-kpi-icon blue">
 
-            <a href="{{ route('hr.reports.index') }}" class="hr-action-card">
-                <span><i class="fas fa-chart-column"></i></span>
-                <strong>View Reports</strong>
-                <i class="fas fa-chevron-right"></i>
-            </a>
-        </div>
+                <i class="fas fa-file-invoice-dollar"></i>
+
+            </span>
+
+        </article>
+
+
+
+        <article class="hr-kpi-card">
+
+            <div>
+
+                <span class="hr-kpi-label">Sent Quotations</span>
+
+                <strong>{{ number_format($sentQuotations ?? 0) }}</strong>
+
+                <small>Waiting for client acceptance</small>
+
+            </div>
+
+
+
+            <span class="hr-kpi-icon orange">
+
+                <i class="fas fa-paper-plane"></i>
+
+            </span>
+
+        </article>
+
+
+
+        <article class="hr-kpi-card">
+
+            <div>
+
+                <span class="hr-kpi-label">Accepted Quotations</span>
+
+                <strong>{{ number_format($acceptedQuotations ?? 0) }}</strong>
+
+                <small>Accepted by clients</small>
+
+            </div>
+
+
+
+            <span class="hr-kpi-icon green">
+
+                <i class="fas fa-circle-check"></i>
+
+            </span>
+
+        </article>
+
+
+
+        <article class="hr-kpi-card">
+
+            <div>
+
+                <span class="hr-kpi-label">Invoice Ready</span>
+
+                <strong>{{ number_format($invoiceReadyQuotations ?? 0) }}</strong>
+
+                <small>Accepted quotations with invoice</small>
+
+            </div>
+
+
+
+            <span class="hr-kpi-icon violet">
+
+                <i class="fas fa-file-invoice"></i>
+
+            </span>
+
+        </article>
+
     </section>
 
-    <section class="hr-bottom-grid">
-        <div class="hr-panel">
-            <div class="hr-section-head">
-                <div>
-                    <h5><i class="fas fa-clock-rotate-left me-2 text-primary"></i>Recent Support Activity</h5>
-                    <p>Latest routed or updated conversations.</p>
-                </div>
 
-                <a href="{{ route('hr.support.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
-            </div>
 
-            <div class="hr-activity-list">
-                @forelse ($recentConversations ?? [] as $conversation)
-                    @php
-                        $clientName = $conversation->client->name
-                            ?? trim(($conversation->client->first_name ?? '') . ' ' . ($conversation->client->last_name ?? ''))
-                            ?: 'Client';
-                        $initials = collect(explode(' ', $clientName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'C';
-                        $statusKey = $conversation->status ?? 'open';
-                    @endphp
+    <section class="hr-main-grid">
 
-                    <a href="{{ route('hr.support.show', $conversation) }}" class="hr-activity-item">
-                        <span class="hr-avatar">{{ $initials }}</span>
-                        <span class="hr-activity-main">
-                            <strong>{{ $clientName }}</strong>
-                            <small>{{ \Illuminate\Support\Str::limit($conversation->latest_message ?? 'Support conversation update', 48) }}</small>
-                        </span>
-                        <span class="hr-status-chip {{ $statusKey }}">{{ ucwords(str_replace('_', ' ', $statusKey)) }}</span>
-                        <span class="hr-time">{{ optional($conversation->updated_at)->diffForHumans() }}</span>
+        <div class="hr-left-column">
+
+            <article class="hr-panel">
+
+                <header class="hr-panel-header">
+
+                    <div>
+
+                        <h5>Recent Support Activity</h5>
+
+                        <p>Latest routed or updated conversations.</p>
+
+                    </div>
+
+
+
+                    <a href="{{ route('hr.support.index') }}" class="hr-panel-link">
+
+                        View all
+
+                        <i class="fas fa-chevron-right"></i>
+
                     </a>
-                @empty
-                    <div class="hr-empty-state">
-                        <i class="fas fa-comments"></i>
-                        <strong>No recent support activity</strong>
-                        <p>Routed HR conversations will appear here.</p>
+
+                </header>
+
+
+
+                <div class="hr-activity-list">
+
+                    @forelse ($recentConversations ?? [] as $conversation)
+
+                        @php
+
+                            $clientName = $conversation->client->name
+
+                                ?? trim(
+
+                                    ($conversation->client->first_name ?? '') . ' ' .
+
+                                    ($conversation->client->last_name ?? '')
+
+                                )
+
+                                ?: 'Client';
+
+
+
+                            $initials = collect(explode(' ', $clientName))
+
+                                ->filter()
+
+                                ->take(2)
+
+                                ->map(fn ($part) => strtoupper(substr($part, 0, 1)))
+
+                                ->implode('') ?: 'C';
+
+
+
+                            $statusKey = $conversation->status ?? 'open';
+
+                        @endphp
+
+
+
+                        <a
+
+                            href="{{ route('hr.support.show', $conversation) }}"
+
+                            class="hr-activity-item"
+
+                            data-hr-search="{{ strtolower(
+
+                                $clientName . ' ' .
+
+                                ($conversation->latest_message ?? '') . ' ' .
+
+                                $statusKey
+
+                            ) }}"
+
+                        >
+
+                            <span class="hr-avatar">{{ $initials }}</span>
+
+
+
+                            <span class="hr-activity-main">
+
+                                <strong>{{ $clientName }}</strong>
+
+                                <small>
+
+                                    {{ \Illuminate\Support\Str::limit(
+
+                                        $conversation->latest_message ?? 'Support conversation update',
+
+                                        58
+
+                                    ) }}
+
+                                </small>
+
+                            </span>
+
+
+
+                            <span class="hr-status-chip {{ $statusKey }}">
+
+                                {{ ucwords(str_replace('_', ' ', $statusKey)) }}
+
+                            </span>
+
+
+
+                            <time>{{ optional($conversation->updated_at)->diffForHumans() }}</time>
+
+                        </a>
+
+                    @empty
+
+                        <div class="hr-empty-state">
+
+                            <span><i class="fas fa-comments"></i></span>
+
+                            <strong>No recent support activity</strong>
+
+                            <small>Routed HR conversations will appear here.</small>
+
+                        </div>
+
+                    @endforelse
+
+                </div>
+
+            </article>
+
+
+
+            <article class="hr-panel">
+
+                <header class="hr-panel-header">
+
+                    <div>
+
+                        <h5>HR Workflow Summary</h5>
+
+                        <p>Support queue status for this period.</p>
+
                     </div>
-                @endforelse
-            </div>
+
+
+
+                    <span class="hr-period-pill">This Month</span>
+
+                </header>
+
+
+
+                <div class="hr-workflow-list">
+
+                    <div class="hr-workflow-row">
+
+                        <span class="blue"><i class="fas fa-message"></i></span>
+
+                        <div>
+
+                            <strong>Conversations Received</strong>
+
+                            <small>Total support conversations received</small>
+
+                        </div>
+
+                        <b>{{ $receivedCount ?? ($openCount + $resolvedCount) }}</b>
+
+                    </div>
+
+
+
+                    <div class="hr-workflow-row">
+
+                        <span class="orange"><i class="fas fa-share"></i></span>
+
+                        <div>
+
+                            <strong>Routed to HR</strong>
+
+                            <small>Forwarded from the support workflow</small>
+
+                        </div>
+
+                        <b>{{ $routedCount }}</b>
+
+                    </div>
+
+
+
+                    <div class="hr-workflow-row">
+
+                        <span class="green"><i class="fas fa-circle-check"></i></span>
+
+                        <div>
+
+                            <strong>Resolved</strong>
+
+                            <small>Conversations resolved by HR</small>
+
+                        </div>
+
+                        <b>{{ $resolvedCount }}</b>
+
+                    </div>
+
+
+
+                    <div class="hr-workflow-row">
+
+                        <span class="violet"><i class="fas fa-clock"></i></span>
+
+                        <div>
+
+                            <strong>Pending</strong>
+
+                            <small>Awaiting action or follow-up</small>
+
+                        </div>
+
+                        <b>{{ $pendingFollowups ?? 0 }}</b>
+
+                    </div>
+
+                </div>
+
+            </article>
+
         </div>
 
-        <div class="hr-panel">
-            <div class="hr-section-head">
-                <div>
-                    <h5><i class="fas fa-list-check me-2 text-primary"></i>HR Workflow Summary</h5>
-                    <p>Support queue status for this period.</p>
-                </div>
 
-                <span class="hr-period-pill">This Month</span>
-            </div>
 
-            <div class="hr-workflow-list">
-                <div class="hr-workflow-row blue">
-                    <span><i class="fas fa-message"></i></span>
+        <aside class="hr-right-column">
+
+            <article class="hr-panel">
+
+                <header class="hr-panel-header">
+
                     <div>
-                        <strong>Conversations Received</strong>
-                        <small>Total support conversations received</small>
+
+                        <h5>Quick Actions</h5>
+
+                        <p>Common HR workflows.</p>
+
                     </div>
-                    <b>{{ $receivedCount ?? ($openCount + $resolvedCount) }}</b>
+
+                </header>
+
+
+
+                <div class="hr-action-list">
+
+                    <a href="{{ route('hr.support.index') }}" class="hr-action-card">
+
+                        <span><i class="fas fa-comments"></i></span>
+
+                        <strong>Support Queue</strong>
+
+                        <i class="fas fa-chevron-right"></i>
+
+                    </a>
+
+
+
+                    <a href="{{ route('hr.inspection-reports.index') }}" class="hr-action-card">
+
+                        <span><i class="fas fa-clipboard-check"></i></span>
+
+                        <strong>Inspection Reports</strong>
+
+                        <i class="fas fa-chevron-right"></i>
+
+                    </a>
+
+
+
+                    <a href="{{ route('hr.quotations.index') }}" class="hr-action-card">
+
+                        <span><i class="fas fa-file-invoice-dollar"></i></span>
+
+                        <strong>Quotations</strong>
+
+                        <i class="fas fa-chevron-right"></i>
+
+                    </a>
+
+
+
+                    <a href="{{ route('hr.invoices.index') }}" class="hr-action-card">
+
+                        <span><i class="fas fa-file-invoice"></i></span>
+
+                        <strong>Invoices</strong>
+
+                        <i class="fas fa-chevron-right"></i>
+
+                    </a>
+
+
+
+                    <a href="{{ route('hr.reports.index') }}" class="hr-action-card">
+
+                        <span><i class="fas fa-chart-column"></i></span>
+
+                        <strong>Reports</strong>
+
+                        <i class="fas fa-chevron-right"></i>
+
+                    </a>
+
                 </div>
 
-                <div class="hr-workflow-row green">
-                    <span><i class="fas fa-share"></i></span>
+            </article>
+
+
+
+            <article class="hr-panel">
+
+                <header class="hr-panel-header">
+
                     <div>
-                        <strong>Routed to HR</strong>
-                        <small>Forwarded from system or other departments</small>
+
+                        <h5>Finance Tools</h5>
+
+                        <p>Billing and payment records.</p>
+
                     </div>
-                    <b>{{ $routedCount }}</b>
+
+                </header>
+
+
+
+                <div class="hr-finance-links">
+
+                    <a href="{{ route('hr.contracts.index') }}">
+
+                        <i class="fas fa-file-contract"></i>
+
+                        <span>Contracts</span>
+
+                    </a>
+
+
+
+                    <a href="{{ route('hr.payments.index') }}">
+
+                        <i class="fas fa-credit-card"></i>
+
+                        <span>Payments</span>
+
+                    </a>
+
+
+
+                    <a href="{{ route('hr.receipts.index') }}">
+
+                        <i class="fas fa-receipt"></i>
+
+                        <span>Receipts</span>
+
+                    </a>
+
+
+
+                    <a href="{{ route('hr.quotations.archived') }}">
+
+                        <i class="fas fa-box-archive"></i>
+
+                        <span>Archived</span>
+
+                    </a>
+
                 </div>
 
-                <div class="hr-workflow-row violet">
-                    <span><i class="fas fa-circle-check"></i></span>
-                    <div>
-                        <strong>Resolved</strong>
-                        <small>Conversations resolved by HR</small>
-                    </div>
-                    <b>{{ $resolvedCount }}</b>
-                </div>
+            </article>
 
-                <div class="hr-workflow-row orange">
-                    <span><i class="fas fa-clock"></i></span>
-                    <div>
-                        <strong>Pending</strong>
-                        <small>Awaiting action or follow-up</small>
-                    </div>
-                    <b>{{ $pendingFollowups ?? 0 }}</b>
-                </div>
-            </div>
-        </div>
+        </aside>
+
     </section>
+
 </div>
+
 @endsection

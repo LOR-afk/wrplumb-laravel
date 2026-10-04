@@ -27,17 +27,24 @@
                 <div class="small text-muted">Quotation No.</div>
                 <div class="fw-semibold">{{ $quotation->quotation_no }}</div>
             </div>
+
             <div class="col-md-3">
                 <div class="small text-muted">Client</div>
-                <div class="fw-semibold">{{ $quotation->request->full_name ?? trim(($quotation->request->first_name ?? '') . ' ' . ($quotation->request->last_name ?? '')) }}</div>
+                <div class="fw-semibold">
+                    {{ $quotation->request->full_name ?? trim(($quotation->request->first_name ?? '') . ' ' . ($quotation->request->last_name ?? '')) }}
+                </div>
             </div>
+
             <div class="col-md-3">
                 <div class="small text-muted">Service Type</div>
                 <div class="fw-semibold">{{ $quotation->request->service_type }}</div>
             </div>
+
             <div class="col-md-3">
                 <div class="small text-muted">Grand Total</div>
-                <div class="fw-semibold">PHP {{ number_format((float) $quotation->grand_total, 2) }}</div>
+                <div class="fw-semibold">
+                    PHP {{ number_format((float) $quotation->grand_total, 2) }}
+                </div>
             </div>
 
             <div class="col-md-6">
@@ -49,17 +56,13 @@
                 <div class="small text-muted">Quotation Status</div>
                 <div class="fw-semibold text-uppercase">{{ $quotation->status }}</div>
             </div>
-
-            <div class="col-12">
-                <div class="small text-muted">Scope Basis / Request Details</div>
-                <div class="fw-semibold">{{ $quotation->request->details }}</div>
-            </div>
         </div>
     </div>
 </div>
 
 <form method="POST" action="{{ route('hr.contracts.store') }}">
     @csrf
+
     <input type="hidden" name="quotation_id" value="{{ $quotation->id }}">
 
     <div class="row g-4">
@@ -69,7 +72,7 @@
                     <h5 class="mb-3">Contract Details</h5>
 
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-12">
                             <label class="form-label">Contract Title</label>
                             <input
                                 type="text"
@@ -111,13 +114,29 @@
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Scope of Work</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">
+                                    Scope of Work
+                                </label>
+
+                                @if (!empty($quotationScope))
+                                    <span class="badge bg-success-subtle text-success-emphasis">
+                                        Loaded from Quotation
+                                    </span>
+                                @endif
+                            </div>
+
                             <textarea
                                 name="scope_of_work"
                                 class="form-control"
-                                rows="5"
+                                rows="8"
                                 required
-                            >{{ old('scope_of_work', $quotation->request->details) }}</textarea>
+                            >{{ old('scope_of_work', $quotationScope ?: ($quotation->request->details ?? '')) }}</textarea>
+
+                            <div class="form-text">
+                                The accepted quotation scope is copied into this contract.
+                                You may review it before generating the contract.
+                            </div>
                         </div>
 
                         <div class="col-12">
@@ -144,6 +163,7 @@
                                     <div class="fw-semibold">{{ $phase['label'] }}</div>
                                     <div class="small text-muted">{{ $phase['percent'] }}%</div>
                                 </div>
+
                                 <div class="fw-semibold">
                                     PHP {{ number_format((float) $phase['amount'], 2) }}
                                 </div>
@@ -168,14 +188,24 @@
 
                     <div class="d-flex justify-content-between">
                         <span>Total Contract Price</span>
-                        <strong>PHP {{ number_format((float) $quotation->grand_total, 2) }}</strong>
+                        <strong>
+                            PHP {{ number_format((float) $quotation->grand_total, 2) }}
+                        </strong>
                     </div>
                 </div>
             </div>
 
             <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-primary">Generate Contract</button>
-                <a href="{{ route('hr.quotations.show', $quotation) }}" class="btn btn-outline-secondary">Back to Quotation</a>
+                <button type="submit" class="btn btn-primary">
+                    Generate Contract
+                </button>
+
+                <a
+                    href="{{ route('hr.quotations.show', $quotation) }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Back to Quotation
+                </a>
             </div>
         </div>
     </div>

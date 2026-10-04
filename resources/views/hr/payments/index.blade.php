@@ -5,7 +5,7 @@
 @section('topbar_subtitle', 'Manage client invoice payments and status.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/hr/payments.css') }}?v=modal-history-02">
+    <link rel="stylesheet" href="{{ asset('css/hr/payments.css') }}?v=payments-hierarchy-01">
 @endpush
 
 @section('content')
@@ -51,70 +51,51 @@
         <div class="alert alert-danger mb-0">{{ $errors->first() }}</div>
     @endif
 
-    <section class="payments-summary-grid">
-        <article class="payment-summary-card">
-            <span class="summary-icon blue"><i class="fas fa-file-invoice"></i></span>
-            <div>
-                <small>Total Invoices</small>
-                <strong>{{ number_format($paymentStats['total_invoices'] ?? 0) }}</strong>
-                <em>All generated invoices</em>
-            </div>
-        </article>
-
-        <article class="payment-summary-card">
-            <span class="summary-icon green"><i class="fas fa-circle-check"></i></span>
-            <div>
-                <small>Fully Paid</small>
-                <strong>{{ number_format($paymentStats['fully_paid_count'] ?? 0) }}</strong>
-                <em>Completed</em>
-            </div>
-        </article>
-
-        <article class="payment-summary-card">
-            <span class="summary-icon orange"><i class="fas fa-clock"></i></span>
-            <div>
-                <small>Partial Payments</small>
-                <strong>{{ number_format($paymentStats['partial_count'] ?? 0) }}</strong>
-                <em>In progress</em>
-            </div>
-        </article>
-
-        <article class="payment-summary-card">
-    <span class="summary-icon violet">
-        <i class="fas fa-user-check"></i>
-    </span>
-
-    <div>
-        <small>Pending Verification</small>
-        <strong>
-            {{ number_format($paymentStats['pending_count'] ?? 0) }}
-        </strong>
-        <em>Requires review</em>
-    </div>
-</article>
-
-        <article class="payment-summary-card">
-            <span class="summary-icon red"><i class="fas fa-circle-exclamation"></i></span>
-            <div>
-                <small>Needs Payment</small>
-                <strong>{{ number_format($paymentStats['needs_payment_count'] ?? 0) }}</strong>
-                <em>Unpaid invoices</em>
-            </div>
-        </article>
-
-        <article class="payment-summary-card total-collected">
-            <span class="summary-icon blue"><i class="fas fa-peso-sign"></i></span>
-            <div>
-                <small>Total Collected</small>
-                <strong>
+    <section class="payments-overview" aria-label="Payment overview">
+        <article class="payments-primary-metric">
+            <div class="payments-primary-copy">
+                <span class="payments-eyebrow">Total Collected</span>
+                <strong class="payments-primary-value">
                     PHP {{ number_format(
                         (float) ($paymentStats['collected_amount'] ?? 0),
                         2
                     ) }}
                 </strong>
-                <em>Confirmed payments</em>
+                <p>Confirmed client payments received to date.</p>
+            </div>
+
+            <div class="payments-primary-meta">
+                <div>
+                    <span>Total Invoices</span>
+                    <strong>{{ number_format($paymentStats['total_invoices'] ?? 0) }}</strong>
+                </div>
+
+                <div>
+                    <span>Fully Paid</span>
+                    <strong>{{ number_format($paymentStats['fully_paid_count'] ?? 0) }}</strong>
+                </div>
             </div>
         </article>
+
+        <div class="payments-status-summary">
+            <article class="payment-status-stat">
+                <span>Needs Payment</span>
+                <strong>{{ number_format($paymentStats['needs_payment_count'] ?? 0) }}</strong>
+                <small>Unpaid invoices</small>
+            </article>
+
+            <article class="payment-status-stat">
+                <span>Partial Payments</span>
+                <strong>{{ number_format($paymentStats['partial_count'] ?? 0) }}</strong>
+                <small>In progress</small>
+            </article>
+
+            <article class="payment-status-stat">
+                <span>Pending Verification</span>
+                <strong>{{ number_format($paymentStats['pending_count'] ?? 0) }}</strong>
+                <small>Requires review</small>
+            </article>
+        </div>
     </section>
 
     <section class="payments-filter-panel">
@@ -153,7 +134,7 @@
             >
 
             <button class="btn btn-primary">
-                <i class="fas fa-sliders me-1"></i>Filters
+                Filters
             </button>
 
             <a
@@ -319,7 +300,6 @@
                                                     href="{{ route('hr.invoices.show', $invoice) }}"
                                                     class="btn btn-sm btn-outline-primary"
                                                 >
-                                                    <i class="fas fa-eye me-1"></i>
                                                     View
                                                 </a>
                                             </article>
@@ -396,7 +376,6 @@
                                         href="{{ route('hr.payments.create', $group['next_invoice']) }}"
                                         class="btn btn-primary"
                                     >
-                                        <i class="fas fa-plus me-1"></i>
                                         Record Payment
                                     </a>
                                 @endif
@@ -406,7 +385,6 @@
                 </div>
             @empty
                 <div class="payment-empty-state">
-                    <div><i class="fas fa-users"></i></div>
                     <h5>No client payment accounts found</h5>
                     <p>Client payment accounts will appear after invoices are generated.</p>
                 </div>

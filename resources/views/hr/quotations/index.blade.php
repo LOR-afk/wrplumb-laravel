@@ -2,10 +2,10 @@
 
 @section('title', 'Quotations')
 @section('topbar_title', 'HR Panel')
-@section('topbar_subtitle', 'Handle routed support concerns and client communication.')
+@section('topbar_subtitle', 'Create and manage client quotations.')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/hr/quotations.css') }}?v=20260609b">
+<link rel="stylesheet" href="{{ asset('css/hr/quotations.css') }}?v=20260922a">
 @endpush
 
 @section('content')
@@ -85,46 +85,6 @@
                 </div>
             </section>
 
-            <section class="quotation-stat-grid">
-                <article class="quotation-stat-card">
-                    <div class="quotation-stat-icon bg-blue"><i class="fas fa-file-invoice"></i></div>
-                    <div>
-                        <div class="quotation-stat-label">Total Quotations</div>
-                        <div class="quotation-stat-value">{{ $summary['total_quotations'] ?? 0 }}</div>
-                        <small>All time</small>
-                    </div>
-                </article>
-
-                <article class="quotation-stat-card">
-                    <div class="quotation-stat-icon bg-green"><i class="fas fa-paper-plane"></i></div>
-                    <div>
-                        <div class="quotation-stat-label">Sent Quotations</div>
-                        <div class="quotation-stat-value">{{ $summary['sent_quotations'] ?? 0 }}</div>
-                        <small>This year</small>
-                    </div>
-                </article>
-
-                <article class="quotation-stat-card">
-                    <div class="quotation-stat-icon bg-gold"><i class="fas fa-peso-sign"></i></div>
-                    <div>
-                        <div class="quotation-stat-label">Total Quoted</div>
-                        <div class="quotation-stat-value small-money">PHP {{ number_format((float) ($summary['total_amount'] ?? 0), 2) }}</div>
-                        <small>Active quotations</small>
-                    </div>
-                </article>
-
-                <article class="quotation-stat-card">
-                    <div class="quotation-stat-icon bg-slate"><i class="fas fa-clock"></i></div>
-                    <div>
-                        <div class="quotation-stat-label">Latest Quotation</div>
-                        <div class="quotation-stat-value latest-date">
-                            {{ !empty($summary['latest_created']) ? \Carbon\Carbon::parse($summary['latest_created'])->format('M d, Y') : '—' }}
-                        </div>
-                        <small>Most recent</small>
-                    </div>
-                </article>
-            </section>
-
             <section class="quotation-workspace-card">
                 <nav class="quotation-status-tabs">
                     @foreach ($statusTabs as $statusKey => $tab)
@@ -180,8 +140,7 @@
             <section class="quotation-table-card quotation-records-card">
                 <div class="quotation-table-header">
                     <div>
-                        <h5 class="mb-1"><i class="fas fa-file-contract text-primary me-2"></i>Quotation Records</h5>
-                        <p class="text-muted mb-0">Track quotation status, totals, client details, and billing readiness.</p>
+                        <h5 class="mb-0"><i class="fas fa-file-contract text-primary me-2"></i>Quotation Records</h5>
                     </div>
 
                     <strong class="quotation-table-count">
@@ -195,12 +154,11 @@
                     <table class="table align-middle mb-0 quotation-table">
                         <thead>
                             <tr>
-                                <th>Quotation No.</th>
+                                <th>Quotation</th>
                                 <th>Client</th>
                                 <th>Service</th>
                                 <th>Status</th>
-                                <th>Total</th>
-                                <th>Prepared By</th>
+                                <th>Amount</th>
                                 <th>Created</th>
                                 <th class="text-end">Action</th>
                             </tr>
@@ -220,48 +178,60 @@
                                     $clientName = $quotation->request->full_name
                                         ?? trim(($quotation->request->first_name ?? '') . ' ' . ($quotation->request->last_name ?? ''))
                                         ?: ($quotation->request->email ?? '—');
-
-                                    $preparedBy = $quotation->preparedBy->name
-                                        ?? trim(($quotation->preparedBy->first_name ?? '') . ' ' . ($quotation->preparedBy->last_name ?? ''))
-                                        ?: '—';
                                 @endphp
 
                                 <tr>
                                     <td>
-                                        <a href="{{ route('hr.quotations.show', $quotation) }}" class="quotation-no">{{ $quotation->quotation_no }}</a>
-                                        <div class="small text-muted">{{ $quotation->invoice ? 'Invoice ready' : 'No invoice yet' }}</div>
-                                    </td>
-
-                                    <td>
-                                        <div class="fw-bold text-dark">{{ $clientName }}</div>
+                                        <a href="{{ route('hr.quotations.show', $quotation) }}" class="quotation-no">
+                                            {{ $quotation->quotation_no }}
+                                        </a>
                                         <div class="small text-muted">
-                                            {{ $quotation->request->email ?? '' }}
-                                            @if(!empty($quotation->request->phone))
-                                                • {{ $quotation->request->phone }}
-                                            @endif
+                                            {{ $quotation->invoice ? 'Invoice ready' : 'No invoice yet' }}
                                         </div>
                                     </td>
 
                                     <td>
+                                        <div class="fw-bold text-dark">{{ $clientName }}</div>
+                                        @if(!empty($quotation->request->email))
+                                            <div class="small text-muted quotation-client-email">
+                                                {{ $quotation->request->email }}
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    <td>
                                         <div class="fw-semibold">{{ $quotation->request->service_type ?? '—' }}</div>
-                                        <div class="small text-muted text-capitalize">{{ $quotation->request->service_category ?? '—' }}</div>
+                                        <div class="small text-muted text-capitalize">
+                                            {{ $quotation->request->service_category ?? '—' }}
+                                        </div>
                                     </td>
 
                                     <td>
-                                        <span class="quotation-status {{ $statusClass }}">{{ strtoupper(str_replace('_', ' ', $quotation->status)) }}</span>
+                                        <span class="quotation-status {{ $statusClass }}">
+                                            {{ strtoupper(str_replace('_', ' ', $quotation->status)) }}
+                                        </span>
                                     </td>
 
                                     <td>
-                                        <div class="quotation-total">PHP {{ number_format((float) $quotation->grand_total, 2) }}</div>
-                                        <div class="small text-muted">{{ $quotation->items_count ?? $quotation->items->count() }} item(s)</div>
+                                        <div class="quotation-total">
+                                            PHP {{ number_format((float) $quotation->grand_total, 2) }}
+                                        </div>
                                     </td>
 
-                                    <td>{{ $preparedBy }}</td>
-                                    <td>{{ optional($quotation->created_at)->format('M d, Y h:i A') }}</td>
+                                    <td>
+                                        <div class="quotation-created-date">
+                                            {{ optional($quotation->created_at)->format('M d, Y') }}
+                                        </div>
+                                        <div class="small text-muted">
+                                            {{ optional($quotation->created_at)->format('h:i A') }}
+                                        </div>
+                                    </td>
 
                                     <td class="text-end">
                                         <div class="quotation-row-actions compact">
-                                            <a href="{{ route('hr.quotations.show', $quotation) }}" class="btn btn-sm btn-outline-primary quotation-icon-btn" title="View details">
+                                            <a href="{{ route('hr.quotations.show', $quotation) }}"
+                                               class="btn btn-sm btn-outline-primary quotation-icon-btn"
+                                               title="View details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
 
@@ -279,7 +249,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8">
+                                    <td colspan="7">
                                         <div class="quotation-empty">
                                             <div class="quotation-empty-icon"><i class="fas fa-file-invoice"></i></div>
                                             <h5 class="fw-bold text-dark mb-1">No quotations found</h5>
@@ -299,65 +269,6 @@
                 @endif
             </section>
         </main>
-
-        <aside class="quotation-index-side">
-            <section class="quotation-overview-card">
-                <div class="quotation-overview-head">
-                    <h5><i class="fas fa-calendar-days me-2"></i>{{ now()->format('M Y') }} Overview</h5>
-                </div>
-
-                <div class="quotation-overview-total">
-                    <span>Total Quoted</span>
-                    <strong>PHP {{ number_format((float) ($summary['total_amount'] ?? 0), 2) }}</strong>
-                    <small>Across active quotations</small>
-                </div>
-
-                <div class="quotation-mini-chart">
-                    <span></span><span></span><span></span><span></span>
-                </div>
-            </section>
-
-            <section class="quotation-overview-card">
-                <div class="quotation-overview-head">
-                    <h5>Pending Actions</h5>
-                </div>
-
-                <div class="quotation-pending-list">
-                    <div class="quotation-pending-row blue">
-                        <span><i class="fas fa-peso-sign"></i></span>
-                        <div>
-                            <strong>{{ $statusCounts['draft'] ?? 0 }}</strong>
-                            <small>Draft quotations</small>
-                        </div>
-                    </div>
-
-                    <div class="quotation-pending-row gold">
-                        <span><i class="fas fa-clock"></i></span>
-                        <div>
-                            <strong>{{ $statusCounts['sent'] ?? 0 }}</strong>
-                            <small>Waiting for acceptance</small>
-                        </div>
-                    </div>
-
-                    <div class="quotation-pending-row red">
-                        <span><i class="fas fa-circle-xmark"></i></span>
-                        <div>
-                            <strong>{{ $statusCounts['rejected'] ?? 0 }}</strong>
-                            <small>Rejected quotations</small>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="quotation-template-callout">
-                <span><i class="fas fa-copy"></i></span>
-                <div>
-                    <strong>Create faster with templates</strong>
-                    <small>Save time by using quotation templates.</small>
-                    <a href="#">Manage Templates <i class="fas fa-arrow-right ms-1"></i></a>
-                </div>
-            </section>
-        </aside>
     </div>
 </div>
 

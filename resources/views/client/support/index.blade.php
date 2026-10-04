@@ -625,7 +625,8 @@
         if (confirmClearButton && clearForm) {
             confirmClearButton.addEventListener('click', function () {
                 confirmClearButton.disabled = true;
-                clearForm.submit();
+                confirmClearButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+                clearForm.requestSubmit();
             });
         }
 

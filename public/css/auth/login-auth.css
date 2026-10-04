@@ -12,9 +12,14 @@
     box-sizing: border-box;
 }
 
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
 body {
     min-height: 100vh;
-    margin: 0;
     font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--wr-bg);
     color: var(--wr-navy);
@@ -73,6 +78,7 @@ body {
 .brand-content {
     position: relative;
     z-index: 2;
+    width: 100%;
     max-width: 580px;
     text-align: center;
 }
@@ -80,27 +86,27 @@ body {
 .brand-logo {
     width: 108px;
     height: 108px;
+    margin-bottom: 24px;
+    padding: 10px;
     border-radius: 24px;
     object-fit: cover;
     background: #ffffff;
-    padding: 10px;
     box-shadow: 0 18px 36px rgba(15, 76, 129, 0.18);
-    margin-bottom: 24px;
 }
 
 .brand-content h1 {
+    margin: 0 0 12px;
+    color: var(--wr-navy);
     font-size: clamp(2rem, 4vw, 3.1rem);
     font-weight: 900;
     letter-spacing: -0.04em;
-    margin-bottom: 12px;
-    color: var(--wr-navy);
 }
 
 .brand-content p {
+    margin: 0 0 26px;
     color: var(--wr-muted);
     font-size: 1.03rem;
     line-height: 1.7;
-    margin-bottom: 26px;
 }
 
 .brand-points {
@@ -111,29 +117,30 @@ body {
 }
 
 .brand-point {
-    background: rgba(255, 255, 255, 0.78);
+    min-width: 0;
+    padding: 16px;
     border: 1px solid rgba(15, 76, 129, 0.12);
     border-radius: 18px;
-    padding: 16px;
+    background: rgba(255, 255, 255, 0.78);
     box-shadow: 0 10px 24px rgba(15, 76, 129, 0.08);
 }
 
 .brand-point i {
-    color: var(--wr-primary-dark);
     margin-bottom: 8px;
+    color: var(--wr-primary-dark);
 }
 
 .brand-point strong {
     display: block;
-    font-size: 0.88rem;
     color: var(--wr-navy);
+    font-size: 0.88rem;
 }
 
 .brand-point span {
     display: block;
+    margin-top: 3px;
     color: var(--wr-muted);
     font-size: 0.78rem;
-    margin-top: 3px;
 }
 
 .login-form-panel {
@@ -146,11 +153,11 @@ body {
 
 .login-card {
     width: min(100%, 430px);
-    background: #ffffff;
+    padding: 32px;
     border: 1px solid #e3edf7;
     border-radius: 22px;
+    background: #ffffff;
     box-shadow: var(--wr-shadow);
-    padding: 32px;
 }
 
 .portal-heading {
@@ -169,10 +176,10 @@ body {
 }
 
 .portal-heading h2 {
-    font-size: 1.75rem;
-    font-weight: 800;
     margin: 0;
     color: var(--wr-navy);
+    font-size: 1.75rem;
+    font-weight: 800;
 }
 
 .portal-heading p {
@@ -182,10 +189,10 @@ body {
 }
 
 .form-label {
-    font-weight: 700;
+    margin-bottom: 8px;
     color: #344054;
     font-size: 0.9rem;
-    margin-bottom: 8px;
+    font-weight: 700;
 }
 
 .input-wrap {
@@ -194,10 +201,10 @@ body {
 
 .form-control {
     min-height: 46px;
-    border-radius: 12px;
-    border: 1px solid var(--wr-border);
-    box-shadow: none;
     padding: 10px 42px 10px 14px;
+    border: 1px solid var(--wr-border);
+    border-radius: 12px;
+    box-shadow: none;
 }
 
 .form-control:focus {
@@ -207,11 +214,11 @@ body {
 
 .input-icon {
     position: absolute;
-    right: 14px;
     top: 50%;
-    transform: translateY(-50%);
+    right: 14px;
     color: #98a2b3;
     font-size: 0.9rem;
+    transform: translateY(-50%);
 }
 
 .captcha-box {
@@ -219,11 +226,11 @@ body {
     display: flex;
     align-items: center;
     padding: 0 14px;
-    border-radius: 12px;
     border: 1px solid var(--wr-border);
+    border-radius: 12px;
     background: #f8fbfe;
-    font-weight: 900;
     color: var(--wr-navy);
+    font-weight: 900;
 }
 
 .btn-signin {
@@ -244,14 +251,19 @@ body {
 
 .back-link {
     display: inline-flex;
+    width: 100%;
     align-items: center;
     justify-content: center;
-    width: 100%;
     margin-top: 18px;
-    text-decoration: none;
     color: var(--wr-primary-dark);
-    font-weight: 700;
     font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.back-link::before {
+    content: "←";
+    margin-right: 6px;
 }
 
 .back-link:hover {
@@ -273,52 +285,275 @@ body {
 
     .login-brand-panel {
         min-height: auto;
-        padding: 36px 20px 28px;
+        padding: 28px 20px 22px;
         border-right: 0;
         border-bottom: 1px solid #e3edf7;
     }
 
     .brand-logo {
-        width: 78px;
-        height: 78px;
-        margin-bottom: 16px;
+        width: 68px;
+        height: 68px;
+        margin-bottom: 12px;
+        padding: 7px;
+        border-radius: 18px;
+    }
+
+    .brand-content h1 {
+        margin-bottom: 8px;
+        font-size: 1.65rem;
     }
 
     .brand-content p {
-        margin-bottom: 18px;
+        max-width: 620px;
+        margin: 0 auto 16px;
+        font-size: 0.9rem;
+        line-height: 1.5;
     }
 
     .brand-points {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .brand-point {
+        padding: 11px 10px;
+        border-radius: 13px;
+    }
+
+    .brand-point i {
+        margin-bottom: 5px;
+    }
+
+    .brand-point strong {
+        font-size: 0.76rem;
+    }
+
+    .brand-point span {
+        font-size: 0.68rem;
     }
 
     .shape {
-        opacity: 0.35;
+        opacity: 0.22;
     }
 
     .login-form-panel {
-        padding: 28px 16px;
+        padding: 20px 16px 28px;
     }
 
     .login-card {
-        padding: 26px 20px;
+        width: min(100%, 460px);
+        padding: 24px 20px;
     }
 }
 
 @media (max-width: 575.98px) {
+    body {
+        background: #ffffff;
+    }
+
+    .login-brand-panel {
+        padding: 18px 14px 14px;
+    }
+
+    .shape {
+        display: none;
+    }
+
+    .brand-logo {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 8px;
+        padding: 5px;
+        border-radius: 13px;
+        box-shadow: 0 8px 18px rgba(15, 76, 129, 0.13);
+    }
+
     .brand-content h1 {
-        font-size: 1.85rem;
+        margin-bottom: 5px;
+        font-size: 1.22rem;
+        line-height: 1.15;
     }
 
     .brand-content p {
-        font-size: 0.94rem;
+        max-width: 340px;
+        margin-bottom: 12px;
+        font-size: 0.76rem;
+        line-height: 1.4;
+    }
+
+    .brand-points {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .brand-point {
+        min-height: 62px;
+        padding: 8px 6px;
+        border-radius: 11px;
+        text-align: center;
+    }
+
+    .brand-point i {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.74rem;
+    }
+
+    .brand-point strong {
+        font-size: 0.65rem;
+        line-height: 1.18;
+    }
+
+    .brand-point span {
+        display: none;
+    }
+
+    .login-form-panel {
+        align-items: flex-start;
+        padding: 12px 10px 22px;
+    }
+
+    .login-card {
+        width: 100%;
+        padding: 18px 14px;
+        border-radius: 18px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.09);
     }
 
     .portal-heading {
-        align-items: flex-start;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .portal-heading img {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
     }
 
     .portal-heading h2 {
-        font-size: 1.45rem;
+        font-size: 1.25rem;
+    }
+
+    .portal-heading p {
+        font-size: 0.76rem;
+    }
+
+    .form-label {
+        margin-bottom: 5px;
+        font-size: 0.78rem;
+    }
+
+    .form-control {
+        min-height: 44px;
+        padding: 9px 38px 9px 11px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+    }
+
+    .input-icon {
+        right: 11px;
+        font-size: 0.78rem;
+    }
+
+    .captcha-box {
+        min-height: 42px;
+        padding: 0 11px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+    }
+
+    .login-card .mb-3 {
+        margin-bottom: 12px !important;
+    }
+
+    .login-card .mb-4 {
+        margin-bottom: 16px !important;
+    }
+
+    .login-card small {
+        font-size: 0.66rem;
+        line-height: 1.25;
+    }
+
+    .btn-signin {
+        min-height: 46px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+    }
+
+    .back-link {
+        margin-top: 13px;
+        font-size: 0.76rem;
+    }
+
+    .alert {
+        padding: 10px 11px;
+        font-size: 0.74rem;
+    }
+}
+
+@media (max-width: 359.98px) {
+    .login-brand-panel {
+        padding: 14px 12px 10px;
+    }
+
+    .brand-logo {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 6px;
+    }
+
+    .brand-content h1 {
+        font-size: 1.05rem;
+    }
+
+    .brand-content p {
+        margin-bottom: 0;
+        font-size: 0.7rem;
+    }
+
+    .brand-points {
+        display: none;
+    }
+
+    .login-form-panel {
+        padding: 8px 8px 18px;
+    }
+
+    .login-card {
+        padding: 15px 12px;
+        border-radius: 15px;
+    }
+
+    .portal-heading {
+        margin-bottom: 14px;
+    }
+
+    .portal-heading img {
+        width: 38px;
+        height: 38px;
+    }
+
+    .portal-heading h2 {
+        font-size: 1.12rem;
+    }
+
+    .portal-heading p {
+        font-size: 0.7rem;
+    }
+
+    .form-control {
+        min-height: 42px;
+        font-size: 0.76rem;
+    }
+
+    .captcha-box {
+        min-height: 40px;
+    }
+
+    .btn-signin {
+        min-height: 44px;
     }
 }

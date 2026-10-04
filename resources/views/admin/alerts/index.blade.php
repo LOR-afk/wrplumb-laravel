@@ -1,11 +1,11 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Admin Alerts - WRPlumb')
-@section('topbar_title', 'Admin Alerts')
-@section('topbar_subtitle', 'Recent system updates and assigned notifications.')
+@section('title', 'Notification Center - WRPlumb')
+@section('topbar_title', 'Notification Center')
+@section('topbar_subtitle', 'Review recent system updates, service activity, and support notifications.')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/alerts.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/alerts.css') }}?v=admin-notifications-01">
 @endpush
 
 @section('content')
@@ -14,8 +14,8 @@
 
     $typeMeta = [
         'request' => [
-            'label' => 'Request',
-            'icon' => 'fa-file-circle-plus',
+            'label' => 'Requests',
+            'icon' => 'fa-clipboard-list',
             'class' => 'request',
             'action' => 'Open Request',
         ],
@@ -32,294 +32,324 @@
             'action' => 'View Details',
         ],
         'payment' => [
-            'label' => 'Payment',
+            'label' => 'Payments',
             'icon' => 'fa-money-bill-wave',
             'class' => 'payment',
             'action' => 'View Record',
         ],
         'default' => [
-            'label' => 'Alert',
+            'label' => 'General',
             'icon' => 'fa-bell',
             'class' => 'default',
             'action' => 'Open',
         ],
     ];
 
-    $filterTabs = [
-        'all' => ['label' => 'All', 'count' => $stats['total'] ?? 0],
-        'unread' => ['label' => 'Unread', 'count' => $stats['unread'] ?? 0],
-        'request' => ['label' => 'Requests', 'count' => $stats['requests'] ?? 0],
-        'support' => ['label' => 'Support', 'count' => $stats['support'] ?? 0],
-        'system' => ['label' => 'System', 'count' => $stats['system'] ?? 0],
+    $categoryItems = [
+        'all' => [
+            'label' => 'All Notifications',
+            'icon' => 'fa-inbox',
+            'count' => $stats['total'] ?? 0,
+        ],
+        'unread' => [
+            'label' => 'Unread',
+            'icon' => 'fa-envelope',
+            'count' => $stats['unread'] ?? 0,
+        ],
+        'request' => [
+            'label' => 'Requests',
+            'icon' => 'fa-clipboard-list',
+            'count' => $stats['requests'] ?? 0,
+        ],
+        'support' => [
+            'label' => 'Support',
+            'icon' => 'fa-headset',
+            'count' => $stats['support'] ?? 0,
+        ],
+        'system' => [
+            'label' => 'System',
+            'icon' => 'fa-gear',
+            'count' => $stats['system'] ?? 0,
+        ],
     ];
 @endphp
 
-<div class="alerts-page">
-    <section class="alerts-summary-grid">
-        <article class="alerts-summary-card blue">
-            <div class="alerts-summary-icon"><i class="fas fa-bell"></i></div>
-            <div>
-                <span>Unread Alerts</span>
+<div class="notification-center-page">
+    <aside class="notification-sidebar">
+        <section class="notification-stats-card">
+            <div class="notification-stat">
                 <strong>{{ $stats['unread'] ?? 0 }}</strong>
-                <p>Needs your attention</p>
+                <span>Unread</span>
             </div>
-        </article>
 
-        <article class="alerts-summary-card indigo">
-            <div class="alerts-summary-icon"><i class="fas fa-clipboard-list"></i></div>
-            <div>
-                <span>Service Requests</span>
+            <div class="notification-stat">
+                <strong>{{ $stats['total'] ?? 0 }}</strong>
+                <span>Total</span>
+            </div>
+
+            <div class="notification-stat">
                 <strong>{{ $stats['requests'] ?? 0 }}</strong>
-                <p>Request notifications</p>
+                <span>Requests</span>
             </div>
-        </article>
 
-        <article class="alerts-summary-card orange">
-            <div class="alerts-summary-icon"><i class="fas fa-headset"></i></div>
-            <div>
-                <span>Support Escalations</span>
+            <div class="notification-stat alert">
                 <strong>{{ $stats['support'] ?? 0 }}</strong>
-                <p>Support updates</p>
+                <span>Support</span>
             </div>
-        </article>
+        </section>
 
-        <article class="alerts-summary-card green">
-            <div class="alerts-summary-icon"><i class="fas fa-gear"></i></div>
-            <div>
-                <span>System Actions</span>
-                <strong>{{ $stats['system'] ?? 0 }}</strong>
-                <p>Recent system updates</p>
-            </div>
-        </article>
-    </section>
+        <section class="notification-categories-card">
+            <div class="notification-card-title">Categories</div>
 
-    <section class="alerts-filter-card">
-        <div class="alerts-tabs">
-            @foreach ($filterTabs as $key => $tab)
-                <a href="{{ route('admin.alerts.index', ['filter' => $key]) }}"
-                   class="alerts-tab {{ $filter === $key ? 'active' : '' }}">
-                    <span>{{ $tab['label'] }}</span>
-                    <em>{{ $tab['count'] }}</em>
-                </a>
-            @endforeach
-        </div>
-
-        <div class="alerts-bulk-actions">
-            <form method="POST" action="{{ route('admin.alerts.mark-all-read') }}">
-                @csrf
-                @method('PATCH')
-                <button type="submit" class="btn btn-outline-primary">
-                    <i class="fas fa-check me-1"></i> Mark all as read
-                </button>
-            </form>
-
-<button
-    type="button"
-    class="btn btn-outline-secondary"
-    data-bs-toggle="modal"
-    data-bs-target="#clearReadAlertsModal">
-
-    <i class="fas fa-trash me-1"></i>
-    Clear Read
-
-</button>
-        </div>
-    </section>
-
-    <section class="alerts-list-panel">
-        <div class="alerts-list-head">
-            <div>
-                <h5><i class="fas fa-list-check me-2 text-primary"></i>Alerts</h5>
-                <p>Showing {{ $alerts->count() }} of {{ $alerts->total() }} alert(s).</p>
-            </div>
-
-            <span class="alerts-sort-chip">
-                <i class="fas fa-arrow-down-wide-short me-1"></i> Newest first
-            </span>
-        </div>
-
-        @forelse ($alerts as $alert)
-            @php
-                $alertTitle = strtolower($alert->title ?? '');
-                $alertMessage = strtolower($alert->message ?? '');
-
-                $detectedType = 'default';
-
-                if (str_contains($alertTitle, 'request') || str_contains($alertMessage, 'service request')) {
-                    $detectedType = 'request';
-                } elseif (str_contains($alertTitle, 'support') || str_contains($alertMessage, 'support')) {
-                    $detectedType = 'support';
-                } elseif (str_contains($alertTitle, 'payment') || str_contains($alertMessage, 'payment') || str_contains($alertMessage, 'receipt')) {
-                    $detectedType = 'payment';
-                } elseif (str_contains($alertTitle, 'system') || str_contains($alertTitle, 'archiv') || str_contains($alertMessage, 'archiv')) {
-                    $detectedType = 'system';
-                }
-
-                $meta = $typeMeta[$detectedType] ?? $typeMeta['default'];
-            @endphp
-
-            <article class="alert-card {{ $meta['class'] }} {{ !$alert->is_read ? 'unread' : 'read' }}">
-                <div class="alert-status-dot"></div>
-
-                <div class="alert-icon">
-                    <i class="fas {{ $meta['icon'] }}"></i>
-                </div>
-
-                <div class="alert-content">
-                    <div class="alert-title-row">
-                        <h5>{{ $alert->title }}</h5>
-                        <span class="alert-read-badge {{ !$alert->is_read ? 'unread' : 'read' }}">
-                            {{ !$alert->is_read ? 'Unread' : 'Read' }}
+            <nav class="notification-category-list">
+                @foreach ($categoryItems as $key => $item)
+                    <a
+                        href="{{ route('admin.alerts.index', ['filter' => $key]) }}"
+                        class="{{ $filter === $key ? 'active' : '' }}"
+                    >
+                        <span>
+                            <i class="fas {{ $item['icon'] }}"></i>
+                            {{ $item['label'] }}
                         </span>
-                    </div>
 
-                    <p>{{ $alert->message }}</p>
+                        <b>{{ $item['count'] }}</b>
+                    </a>
+                @endforeach
+            </nav>
+        </section>
+    </aside>
 
-                    <div class="alert-meta-row">
-                        <span><i class="fas fa-calendar-days me-1"></i>{{ $alert->created_at->format('M d, Y') }}</span>
-                        <span><i class="fas fa-clock me-1"></i>{{ $alert->created_at->format('h:i A') }}</span>
-                        <span class="alert-type-chip {{ $meta['class'] }}">{{ $meta['label'] }}</span>
-                    </div>
+    <section class="notification-main-panel">
+        <div class="notification-toolbar">
+            <div class="notification-toolbar-left">
+                <label class="notification-select-box">
+                    <input type="checkbox" id="notificationSelectAll">
+                    <span></span>
+                </label>
+
+                <div class="notification-search">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input
+                        type="search"
+                        id="notificationSearchInput"
+                        placeholder="Search notifications..."
+                        autocomplete="off"
+                    >
                 </div>
 
-                <div class="alert-actions">
-                    @if ($alert->link)
-                        <a href="{{ $alert->link }}" class="btn btn-primary">
-                            <i class="fas fa-eye me-1"></i>{{ $meta['action'] }}
-                        </a>
-                    @endif
-
-                    @unless ($alert->is_read)
-                        <form method="POST" action="{{ route('admin.alerts.mark-read', $alert) }}">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="btn btn-outline-secondary">
-                                <i class="fas fa-check me-1"></i> Mark read
-                            </button>
-                        </form>
-                    @endunless
-                </div>
-            </article>
-        @empty
-            <div class="alerts-empty-state">
-                <div class="alerts-empty-icon"><i class="fas fa-bell-slash"></i></div>
-                <strong>No alerts right now</strong>
-                <p>You’re all caught up. New alerts and notifications will appear here.</p>
+                <select id="notificationSortSelect" class="notification-sort-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="unread">Unread First</option>
+                </select>
             </div>
-        @endforelse
+
+            <div class="notification-toolbar-actions">
+                <form method="POST" action="{{ route('admin.alerts.mark-all-read') }}">
+                    @csrf
+                    @method('PATCH')
+
+                    <button type="submit" class="notification-action-btn primary">
+                        <i class="fas fa-check-double"></i>
+                        Mark All Read
+                    </button>
+                </form>
+
+                <button
+                    type="button"
+                    class="notification-action-btn danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#clearReadAlertsModal"
+                >
+                    <i class="fas fa-trash"></i>
+                    Clear Read
+                </button>
+            </div>
+        </div>
+
+        <div class="notification-section-head">
+            <strong>
+                @if($filter === 'unread')
+                    Unread Notifications
+                @elseif($filter === 'request')
+                    Request Notifications
+                @elseif($filter === 'support')
+                    Support Notifications
+                @elseif($filter === 'system')
+                    System Notifications
+                @else
+                    Recent Notifications
+                @endif
+            </strong>
+
+            <span>{{ $alerts->total() }} notification{{ $alerts->total() === 1 ? '' : 's' }}</span>
+        </div>
+
+        <div class="notification-list" id="notificationList">
+            @forelse ($alerts as $alert)
+                @php
+                    $alertTitle = strtolower($alert->title ?? '');
+                    $alertMessage = strtolower($alert->message ?? '');
+
+                    $detectedType = 'default';
+
+                    if (str_contains($alertTitle, 'request') || str_contains($alertMessage, 'service request')) {
+                        $detectedType = 'request';
+                    } elseif (str_contains($alertTitle, 'support') || str_contains($alertMessage, 'support')) {
+                        $detectedType = 'support';
+                    } elseif (
+                        str_contains($alertTitle, 'payment') ||
+                        str_contains($alertMessage, 'payment') ||
+                        str_contains($alertMessage, 'receipt')
+                    ) {
+                        $detectedType = 'payment';
+                    } elseif (
+                        str_contains($alertTitle, 'system') ||
+                        str_contains($alertTitle, 'archiv') ||
+                        str_contains($alertMessage, 'archiv')
+                    ) {
+                        $detectedType = 'system';
+                    }
+
+                    $meta = $typeMeta[$detectedType] ?? $typeMeta['default'];
+                @endphp
+
+                <article
+                    class="notification-row {{ !$alert->is_read ? 'unread' : 'read' }}"
+                    data-created="{{ $alert->created_at->timestamp }}"
+                    data-unread="{{ !$alert->is_read ? 1 : 0 }}"
+                    data-notification-search="{{ strtolower(
+                        ($alert->title ?? '') . ' ' .
+                        ($alert->message ?? '') . ' ' .
+                        ($meta['label'] ?? '')
+                    ) }}"
+                >
+                    <label class="notification-row-check">
+                        <input type="checkbox" class="notification-item-check">
+                        <span></span>
+                    </label>
+
+                    <div class="notification-type-icon {{ $meta['class'] }}">
+                        <i class="fas {{ $meta['icon'] }}"></i>
+                    </div>
+
+                    <div class="notification-content">
+                        <div class="notification-title-line">
+                            <h3>{{ $alert->title }}</h3>
+
+                            <span class="notification-type-badge {{ $meta['class'] }}">
+                                {{ $meta['label'] }}
+                            </span>
+
+                            @unless($alert->is_read)
+                                <span class="notification-unread-dot" title="Unread"></span>
+                            @endunless
+                        </div>
+
+                        <p>{{ $alert->message }}</p>
+
+                        <div class="notification-meta">
+                            <span>
+                                <i class="far fa-clock"></i>
+                                {{ $alert->created_at->diffForHumans() }}
+                            </span>
+
+                            <span>
+                                <i class="far fa-calendar"></i>
+                                {{ $alert->created_at->format('M d, Y') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="notification-row-actions">
+                        @if ($alert->link)
+                            <a href="{{ $alert->link }}" class="notification-open-btn">
+                                {{ $meta['action'] }}
+                            </a>
+                        @endif
+
+                        @unless ($alert->is_read)
+                            <form method="POST" action="{{ route('admin.alerts.mark-read', $alert) }}">
+                                @csrf
+                                @method('PATCH')
+
+                                <button type="submit" class="notification-mark-read-btn" title="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                        @endunless
+                    </div>
+                </article>
+            @empty
+                <div class="notification-empty-state">
+                    <span><i class="fas fa-bell-slash"></i></span>
+                    <strong>No notifications found</strong>
+                    <p>You’re all caught up.</p>
+                </div>
+            @endforelse
+        </div>
 
         @if(method_exists($alerts, 'links'))
-            <div class="alerts-pagination">
+            <div class="notification-pagination">
                 {{ $alerts->links() }}
             </div>
         @endif
     </section>
 </div>
-<!-- Clear Read Notifications Modal -->
-<div class="modal fade"
-     id="clearReadAlertsModal"
-     tabindex="-1"
-     aria-labelledby="clearReadAlertsModalLabel"
-     aria-hidden="true">
 
+<div
+    class="modal fade"
+    id="clearReadAlertsModal"
+    tabindex="-1"
+    aria-labelledby="clearReadAlertsModalLabel"
+    aria-hidden="true"
+>
     <div class="modal-dialog modal-dialog-centered">
-
-        <div class="modal-content border-0 shadow-lg">
-
-            <div class="modal-header border-0">
-
-                <div class="d-flex align-items-center">
-
-                    <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center me-3"
-                         style="width:60px;height:60px;">
-
-                        <i class="fas fa-trash text-danger fa-lg"></i>
-
-                    </div>
+        <div class="modal-content notification-modal">
+            <div class="modal-header">
+                <div class="notification-modal-head">
+                    <span><i class="fas fa-trash"></i></span>
 
                     <div>
-
-                        <h5 class="modal-title mb-1"
-                            id="clearReadAlertsModalLabel">
-
-                            Clear Read Notifications
-
-                        </h5>
-
-                        <small class="text-muted">
-                            This action is permanent.
-                        </small>
-
+                        <h5 id="clearReadAlertsModalLabel">Clear Read Notifications</h5>
+                        <p>This action permanently removes read notifications.</p>
                     </div>
-
                 </div>
 
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal">
-                </button>
-
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-
-                <p class="mb-3">
-
-                    Are you sure you want to permanently delete
-                    all <strong>read notifications</strong>?
-
+                <p>
+                    Are you sure you want to delete all notifications that have already been marked as read?
                 </p>
 
-                <div class="alert alert-warning d-flex">
-
-                    <i class="fas fa-triangle-exclamation me-2 mt-1"></i>
-
-                    <div>
-
-                        Once deleted, these notifications
-                        cannot be recovered.
-
-                    </div>
-
+                <div class="notification-modal-warning">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>Deleted notifications cannot be recovered.</span>
                 </div>
-
             </div>
 
-            <div class="modal-footer border-0">
-
-                <button
-                    type="button"
-                    class="btn btn-light"
-                    data-bs-dismiss="modal">
-
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                     Cancel
-
                 </button>
 
-                <form method="POST"
-                      action="{{ route('admin.alerts.clear-read') }}">
-
+                <form method="POST" action="{{ route('admin.alerts.clear-read') }}">
                     @csrf
                     @method('DELETE')
 
-                    <button
-                        type="submit"
-                        class="btn btn-danger">
-
+                    <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash me-1"></i>
-
-                        Delete Notifications
-
+                        Delete Read Notifications
                     </button>
-
                 </form>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/admin/alerts.js') }}?v=admin-notifications-01"></script>
+@endpush

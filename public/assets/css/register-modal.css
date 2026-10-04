@@ -1,0 +1,356 @@
+#registerModal .modal-dialog {
+    width: min(470px, calc(100vw - 28px));
+    max-width: 470px;
+    margin: 14px auto;
+}
+
+#registerModal .register-modal-content {
+    max-height: calc(100vh - 28px);
+    overflow: hidden;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 24px !important;
+    background: #ffffff;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.2) !important;
+}
+
+#registerModal .register-modal-top {
+    position: relative;
+    padding: 24px 28px 14px;
+    border: 0;
+    background: #ffffff;
+}
+
+#registerModal .register-back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #f3f5f7;
+    color: #0f172a;
+    font-size: 0.82rem;
+}
+
+#registerModal .register-back-btn:hover {
+    background: #e9eef3;
+}
+
+#registerModal .register-logo-wrap {
+    position: relative;
+    width: fit-content;
+    margin: 0 auto 14px;
+}
+
+#registerModal .register-modal-logo {
+    display: block;
+    width: 62px !important;
+    height: 62px !important;
+    object-fit: cover;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 24px rgba(15, 76, 129, 0.1);
+}
+
+#registerModal .register-trademark {
+    position: absolute;
+    top: 1px;
+    right: -9px;
+    color: #2563eb;
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+#registerModal .modal-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.42rem;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+}
+
+#registerModal .register-subtitle {
+    margin: 7px 0 0;
+    color: #7b8797;
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+#registerModal .register-modal-body {
+    max-height: calc(100vh - 146px);
+    overflow-y: auto;
+    padding: 0 28px 26px !important;
+    background: #ffffff;
+}
+
+#registerModal .register-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#registerModal .register-modal-body::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #d6dee7;
+}
+
+#registerModal .register-error {
+    margin: 0 0 14px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fff7f7;
+    font-size: 0.78rem;
+}
+
+#registerModal .register-form {
+    display: grid;
+    gap: 13px;
+}
+
+#registerModal .register-name-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr);
+    gap: 10px;
+}
+
+#registerModal .register-field {
+    min-width: 0;
+}
+
+#registerModal .form-label {
+    display: block;
+    margin: 0 0 6px;
+    color: #111827;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+#registerModal .register-optional {
+    color: #98a3af;
+    font-size: 0.67rem;
+    font-weight: 600;
+}
+
+#registerModal .register-input-wrap {
+    position: relative;
+}
+
+#registerModal .register-input-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    z-index: 1;
+    color: #8895a4;
+    transform: translateY(-50%);
+}
+
+#registerModal .register-input-wrap .form-control {
+    padding-left: 42px;
+    padding-right: 44px;
+}
+
+#registerModal .form-control {
+    width: 100%;
+    min-height: 47px;
+    padding: 10px 13px;
+    border: 1px solid #d8e0e8;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #111827;
+    font-size: 0.83rem;
+    box-shadow: none;
+}
+
+#registerModal .form-control::placeholder {
+    color: #a8b2bf;
+}
+
+#registerModal textarea.form-control {
+    min-height: 68px;
+    resize: vertical;
+}
+
+#registerModal .form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+#registerModal .form-control.is-invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+#registerModal .register-mi-field .form-control {
+    text-align: center;
+    text-transform: uppercase;
+}
+
+#registerModal .register-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 9px;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #7c8998;
+    transform: translateY(-50%);
+}
+
+#registerModal .register-password-toggle:hover {
+    background: #eef4ff;
+    color: #1d4ed8;
+}
+
+#registerModal .register-strength {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin-top: 7px;
+}
+
+#registerModal .register-strength span {
+    height: 4px;
+    border-radius: 999px;
+    background: #dfe5ec;
+}
+
+#registerModal .register-strength span.active {
+    background: #2563eb;
+}
+
+#registerModal .register-strength-text {
+    min-height: 14px;
+    margin-top: 3px;
+    color: #7b8797;
+    font-size: 0.66rem;
+}
+
+#registerModal .register-strength-text.is-strong {
+    color: #16a34a;
+}
+
+#registerModal .register-consent {
+    margin-top: 1px;
+}
+
+#registerModal .register-consent .form-check {
+    margin: 0;
+    padding-left: 1.7rem;
+}
+
+#registerModal .register-consent .form-check-input {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.18rem;
+    border-color: #b8c4d0;
+    border-radius: 4px;
+}
+
+#registerModal .register-consent .form-check-input:checked {
+    border-color: #1d4ed8;
+    background-color: #1d4ed8;
+}
+
+#registerModal .register-consent .form-check-label {
+    color: #667085;
+    font-size: 0.71rem;
+    line-height: 1.5;
+}
+
+#registerModal .register-consent a {
+    color: #1d4ed8;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+#registerModal .register-primary-btn {
+    display: inline-flex;
+    width: 100%;
+    min-height: 50px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 18px !important;
+    border: 1px solid #133fb8 !important;
+    border-radius: 15px !important;
+    background: linear-gradient(90deg, #12379f 0%, #1558e8 100%) !important;
+    color: #ffffff !important;
+    font-size: 0.85rem;
+    font-weight: 900;
+    box-shadow: 0 12px 26px rgba(21, 88, 232, 0.18);
+}
+
+#registerModal .register-primary-btn:hover {
+    border-color: #102f8c !important;
+    background: linear-gradient(90deg, #102f8c 0%, #124bd0 100%) !important;
+}
+
+#registerModal .register-login-note {
+    margin: 0;
+    color: #8793a1;
+    font-size: 0.71rem;
+    text-align: center;
+}
+
+#registerModal .register-login-note a {
+    color: #1d4ed8;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+@media (max-width: 575.98px) {
+    #registerModal .modal-dialog {
+        width: auto;
+        margin: 0;
+    }
+
+    #registerModal .register-modal-content {
+        min-height: 100vh;
+        max-height: 100vh;
+        border-radius: 0 !important;
+    }
+
+    #registerModal .register-modal-top {
+        padding: 26px 20px 14px;
+    }
+
+    #registerModal .register-back-btn {
+        top: 18px;
+        left: 18px;
+    }
+
+    #registerModal .register-modal-logo {
+        width: 58px !important;
+        height: 58px !important;
+    }
+
+    #registerModal .modal-title {
+        font-size: 1.3rem;
+    }
+
+    #registerModal .register-subtitle {
+        font-size: 0.74rem;
+    }
+
+    #registerModal .register-modal-body {
+        max-height: calc(100vh - 138px);
+        padding: 0 20px 24px !important;
+    }
+
+    #registerModal .register-name-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #registerModal .register-mi-field .form-control {
+        text-align: left;
+    }
+}

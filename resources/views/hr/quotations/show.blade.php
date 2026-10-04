@@ -42,9 +42,6 @@
 @endphp
 
 <div class="quotation-show-page">
-    @if (session('success'))
-        <div class="alert alert-success mb-3">{{ session('success') }}</div>
-    @endif
 
     @if (session('info'))
         <div class="alert alert-info mb-3">{{ session('info') }}</div>

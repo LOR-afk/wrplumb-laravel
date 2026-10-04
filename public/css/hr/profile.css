@@ -1,0 +1,320 @@
+/* HR profile dropdown + modals */
+.hr-profile-dropdown {
+    position: relative;
+}
+
+.hr-profile-trigger {
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 8px;
+    border-radius: 12px;
+    color: #0f172a;
+}
+
+.hr-profile-trigger:hover {
+    background: #f1f5f9;
+}
+
+.hr-profile-avatar-sm,
+.hr-profile-avatar-lg,
+.hr-profile-avatar-xl,
+.hr-settings-photo-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex: 0 0 auto;
+    background: #e6f4ff;
+    color: #0f4c81;
+    font-weight: 900;
+    border: 1px solid #d7e7f5;
+}
+
+.hr-profile-avatar-sm {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+}
+.hr-profile-avatar-lg {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+}
+.hr-profile-avatar-xl,
+.hr-settings-photo-preview {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    font-size: 1.25rem;
+}
+
+.hr-profile-avatar-sm img,
+.hr-profile-avatar-lg img,
+.hr-profile-avatar-xl img,
+.hr-settings-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hr-profile-trigger-copy {
+    display: grid;
+    text-align: left;
+    line-height: 1.1;
+}
+.hr-profile-trigger-copy strong {
+    font-size: 0.82rem;
+}
+.hr-profile-trigger-copy small {
+    color: #94a3b8;
+    font-size: 0.67rem;
+    margin-top: 3px;
+}
+
+.hr-profile-menu {
+    width: 285px;
+    border: 1px solid #dbe5f1;
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+}
+
+.hr-profile-menu-head {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 8px 12px;
+    border-bottom: 1px solid #e5edf5;
+    margin-bottom: 6px;
+}
+
+.hr-profile-menu-copy {
+    min-width: 0;
+    display: grid;
+}
+.hr-profile-menu-copy strong {
+    color: #0f172a;
+    font-size: 0.9rem;
+}
+.hr-profile-menu-copy span {
+    color: #64748b;
+    font-size: 0.72rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.hr-profile-role-badge {
+    display: inline-flex;
+    width: max-content;
+    margin-top: 5px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #e8f3ff;
+    color: #0f4c81;
+    font-size: 0.65rem;
+    font-weight: 800;
+}
+
+.hr-profile-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #334155;
+    text-align: left;
+    text-decoration: none;
+}
+.hr-profile-item:hover {
+    background: #f8fafc;
+    color: #0f4c81;
+}
+
+.hr-profile-item-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef6ff;
+    color: #0f4c81;
+}
+.hr-profile-item-copy {
+    display: grid;
+}
+.hr-profile-item-copy strong {
+    font-size: 0.78rem;
+}
+.hr-profile-item-copy small {
+    color: #94a3b8;
+    font-size: 0.66rem;
+}
+.hr-profile-item.danger {
+    color: #dc2626;
+}
+.hr-profile-item.danger .hr-profile-item-icon {
+    background: #fff1f2;
+    color: #dc2626;
+}
+
+.hr-profile-modal .modal-content {
+    border: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+}
+.hr-profile-modal .modal-header {
+    padding: 20px 22px 14px;
+    border-bottom: 1px solid #e5edf5;
+}
+.hr-profile-modal .modal-body {
+    padding: 18px 22px;
+}
+.hr-profile-modal .modal-footer {
+    padding: 14px 22px;
+    border-top: 1px solid #e5edf5;
+}
+
+.hr-profile-modal-subtitle {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.hr-profile-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid #dbe5f1;
+    border-radius: 16px;
+    background: #fbfdff;
+    margin-bottom: 14px;
+}
+.hr-profile-preview h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+.hr-profile-preview p {
+    margin: 2px 0 0;
+    color: #64748b;
+    font-size: 0.76rem;
+}
+
+.hr-profile-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.hr-profile-info-item {
+    border: 1px solid #dbe5f1;
+    border-radius: 14px;
+    padding: 12px;
+    background: #fff;
+}
+.hr-profile-info-item.full {
+    grid-column: 1 / -1;
+}
+.hr-profile-info-item span {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+}
+.hr-profile-info-item strong {
+    color: #0f172a;
+    font-size: 0.8rem;
+}
+
+.hr-settings-photo-panel {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 16px;
+    border: 1px solid #dbe5f1;
+    border-radius: 16px;
+    background: #fbfdff;
+    margin-bottom: 18px;
+}
+.hr-settings-photo-copy {
+    min-width: 0;
+}
+.hr-settings-photo-copy h5 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 900;
+}
+.hr-settings-photo-copy p {
+    margin: 3px 0 8px;
+    color: #64748b;
+    font-size: 0.75rem;
+}
+.hr-settings-photo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.hr-settings-photo-status,
+.hr-settings-help {
+    color: #64748b;
+    font-size: 0.68rem;
+    margin-top: 7px;
+}
+
+.hr-settings-section {
+    border: 1px solid #dbe5f1;
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 16px;
+    background: #fbfdff;
+}
+.hr-settings-section h5 {
+    font-size: 0.95rem;
+    font-weight: 900;
+    margin: 0 0 4px;
+}
+.hr-settings-section > p {
+    margin: 0 0 14px;
+    color: #64748b;
+    font-size: 0.72rem;
+}
+
+.hr-profile-modal .form-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #334155;
+}
+.hr-profile-modal .form-control {
+    border-radius: 12px;
+    border-color: #dbe5f1;
+    min-height: 42px;
+}
+
+@media (max-width: 767.98px) {
+    .hr-profile-trigger-copy {
+        display: none;
+    }
+    .hr-profile-info-grid {
+        grid-template-columns: 1fr;
+    }
+    .hr-profile-info-item.full {
+        grid-column: auto;
+    }
+    .hr-settings-photo-panel {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

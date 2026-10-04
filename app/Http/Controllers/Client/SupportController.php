@@ -7,6 +7,7 @@ use App\Models\SupportConversation;
 use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class SupportController extends Controller
@@ -80,10 +81,6 @@ class SupportController extends Controller
             'attachment_mime' => $attachmentMime,
         ]);
 
-        /*
-         * If the conversation is already handled by HR/Admin,
-         * append the message/image to the same thread without bot intervention.
-         */
         if (in_array($conversation->current_queue, ['hr', 'admin'], true)) {
             $conversation->update([
                 'status' => $conversation->current_queue === 'admin' ? 'escalated' : 'routed',
@@ -93,10 +90,6 @@ class SupportController extends Controller
             return $this->redirectBackToSupport($request);
         }
 
-        /*
-         * Images by themselves do not need an automated text response.
-         * Keep the conversation open with the bot unless there is text to classify.
-         */
         if (blank($validated['message'] ?? null)) {
             return $this->redirectBackToSupport($request);
         }
@@ -151,34 +144,46 @@ class SupportController extends Controller
             ->first();
 
         if ($conversation) {
-            foreach ($conversation->messages as $message) {
-                if (!empty($message->attachment_path)) {
-                    Storage::disk('public')->delete($message->attachment_path);
+            DB::transaction(function () use ($conversation) {
+                foreach ($conversation->messages as $message) {
+                    if (!empty($message->attachment_path)) {
+                        Storage::disk('public')->delete($message->attachment_path);
+                    }
                 }
-            }
 
-            $conversation->messages()->delete();
+                SupportMessage::where(
+                    'conversation_id',
+                    $conversation->id
+                )->delete();
 
-            $conversation->update([
-                'status' => 'open',
-                'current_queue' => 'bot',
-                'routed_to' => null,
-                'routed_at' => null,
-                'resolved_at' => null,
-            ]);
+                $conversation->update([
+                    'status' => 'open',
+                    'current_queue' => 'bot',
+                    'routed_to' => null,
+                    'routed_at' => null,
+                    'resolved_at' => null,
+                ]);
+            });
         }
 
-        return $this->redirectBackToSupport($request);
+        return $this->redirectBackToSupport(
+            $request,
+            'Chat cleared successfully.'
+        );
     }
 
-    private function redirectBackToSupport(Request $request)
-    {
-        if ($request->boolean('support_widget')) {
-            return redirect()->route('client.support.index', [
-                'support_widget' => 1,
-            ]);
+    private function redirectBackToSupport(
+        Request $request,
+        ?string $successMessage = null
+    ) {
+        $redirect = $request->boolean('support_widget')
+            ? redirect()->route('client.support.index', ['support_widget' => 1])
+            : redirect()->route('client.support.index');
+
+        if ($successMessage) {
+            $redirect->with('success', $successMessage);
         }
 
-        return redirect()->route('client.support.index');
+        return $redirect;
     }
 }
