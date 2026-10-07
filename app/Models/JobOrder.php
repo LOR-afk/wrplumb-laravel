@@ -10,6 +10,7 @@ class JobOrder extends Model
         'quotation_request_id',
         'worker_id',
         'job_order_no',
+        'job_type',
         'service_flow',
         'service_type',
         'project_type',
@@ -61,5 +62,15 @@ class JobOrder extends Model
     public function backJobs()
     {
         return $this->hasMany(BackJob::class, 'original_job_order_id');
+    }
+
+    public function scopeInspection($query)
+    {
+        return $query->where('job_type', 'inspection');
+    }
+
+    public function scopeService($query)
+    {
+        return $query->where('job_type', 'service');
     }
 }

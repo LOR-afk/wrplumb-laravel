@@ -10,6 +10,17 @@ class Quotation extends Model
         'quotation_request_id',
         'quotation_no',
         'status',
+        'quotation_format',
+        'quotation_template_id',
+        'project_name',
+        'project_location',
+        'subject',
+        'custom_document_path',
+        'custom_document_name',
+        'custom_document_mime',
+        'custom_document_size',
+        'generated_document_path',
+        'generated_document_name',
         'notes',
         'payment_plan',
         'payment_terms_json',
@@ -41,6 +52,7 @@ class Quotation extends Model
             'tax_rate' => 'decimal:2',
             'tax_amount' => 'decimal:2',
             'grand_total' => 'decimal:2',
+            'custom_document_size' => 'integer',
             'sent_at' => 'datetime',
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
@@ -67,6 +79,11 @@ class Quotation extends Model
             ->orderBy('sort_order');
     }
 
+    public function template()
+    {
+        return $this->belongsTo(QuotationTemplate::class, 'quotation_template_id');
+    }
+
     public function preparedBy()
     {
         return $this->belongsTo(User::class, 'prepared_by');
@@ -90,5 +107,19 @@ class Quotation extends Model
     public function scopeArchived($query)
     {
         return $query->whereNotNull('archived_at');
+    }
+
+    public function getIsCustomFormatAttribute(): bool
+    {
+        return $this->quotation_format === 'custom';
+    }
+
+    public function getCustomDocumentUrlAttribute(): ?string
+    {
+        if (!$this->custom_document_path) {
+            return null;
+        }
+
+        return asset('storage/' . ltrim($this->custom_document_path, '/'));
     }
 }

@@ -3,12 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Quotation;
-use App\Models\JobOrder;
-use App\Models\InspectionReport;
-use App\Models\InspectionStatusLog;
-use App\Models\QuotationRequestImage;
-
 
 class QuotationRequest extends Model
 {
@@ -107,9 +101,27 @@ class QuotationRequest extends Model
         return $this->hasOne(Quotation::class, 'quotation_request_id');
     }
 
+    public function jobOrders()
+    {
+        return $this->hasMany(JobOrder::class, 'quotation_request_id');
+    }
+
+    public function inspectionJobOrder()
+    {
+        return $this->hasOne(JobOrder::class, 'quotation_request_id')
+            ->where('job_type', 'inspection');
+    }
+
+    public function serviceJobOrder()
+    {
+        return $this->hasOne(JobOrder::class, 'quotation_request_id')
+            ->where('job_type', 'service');
+    }
+
     public function jobOrder()
     {
-        return $this->hasOne(JobOrder::class, 'quotation_request_id');
+        return $this->hasOne(JobOrder::class, 'quotation_request_id')
+            ->oldestOfMany();
     }
 
     public function scopeActive($query)
@@ -129,25 +141,18 @@ class QuotationRequest extends Model
 
     public function inspectionReport()
     {
-        return $this->hasOne(
-            InspectionReport::class,
-            'quotation_request_id'
-        );
+        return $this->hasOne(InspectionReport::class, 'quotation_request_id');
     }
 
     public function inspectionStatusLogs()
     {
-        return $this->hasMany(
-            InspectionStatusLog::class,
-            'quotation_request_id'
-        )->latest('recorded_at');
+        return $this->hasMany(InspectionStatusLog::class, 'quotation_request_id')
+            ->latest('recorded_at');
     }
 
     public function images()
     {
-        return $this->hasMany(
-            QuotationRequestImage::class,
-            'quotation_request_id'
-        )->latest();
+        return $this->hasMany(QuotationRequestImage::class, 'quotation_request_id')
+            ->latest();
     }
 }

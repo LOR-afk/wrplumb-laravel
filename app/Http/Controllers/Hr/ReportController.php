@@ -31,21 +31,82 @@ class ReportController extends Controller
         }
 
         $summary = [
-            'total_income' => (clone $paymentsQuery)->where('status', 'confirmed')->sum('amount'),
-            'confirmed_count' => (clone $paymentsQuery)->where('status', 'confirmed')->count(),
-            'rejected_count' => (clone $paymentsQuery)->where('status', 'rejected')->count(),
-            'pending_count' => (clone $paymentsQuery)->whereIn('status', ['pending', 'pending_verification'])->count(),
+            'total_income' => (clone $paymentsQuery)
+                ->where('status', 'confirmed')
+                ->sum('amount'),
+
+            'confirmed_count' => (clone $paymentsQuery)
+                ->where('status', 'confirmed')
+                ->count(),
+
+            'rejected_count' => (clone $paymentsQuery)
+                ->where('status', 'rejected')
+                ->count(),
+
+            'pending_count' => (clone $paymentsQuery)
+                ->whereIn('status', ['pending', 'pending_verification'])
+                ->count(),
+
             'invoice_count' => Invoice::query()
                 ->when($year, fn ($q) => $q->whereYear('invoice_date', $year))
                 ->when($month, fn ($q) => $q->whereMonth('invoice_date', $month))
                 ->count(),
+
             'receipt_count' => Receipt::query()
                 ->when($year, fn ($q) => $q->whereYear('receipt_date', $year))
                 ->when($month, fn ($q) => $q->whereMonth('receipt_date', $month))
                 ->count(),
         ];
 
-        return view('hr.reports.index', compact('summary', 'year', 'month'));
+        $yearPayments = Payment::query()
+            ->whereYear('payment_date', $year)
+            ->where('status', 'confirmed')
+            ->get(['amount', 'payment_date']);
+
+        $monthlyIncome = collect(range(1, 12))->map(function ($monthNumber) use ($yearPayments) {
+            return round(
+                (float) $yearPayments
+                    ->filter(fn ($payment) => optional($payment->payment_date)->month === $monthNumber)
+                    ->sum('amount'),
+                2
+            );
+        })->values();
+
+        $statusBreakdown = [
+            'confirmed' => (clone $paymentsQuery)
+                ->where('status', 'confirmed')
+                ->count(),
+
+            'pending' => (clone $paymentsQuery)
+                ->whereIn('status', ['pending', 'pending_verification'])
+                ->count(),
+
+            'rejected' => (clone $paymentsQuery)
+                ->where('status', 'rejected')
+                ->count(),
+        ];
+
+        $methodPayments = (clone $paymentsQuery)
+            ->where('status', 'confirmed')
+            ->get(['amount', 'payment_method']);
+
+        $methodBreakdown = $methodPayments
+            ->groupBy(function ($payment) {
+                $method = trim((string) $payment->payment_method);
+
+                return $method !== '' ? $method : 'Other';
+            })
+            ->map(fn ($payments) => round((float) $payments->sum('amount'), 2))
+            ->sortDesc();
+
+        return view('hr.reports.index', compact(
+            'summary',
+            'year',
+            'month',
+            'monthlyIncome',
+            'statusBreakdown',
+            'methodBreakdown'
+        ));
     }
 
     public function exportIncome(Request $request)
@@ -95,6 +156,7 @@ class ReportController extends Controller
         $sheet->fromArray($headers, null, 'A1');
 
         $row = 2;
+
         foreach ($payments as $payment) {
             $client = $payment->invoice?->quotation?->request?->full_name
                 ?? $payment->invoice?->quotation?->request?->email
@@ -118,17 +180,39 @@ class ReportController extends Controller
 
         $lastRow = max($row - 1, 1);
 
-        $sheet->getStyle('A1:J1')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle('A1:J1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('0F4C81');
-        $sheet->getStyle('A1:J' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('A1:J' . $lastRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('E2:E' . $lastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('A1:J1')
+            ->getFont()
+            ->setBold(true)
+            ->getColor()
+            ->setRGB('FFFFFF');
+
+        $sheet->getStyle('A1:J1')
+            ->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()
+            ->setRGB('0F4C81');
+
+        $sheet->getStyle('A1:J' . $lastRow)
+            ->getBorders()
+            ->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
+
+        $sheet->getStyle('A1:J' . $lastRow)
+            ->getAlignment()
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        $sheet->getStyle('E2:E' . $lastRow)
+            ->getNumberFormat()
+            ->setFormatCode('#,##0.00');
 
         foreach (range('A', 'J') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        $monthPart = $month ? '-' . str_pad((string) $month, 2, '0', STR_PAD_LEFT) : '';
+        $monthPart = $month
+            ? '-' . str_pad((string) $month, 2, '0', STR_PAD_LEFT)
+            : '';
+
         $filename = 'hr-income-report-' . $year . $monthPart . '.xlsx';
 
         return response()->streamDownload(function () use ($spreadsheet) {

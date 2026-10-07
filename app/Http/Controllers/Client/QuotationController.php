@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\JobOrder;
 use App\Models\Quotation;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
@@ -78,7 +79,8 @@ class QuotationController extends Controller
             'declined_at' => null,
         ]);
 
-        $quotation->refresh();
+        $quotation->refresh()->load('request');
+        $serviceJobOrder = $this->ensureServiceJobOrder($quotation);
 
         AuditLogService::log(
             'Client Accepted Quotation',
@@ -94,13 +96,52 @@ class QuotationController extends Controller
                 'status' => $quotation->status,
                 'client_response' => $quotation->client_response,
                 'accepted_at' => optional($quotation->accepted_at)->toDateTimeString(),
+                'service_job_order_id' => $serviceJobOrder->id,
+                'service_job_order_no' => $serviceJobOrder->job_order_no,
             ],
             "Client accepted quotation #{$quotation->id} through the client portal."
         );
 
         return redirect()
             ->route('client.quotations.show', $quotation)
-            ->with('success', 'Quotation accepted successfully with your selected payment plan.');
+            ->with('success', 'Quotation accepted successfully. Your service is now awaiting work assignment and scheduling.');
+    }
+
+    protected function ensureServiceJobOrder(Quotation $quotation): JobOrder
+    {
+        $serviceRequest = $quotation->request;
+
+        return JobOrder::firstOrCreate(
+            [
+                'quotation_request_id' => $serviceRequest->id,
+                'job_type' => 'service',
+            ],
+            [
+                'worker_id' => null,
+                'job_order_no' => $this->generateJobOrderNumber(),
+                'service_flow' => $serviceRequest->service_flow,
+                'service_type' => $serviceRequest->service_type,
+                'project_type' => $serviceRequest->project_type,
+                'scheduled_date' => null,
+                'scheduled_time' => null,
+                'status' => 'pending',
+                'scope_of_work' => $serviceRequest->details,
+                'admin_notes' => 'Service job order created automatically after quotation acceptance.',
+                'created_by' => Auth::id(),
+            ]
+        );
+    }
+
+    protected function generateJobOrderNumber(): string
+    {
+        $nextId = (JobOrder::max('id') ?? 0) + 1;
+
+        do {
+            $jobOrderNo = 'JO-' . now()->format('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
+            $nextId++;
+        } while (JobOrder::where('job_order_no', $jobOrderNo)->exists());
+
+        return $jobOrderNo;
     }
 
     protected function buildPaymentTerms(float $total, string $planKey): array

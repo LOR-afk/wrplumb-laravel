@@ -12,31 +12,42 @@
 
 @section('content')
 @php
-    $quotationItems = method_exists($quotations, 'getCollection') ? $quotations->getCollection() : collect($quotations);
-    $totalCount = method_exists($quotations, 'total') ? $quotations->total() : $quotationItems->count();
-    $displayedCount = $quotationItems->count();
-    $pendingCount = $quotationItems->where('status', 'pending')->count();
-    $assignedCount = $quotationItems->where('status', 'assigned')->count();
-    $activeJobCount = $quotationItems->filter(function ($item) {
-        return $item->jobOrder && in_array($item->jobOrder->status, ['scheduled', 'in_progress']);
-    })->count();
-    $activeFilterCount = collect(['search', 'status', 'service_category', 'preferred_date'])->filter(function ($key) {
-        return request()->filled($key);
-    })->count();
+    $displayedClientCount = $clientGroups->count();
+    $totalClientCount = $clientGroups->total();
+    $displayedRecordCount = $clientGroups->getCollection()->sum('record_count');
+
+    $activeFilterCount = collect([
+        'search',
+        'status',
+        'record_type',
+        'service_category',
+        'preferred_date',
+    ])->filter(fn ($key) => request()->filled($key))->count();
+
+    $advancedFilterCount = collect([
+        'service_category',
+        'preferred_date',
+    ])->filter(fn ($key) => request()->filled($key))->count();
 @endphp
 
-<div class="workflow-page">
-    <div class="workflow-filter-card">
-        <form method="GET" action="{{ route('admin.quotations.index') }}" class="workflow-filter-form">
-            <div class="workflow-filter-search">
+<div class="workflow-page grouped-request-page">
+    <div class="workflow-filter-card grouped-filter-card">
+        <form method="GET" action="{{ route('admin.quotations.index') }}" class="workflow-filter-form grouped-filter-form">
+            <div class="workflow-filter-search grouped-primary-search">
                 <label class="form-label">Search</label>
                 <div class="workflow-search-control">
                     <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" name="search" class="form-control" placeholder="Search requests, clients, jobs..." value="{{ request('search') }}">
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="Search clients, services, job orders..."
+                        value="{{ request('search') }}"
+                    >
                 </div>
             </div>
 
-            <div>
+            <div class="grouped-primary-filter">
                 <label class="form-label">Status</label>
                 <select name="status" class="form-select">
                     <option value="">All statuses</option>
@@ -44,6 +55,7 @@
                     <option value="assigned" @selected(request('status') === 'assigned')>Assigned Request</option>
                     <option value="in_progress" @selected(request('status') === 'in_progress')>In Progress Request</option>
                     <option value="completed" @selected(request('status') === 'completed')>Completed Request</option>
+                    <option value="job_pending" @selected(request('status') === 'job_pending')>Job Pending</option>
                     <option value="job_scheduled" @selected(request('status') === 'job_scheduled')>Job Scheduled</option>
                     <option value="job_in_progress" @selected(request('status') === 'job_in_progress')>Job In Progress</option>
                     <option value="job_completed" @selected(request('status') === 'job_completed')>Job Completed</option>
@@ -51,50 +63,178 @@
                 </select>
             </div>
 
-            <div>
-                <label class="form-label">Category</label>
-                <select name="service_category" class="form-select">
-                    <option value="">All categories</option>
-                    <option value="plumbing" @selected(request('service_category') === 'plumbing')>Plumbing</option>
-                    <option value="construction" @selected(request('service_category') === 'construction')>Construction</option>
+            <div class="grouped-primary-filter">
+                <label class="form-label">Record Type</label>
+                <select name="record_type" class="form-select">
+                    <option value="">All record types</option>
+                    <option value="inspection" @selected(request('record_type') === 'inspection')>Inspection</option>
+                    <option value="service" @selected(request('record_type') === 'service')>Actual Service</option>
                 </select>
             </div>
 
-            <div>
-                <label class="form-label">Preferred Date</label>
-                <input type="date" name="preferred_date" class="form-control" value="{{ request('preferred_date') }}">
+            <div class="grouped-primary-filter">
+                <label class="form-label">Sort</label>
+                <select name="sort" class="form-select">
+                    <option value="preferred_date_desc" @selected(($sort ?? 'preferred_date_desc') === 'preferred_date_desc')>Preferred Date — Newest</option>
+                    <option value="preferred_date_asc" @selected(($sort ?? '') === 'preferred_date_asc')>Preferred Date — Oldest</option>
+                    <option value="client_asc" @selected(($sort ?? '') === 'client_asc')>Client Name — A to Z</option>
+                    <option value="client_desc" @selected(($sort ?? '') === 'client_desc')>Client Name — Z to A</option>
+                    <option value="created_at_desc" @selected(($sort ?? '') === 'created_at_desc')>Recently Added</option>
+                    <option value="created_at_asc" @selected(($sort ?? '') === 'created_at_asc')>Oldest Added</option>
+                </select>
             </div>
 
-            <div class="workflow-filter-actions">
-                <button class="btn btn-primary">
-                    <i class="fas fa-filter me-1"></i> Apply
+            <div class="grouped-more-filter-control">
+                <label class="form-label d-none d-xl-block">&nbsp;</label>
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary grouped-more-filter-btn"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#groupedMoreFilters"
+                    aria-expanded="{{ $advancedFilterCount > 0 ? 'true' : 'false' }}"
+                    aria-controls="groupedMoreFilters"
+                >
+                    <i class="fas fa-sliders me-1"></i>
+                    More Filters
+                    @if ($advancedFilterCount > 0)
+                        <span class="grouped-more-filter-count">{{ $advancedFilterCount }}</span>
+                    @endif
                 </button>
-                <a href="{{ route('admin.quotations.index') }}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+
+            <div class="workflow-filter-actions grouped-filter-actions">
+                <label class="form-label d-none d-xl-block">&nbsp;</label>
+                <div class="grouped-filter-action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i>
+                        Apply
+                    </button>
+                    <a href="{{ route('admin.quotations.index') }}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </div>
+
+            <div id="groupedMoreFilters" class="collapse grouped-more-filters-panel {{ $advancedFilterCount > 0 ? 'show' : '' }}">
+                <div class="grouped-more-filters-inner">
+                    <div>
+                        <label class="form-label">Category</label>
+                        <select name="service_category" class="form-select">
+                            <option value="">All categories</option>
+                            <option value="plumbing" @selected(request('service_category') === 'plumbing')>Plumbing</option>
+                            <option value="construction" @selected(request('service_category') === 'construction')>Construction</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Preferred Date</label>
+                        <input
+                            type="date"
+                            name="preferred_date"
+                            class="form-control"
+                            value="{{ request('preferred_date') }}"
+                        >
+                    </div>
+
+                    <div class="grouped-more-filter-note">
+                        <i class="fas fa-circle-info"></i>
+                        <span>Use these only when you need to narrow the list further.</span>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 
-    <div class="workflow-list-panel">
-        <div class="workflow-list-head">
+    <div class="workflow-list-panel grouped-client-panel">
+        <div class="workflow-list-head grouped-list-head">
             <div>
-                <h5><i class="fas fa-briefcase me-2 text-primary"></i>Service Requests</h5>
-                <p>Showing {{ $displayedCount }} of {{ $totalCount }} request(s).</p>
+                <div class="grouped-list-title-row">
+                    <h5>
+                        <i class="fas fa-users me-2 text-primary"></i>
+                        Service Requests
+                    </h5>
+                </div>
+
+                <p>
+                    {{ $requestTotalCount }} service record{{ $requestTotalCount === 1 ? '' : 's' }}
+                    across {{ $totalClientCount }} client{{ $totalClientCount === 1 ? '' : 's' }} · Grouped by client
+                </p>
             </div>
 
-            <div class="workflow-list-actions">
-                <span class="workflow-filter-count">{{ $activeFilterCount }} active filter{{ $activeFilterCount === 1 ? '' : 's' }}</span>
-            </div>
+            @if ($activeFilterCount > 0)
+                <div class="workflow-list-actions">
+                    <span class="workflow-filter-count">
+                        {{ $activeFilterCount }} active filter{{ $activeFilterCount === 1 ? '' : 's' }}
+                    </span>
+                </div>
+            @endif
         </div>
 
-        @if ($quotations->count())
-            <div class="workflow-request-grid">
-                @foreach ($quotations as $quotation)
+        @if ($clientGroups->count())
+            <div class="grouped-client-list">
+                @foreach ($clientGroups as $group)
+                    @php
+                        $initials = collect(preg_split('/\s+/', trim($group['client_name'] ?? '')))
+                            ->filter()
+                            ->take(2)
+                            ->map(fn ($part) => strtoupper(mb_substr($part, 0, 1)))
+                            ->implode('');
+
+                        $initials = $initials ?: 'CL';
+                    @endphp
+
+                    <details class="grouped-client-card" {{ $loop->first ? 'open' : '' }}>
+                        <summary class="grouped-client-summary">
+                            <span class="grouped-client-chevron">
+                                <i class="fas fa-chevron-right"></i>
+                            </span>
+
+                            <span class="grouped-client-avatar">{{ $initials }}</span>
+
+                            <span class="grouped-client-identity">
+                                <strong>{{ $group['client_name'] }}</strong>
+                                <small>
+                                    {{ $group['email'] ?: 'No email' }}
+                                    @if (!empty($group['phone']))
+                                        <span>•</span> {{ $group['phone'] }}
+                                    @endif
+                                </small>
+                            </span>
+
+                            <span class="grouped-client-count">
+                                <i class="fas fa-file-lines"></i>
+                                {{ $group['record_count'] }}
+                                service record{{ $group['record_count'] === 1 ? '' : 's' }}
+                            </span>
+
+                            <span class="grouped-client-latest">
+                                <small>Latest Request</small>
+                                <strong>{{ optional($group['latest_request_date'])->format('Y-m-d') ?? '—' }}</strong>
+                            </span>
+                        </summary>
+
+                        <div class="grouped-service-table">
+                            <div class="grouped-service-head">
+                                <span>Service Request</span>
+                                <span>Type</span>
+                                <span>Assigned To</span>
+                                <span>Preferred Date</span>
+                                <span>Status</span>
+                                <span>Action</span>
+                            </div>
+
+                            <div class="grouped-service-body">
+                                @foreach ($group['requests'] as $quotation)
                     @php
                         $availableWorkers = $availableWorkersByQuotation[$quotation->id] ?? collect();
                         $hasAvailableWorkers = $availableWorkers->isNotEmpty();
 
                         $flow = $quotation->service_flow ?? 'inspection_required';
                         $visitPurpose = $quotation->visit_purpose ?? ($flow === 'direct_service' ? 'service' : 'inspection');
+
+                        $inspectionJobOrder = $quotation->inspectionJobOrder;
+                        $serviceJobOrder = $quotation->serviceJobOrder;
+                        $initialJobOrder = $flow === 'inspection_required'
+                            ? $inspectionJobOrder
+                            : $serviceJobOrder;
 
                         $clientName = $quotation->full_name ?? trim(($quotation->first_name ?? '') . ' ' . ($quotation->last_name ?? ''));
                         $assignmentLabel = $flow === 'direct_service' ? 'Personnel' : 'Inspector';
@@ -111,16 +251,23 @@
                         $hasScheduled = !empty($quotation->appointment_date)
                             && !empty($quotation->appointment_time)
                             && in_array($quotation->appointment_status, ['approved', 'rescheduled']);
-                        $hasJobOrder = !empty($quotation->jobOrder);
+                        $hasJobOrder = !empty($initialJobOrder);
 
-                        $isTaskCompleted = ($quotation->jobOrder?->status === 'completed')
+                        $inspectionCompleted = $flow !== 'inspection_required'
+                            || ($inspectionJobOrder?->status === 'completed');
+                        $inspectionReportSubmitted = $flow !== 'inspection_required'
+                            || ($quotation->inspectionReport?->status === 'submitted');
+                        $quotationAccepted = ($quotation->quotation?->status === 'accepted')
+                            || ($quotation->quotation?->client_response === 'accepted');
+
+                        $isTaskCompleted = ($serviceJobOrder?->status === 'completed')
                             || ($quotation->status === 'completed');
 
-                        $taskCompletedAt = $quotation->jobOrder?->completed_at
+                        $taskCompletedAt = $serviceJobOrder?->completed_at
                             ?? $quotation->completed_at
                             ?? null;
 
-                        $archiveStatus = $quotation->jobOrder?->status ?? $quotation->status;
+                        $archiveStatus = $serviceJobOrder?->status ?? $quotation->status;
                         $canArchive = in_array($archiveStatus, ['completed', 'cancelled'], true);
 
                         $recommendationLabel = $flow === 'direct_service' ? 'Direct Service' : 'Inspection Required';
@@ -136,9 +283,13 @@
                             $scheduleTimeDisplay = $rawScheduleTime;
                         }
 
-                        $displayStatus = $quotation->jobOrder
-                            ? 'Job ' . ucfirst(str_replace('_', ' ', $quotation->jobOrder->status))
-                            : ucfirst(str_replace('_', ' ', $quotation->status));
+                        if ($serviceJobOrder) {
+                            $displayStatus = 'Service ' . ucfirst(str_replace('_', ' ', $serviceJobOrder->status));
+                        } elseif ($inspectionJobOrder) {
+                            $displayStatus = 'Inspection ' . ucfirst(str_replace('_', ' ', $inspectionJobOrder->status));
+                        } else {
+                            $displayStatus = ucfirst(str_replace('_', ' ', $quotation->status));
+                        }
 
                         $statusTone = 'blue';
                         if (str_contains(strtolower($displayStatus), 'completed')) {
@@ -163,57 +314,92 @@
                             $initialStep = 5;
                         }
                     @endphp
+                    @php
+                        $activeJobOrder = $serviceJobOrder ?: $inspectionJobOrder;
 
-                    <article class="workflow-request-card workflow-request-clickable"
-                             role="button"
-                             tabindex="0"
-                             data-bs-toggle="modal"
-                             data-bs-target="#requestWorkflowModal{{ $quotation->id }}">
-                        <div class="workflow-request-main">
-                            <div class="workflow-request-icon {{ $flow === 'direct_service' ? 'direct' : 'inspect' }}">
-                                @if ($flow === 'direct_service')
-                                    <i class="fas fa-screwdriver-wrench"></i>
-                                @else
-                                    <i class="fas fa-shower"></i>
-                                @endif
-                            </div>
+                        if ($serviceJobOrder) {
+                            $recordTypeLabel = 'Service JO';
+                            $recordTypeClass = 'service';
+                            $recordTypeIcon = 'fa-screwdriver-wrench';
+                            $activeAssignee = $serviceJobOrder->worker?->name ?? 'Not assigned';
+                        } elseif ($inspectionJobOrder) {
+                            $recordTypeLabel = 'Inspection JO';
+                            $recordTypeClass = 'inspection';
+                            $recordTypeIcon = 'fa-magnifying-glass';
+                            $activeAssignee = $inspectionJobOrder->worker?->name
+                                ?? $quotation->worker?->name
+                                ?? 'Not assigned';
+                        } elseif ($flow === 'direct_service') {
+                            $recordTypeLabel = 'Service Request';
+                            $recordTypeClass = 'service';
+                            $recordTypeIcon = 'fa-screwdriver-wrench';
+                            $activeAssignee = $quotation->worker?->name ?? 'Not assigned';
+                        } else {
+                            $recordTypeLabel = 'Inspection Request';
+                            $recordTypeClass = 'inspection';
+                            $recordTypeIcon = 'fa-magnifying-glass';
+                            $activeAssignee = $quotation->worker?->name ?? 'Not assigned';
+                        }
+                    @endphp
 
-                            <div class="workflow-request-copy">
-                                <h5>{{ $clientName ?: 'Unnamed Client' }}</h5>
-                                <span class="workflow-service-link">
-                                    {{ $quotation->service_type }}
-                                </span>
-                                <p>{{ $quotation->email }} @if($quotation->phone) • {{ $quotation->phone }} @endif</p>
-
-                                <div class="workflow-chip-row">
-                                    <span class="workflow-chip service"><i class="fas fa-screwdriver-wrench"></i>{{ $quotation->service_type }}</span>
-                                    @if ($flow === 'direct_service')
-                                        <span class="workflow-chip direct"><i class="fas fa-bolt"></i>Direct Service</span>
-                                    @else
-                                        <span class="workflow-chip inspect"><i class="fas fa-search-location"></i>Inspection Required</span>
-                                    @endif
-                                    <span class="workflow-chip date"><i class="fas fa-calendar-day"></i>{{ optional($quotation->preferred_date)->format('Y-m-d') ?? 'No date' }}</span>
-                                </div>
-                            </div>
+                    <div class="grouped-service-row">
+                        <div class="grouped-service-main">
+                            <strong>{{ $quotation->service_type ?: 'Service request' }}</strong>
+                            <small>{{ $quotation->details ?: ($flow === 'inspection_required' ? 'Inspection and assessment required' : 'Direct service request') }}</small>
                         </div>
 
-                        <div class="workflow-request-meta">
-                            <div>
-                                <span>Preferred Date</span>
-                                <strong>{{ optional($quotation->preferred_date)->format('Y-m-d') ?? '—' }}</strong>
-                            </div>
-                            <div>
-                                <span>Status</span>
-                                <strong><span class="workflow-status {{ $statusTone }}">{{ strtoupper($displayStatus) }}</span></strong>
-                            </div>
-                            <div>
-                                <span>{{ $assignmentLabel }}</span>
-                                <strong>{{ $quotation->worker?->name ?? 'Not assigned' }}</strong>
-                            </div>
+                        <div>
+                            <span class="grouped-type-badge {{ $recordTypeClass }}">
+                                <i class="fas {{ $recordTypeIcon }}"></i>
+                                {{ $recordTypeLabel }}
+                            </span>
                         </div>
 
-                    </article>
+                        <div class="grouped-assignee">
+                            <span class="grouped-assignee-icon">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <span>
+                                <strong>{{ $activeAssignee }}</strong>
+                                <small>{{ $recordTypeClass === 'inspection' ? 'Inspector' : 'Service personnel' }}</small>
+                            </span>
+                        </div>
 
+                        <div class="grouped-date-cell">
+                            <i class="fas fa-calendar-day"></i>
+                            <strong>{{ optional($quotation->preferred_date)->format('Y-m-d') ?? '—' }}</strong>
+                        </div>
+
+                        <div>
+                            <span class="workflow-status {{ $statusTone }}">
+                                {{ strtoupper($displayStatus) }}
+                            </span>
+                        </div>
+
+                        <div class="grouped-row-action">
+                            @if ($serviceJobOrder)
+                                <a
+                                    href="{{ route('admin.job-orders.show', $serviceJobOrder) }}"
+                                    class="btn grouped-action-btn"
+                                    title="Open service job order"
+                                >
+                                    <i class="fas fa-arrow-up-right-from-square"></i>
+                                </a>
+                            @else
+                                <button
+                                    type="button"
+                                    class="btn grouped-action-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#requestWorkflowModal{{ $quotation->id }}"
+                                    title="Manage request workflow"
+                                >
+                                    <i class="fas fa-ellipsis"></i>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if (!$serviceJobOrder)
                     <div class="modal fade workflow-modal"
                          id="requestWorkflowModal{{ $quotation->id }}"
                          tabindex="-1"
@@ -222,7 +408,7 @@
                          data-initial-step="{{ $initialStep }}"
                          data-task-completed="{{ $isTaskCompleted ? '1' : '0' }}"
                          data-job-order-create-url="{{ route('admin.job-orders.create', $quotation) }}"
-                         data-job-order-show-url="{{ $hasJobOrder ? route('admin.job-orders.show', $quotation->jobOrder) : '' }}">
+                         data-job-order-show-url="{{ $hasJobOrder ? route('admin.job-orders.show', $initialJobOrder) : '' }}">
                         <div class="modal-dialog modal-dialog-centered modal-xl">
                             <div class="modal-content">
                                 <div class="workflow-modal-header">
@@ -485,8 +671,8 @@
 
                                     <section class="workflow-step-panel" data-step-panel="4">
                                         <div class="workflow-section-title">
-                                            <h4>Job Order</h4>
-                                            <p>Create or review the job order connected to this request.</p>
+                                            <h4>{{ $flow === 'inspection_required' ? 'Inspection Job Order' : 'Service Job Order' }}</h4>
+                                            <p>{{ $flow === 'inspection_required' ? 'Create or review the job order for the site inspection.' : 'Create or review the job order for the actual service work.' }}</p>
                                         </div>
 
                                         @if (!$hasAssigned || !$hasScheduled)
@@ -501,22 +687,22 @@
                                             <div class="workflow-job-card ready">
                                                 <i class="fas fa-circle-check"></i>
                                                 <div>
-                                                    <strong>Ready for job order</strong>
+                                                    <strong>Ready for {{ $flow === 'inspection_required' ? 'inspection' : 'service' }} job order</strong>
                                                     <span>Assignment and schedule are already set.</span>
                                                 </div>
                                             </div>
                                             <a href="{{ route('admin.job-orders.create', $quotation) }}" class="btn btn-success w-100">
-                                                <i class="fas fa-plus-circle me-1"></i> Create Job Order
+                                                <i class="fas fa-plus-circle me-1"></i> Create {{ $flow === 'inspection_required' ? 'Inspection' : 'Service' }} Job Order
                                             </a>
                                         @else
                                             <div class="workflow-job-card done">
                                                 <i class="fas fa-clipboard-check"></i>
                                                 <div>
-                                                    <strong>{{ $quotation->jobOrder->job_order_no }}</strong>
-                                                    <span>Status: {{ ucfirst(str_replace('_', ' ', $quotation->jobOrder->status)) }}</span>
+                                                    <strong>{{ $initialJobOrder->job_order_no }}</strong>
+                                                    <span>Status: {{ ucfirst(str_replace('_', ' ', $initialJobOrder->status)) }}</span>
                                                 </div>
                                             </div>
-                                            <a href="{{ route('admin.job-orders.show', $quotation->jobOrder) }}" class="btn btn-outline-primary w-100">
+                                            <a href="{{ route('admin.job-orders.show', $initialJobOrder) }}" class="btn btn-outline-primary w-100">
                                                 <i class="fas fa-eye me-1"></i> View Job Order
                                             </a>
                                         @endif
@@ -539,11 +725,11 @@
                                                     </div>
 
                                                     <div class="workflow-completion-meta">
-                                                        @if ($quotation->jobOrder?->job_order_no)
+                                                        @if ($serviceJobOrder?->job_order_no)
                                                             <span>
                                                                 <i class="fas fa-clipboard-list"></i>
                                                                 Job Order
-                                                                <strong>{{ $quotation->jobOrder->job_order_no }}</strong>
+                                                                <strong>{{ $serviceJobOrder->job_order_no }}</strong>
                                                             </span>
                                                         @endif
 
@@ -628,14 +814,14 @@
                                                         </div>
                                                     @endif
 
-                                                    @if ($quotation->jobOrder?->created_at)
+                                                    @if ($serviceJobOrder?->created_at)
                                                         <div class="workflow-completion-timeline-item">
                                                             <span class="workflow-completion-timeline-dot">
                                                                 <i class="fas fa-check"></i>
                                                             </span>
                                                             <div class="workflow-completion-timeline-copy">
                                                                 <strong>Job order issued</strong>
-                                                                <span>{{ optional($quotation->jobOrder->created_at)->format('M d, Y h:i A') }}</span>
+                                                                <span>{{ optional($serviceJobOrder->created_at)->format('M d, Y h:i A') }}</span>
                                                             </div>
                                                         </div>
                                                     @endif
@@ -656,17 +842,12 @@
                                                 $alreadySentToHr = !empty($quotation->ready_for_quotation_at);
                                                 $hasExistingQuotation = !empty($quotation->quotation);
 
-                                                $inspectionCompleted = $flow !== 'inspection_required'
-                                                    || (
-                                                        $quotation->jobOrder
-                                                        && $quotation->jobOrder->status === 'completed'
-                                                    );
-
                                                 $canSendToHr = !$alreadySentToHr
                                                     && !$hasExistingQuotation
                                                     && $hasAssigned
                                                     && $hasScheduled
-                                                    && $inspectionCompleted;
+                                                    && $inspectionCompleted
+                                                    && $inspectionReportSubmitted;
                                             @endphp
 
                                             <div
@@ -701,15 +882,32 @@
                                                             <i class="fas fa-check-circle"></i>
                                                             HR has been notified
                                                         </div>
+                                                    @elseif ($hasExistingQuotation && $quotationAccepted)
+                                                        <span class="quotation-handoff-eyebrow">
+                                                            Quotation Accepted
+                                                        </span>
+
+                                                        <h6>Ready for actual service work</h6>
+
+                                                        <p>
+                                                            The client accepted the quotation. A separate service job order is now used for the actual repair or installation work.
+                                                        </p>
+
+                                                        @if ($serviceJobOrder)
+                                                            <a href="{{ route('admin.job-orders.show', $serviceJobOrder) }}" class="btn btn-primary w-100">
+                                                                <i class="fas fa-screwdriver-wrench me-1"></i>
+                                                                Open Service Job Order
+                                                            </a>
+                                                        @endif
                                                     @elseif ($hasExistingQuotation)
                                                         <span class="quotation-handoff-eyebrow">
                                                             Quotation Prepared
                                                         </span>
 
-                                                        <h6>Quotation already created</h6>
+                                                        <h6>Waiting for client decision</h6>
 
                                                         <p>
-                                                            HR has already created a quotation for this service request.
+                                                            HR has already prepared the quotation. The actual service job order will be created after the client accepts it.
                                                         </p>
                                                     @else
                                                         <span class="quotation-handoff-eyebrow">
@@ -793,17 +991,12 @@
     $alreadySentToHr = !empty($quotation->ready_for_quotation_at);
     $hasExistingQuotation = !empty($quotation->quotation);
 
-    $inspectionCompleted = $flow !== 'inspection_required'
-        || (
-            $quotation->jobOrder
-            && $quotation->jobOrder->status === 'completed'
-        );
-
     $canSendToHr = !$alreadySentToHr
         && !$hasExistingQuotation
         && $hasAssigned
         && $hasScheduled
-        && $inspectionCompleted;
+        && $inspectionCompleted
+        && $inspectionReportSubmitted;
 @endphp
 
 <div
@@ -839,15 +1032,32 @@
                 <i class="fas fa-check-circle"></i>
                 HR has been notified
             </div>
+        @elseif ($hasExistingQuotation && $quotationAccepted)
+            <span class="quotation-handoff-eyebrow">
+                Quotation Accepted
+            </span>
+
+            <h6>Ready for actual service work</h6>
+
+            <p>
+                The client accepted the quotation. A separate service job order is now used for the actual repair or installation work.
+            </p>
+
+            @if ($serviceJobOrder)
+                <a href="{{ route('admin.job-orders.show', $serviceJobOrder) }}" class="btn btn-primary w-100">
+                    <i class="fas fa-screwdriver-wrench me-1"></i>
+                    Open Service Job Order
+                </a>
+            @endif
         @elseif ($hasExistingQuotation)
             <span class="quotation-handoff-eyebrow">
                 Quotation Prepared
             </span>
 
-            <h6>Quotation already created</h6>
+            <h6>Waiting for client decision</h6>
 
             <p>
-                HR has already created a quotation for this service request.
+                HR has already prepared the quotation. The actual service job order will be created after the client accepts it.
             </p>
         @else
             <span class="quotation-handoff-eyebrow">
@@ -873,7 +1083,7 @@
                 </div>
             @elseif (
                 $flow === 'inspection_required'
-                && !$hasJobOrder
+                && !$inspectionJobOrder
             )
                 <div class="quotation-handoff-warning">
                     <i class="fas fa-triangle-exclamation"></i>
@@ -881,11 +1091,19 @@
                 </div>
             @elseif (
                 $flow === 'inspection_required'
-                && $quotation->jobOrder?->status !== 'completed'
+                && $inspectionJobOrder?->status !== 'completed'
             )
                 <div class="quotation-handoff-warning">
                     <i class="fas fa-triangle-exclamation"></i>
-                    Complete the inspection job order first.
+                    Wait for the assigned inspector to complete the inspection.
+                </div>
+            @elseif (
+                $flow === 'inspection_required'
+                && !$inspectionReportSubmitted
+            )
+                <div class="quotation-handoff-warning">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    Inspection is complete. Wait for the inspector to submit the final report.
                 </div>
             @endif
 
@@ -972,8 +1190,8 @@
                                     @if ($isTaskCompleted)
                                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                                         <div class="workflow-nav-actions">
-                                            @if ($quotation->jobOrder)
-                                                <a href="{{ route('admin.job-orders.show', $quotation->jobOrder) }}" class="btn btn-primary">
+                                            @if ($serviceJobOrder)
+                                                <a href="{{ route('admin.job-orders.show', $serviceJobOrder) }}" class="btn btn-primary">
                                                     View Full Job Order
                                                     <i class="fas fa-chevron-right ms-1"></i>
                                                 </a>
@@ -994,17 +1212,22 @@
                             </div>
                         </div>
                     </div>
+                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    </details>
                 @endforeach
             </div>
 
             <div class="workflow-pagination mt-3">
-                {{ $quotations->links() }}
+                {{ $clientGroups->links() }}
             </div>
         @else
             <div class="workflow-empty-state">
                 <div><i class="fas fa-file-circle-xmark"></i></div>
-                <strong>No quotation requests found</strong>
-                <p>Incoming service requests will appear here.</p>
+                <strong>No service requests found</strong>
+                <p>Try adjusting the filters or search terms.</p>
             </div>
         @endif
     </div>
