@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\QuotationRequest;
 use App\Services\AlertService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Http\Request;
 use App\Models\InspectorAvailability;
 use Carbon\Carbon;
@@ -117,6 +118,8 @@ class MyRequestController extends Controller
             'warning'
         );
 
+        WorkflowEmailService::clientActionRequested($quotation->fresh());
+
         return back()->with('success', 'Reschedule request sent successfully.');
     }
 
@@ -158,6 +161,8 @@ class MyRequestController extends Controller
             route('admin.quotations.index'),
             'warning'
         );
+
+        WorkflowEmailService::clientActionRequested($quotation->fresh());
 
         return back()->with('success', 'Cancellation request sent successfully.');
     }
@@ -270,6 +275,8 @@ class MyRequestController extends Controller
             route('admin.quotations.index'),
             'info'
         );
+
+        WorkflowEmailService::newServiceRequest($quotation);
 
         return redirect()
             ->route('client.requests.index')

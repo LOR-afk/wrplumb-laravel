@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
+use App\Services\AlertService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Support\Facades\Auth;
 
 class ContractController extends Controller
@@ -41,7 +43,7 @@ class ContractController extends Controller
 
         abort_if($contract->quotation->request->email !== $user->email, 403);
 
-        if (in_array($contract->status, ['accepted', 'finalized', 'cancelled'])) {
+        if (in_array($contract->status, ['accepted', 'finalized', 'cancelled', 'voided'], true)) {
             return back()->withErrors([
                 'contract' => 'This contract can no longer be accepted.',
             ]);
@@ -52,6 +54,26 @@ class ContractController extends Controller
             'client_accepted_at' => now(),
             'sent_at' => $contract->sent_at ?? now(),
         ]);
+
+        $contract->refresh()->load('quotation.request');
+
+        AlertService::sendToRole(
+            'hr',
+            'Contract accepted',
+            "{$user->name} accepted contract {$contract->contract_no}.",
+            route('hr.contracts.show', $contract),
+            'success'
+        );
+
+        AlertService::sendToRole(
+            'admin',
+            'Contract accepted',
+            "{$user->name} accepted contract {$contract->contract_no}.",
+            route('admin.quotations.index'),
+            'success'
+        );
+
+        WorkflowEmailService::contractAccepted($contract);
 
         return redirect()
             ->route('client.contracts.show', $contract)

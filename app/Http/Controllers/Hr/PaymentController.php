@@ -5,6 +5,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentSchedule;
+use App\Models\User;
+use App\Services\AlertService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -96,10 +99,15 @@ class PaymentController extends Controller
             ->latest('updated_at')
             ->get();
 
-$clientGroups = $matchingInvoices
-    ->groupBy(function (Invoice $invoice) {
-        return 'invoice-' . $invoice->id;
-    })
+        $clientGroups = $matchingInvoices
+            ->groupBy(function (Invoice $invoice) {
+                $requestData = $invoice->quotation?->request;
+                $email = strtolower(trim((string) ($requestData?->email ?? '')));
+
+                return $email !== ''
+                    ? $email
+                    : 'request-' . ($requestData?->id ?? $invoice->id);
+            })
             ->map(function ($invoices, $groupKey) {
                 $firstInvoice = $invoices->first();
                 $requestData = $firstInvoice?->quotation?->request;
@@ -232,6 +240,7 @@ $clientGroups = $matchingInvoices
         $validated = $request->validate([
             'invoice_id' => ['required', 'exists:invoices,id'],
             'payment_schedule_id' => ['nullable', 'exists:payment_schedules,id'],
+            'payment_type' => ['nullable', 'string', 'max:100'],
             'payment_method' => ['required', 'string', 'max:100'],
             'reference_number' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:0.01'],
@@ -259,9 +268,7 @@ $clientGroups = $matchingInvoices
                 ->findOrFail($validated['payment_schedule_id']);
         }
 
-        $payment = null;
-
-        DB::transaction(function () use ($validated, $invoice, $schedule, &$payment) {
+        $payment = DB::transaction(function () use ($validated, $invoice, $schedule): Payment {
             $payment = Payment::create([
                 'invoice_id' => $invoice->id,
                 'payment_schedule_id' => $schedule?->id,
@@ -269,7 +276,7 @@ $clientGroups = $matchingInvoices
                 'verified_by' => $validated['status'] === 'confirmed' ? Auth::id() : null,
                 'verified_at' => $validated['status'] === 'confirmed' ? now() : null,
                 'payment_no' => $this->generatePaymentNumber(),
-                'payment_type' => $schedule?->label ?? 'Unscheduled Payment',
+                'payment_type' => $validated['payment_type'] ?? $schedule?->label,
                 'payment_method' => $validated['payment_method'],
                 'reference_number' => $validated['reference_number'] ?? null,
                 'amount' => $validated['amount'],
@@ -296,7 +303,32 @@ $clientGroups = $matchingInvoices
             }
 
             $this->syncInvoiceStatus($invoice->fresh()->load('payments'));
+
+            return $payment;
         });
+
+        $payment->refresh()->load('invoice.quotation.request');
+
+        if (in_array($payment->status, ['confirmed', 'rejected'], true)) {
+            $client = User::query()
+                ->where('role', 'client')
+                ->where('email', $payment->invoice?->quotation?->request?->email)
+                ->first();
+
+            if ($client) {
+                AlertService::send(
+                    $client,
+                    $payment->status === 'confirmed' ? 'Payment confirmed' : 'Payment rejected',
+                    $payment->status === 'confirmed'
+                        ? "Payment {$payment->payment_no} has been recorded and confirmed."
+                        : "Payment {$payment->payment_no} was recorded as rejected.",
+                    route('client.payments.show', $payment),
+                    $payment->status === 'confirmed' ? 'success' : 'warning'
+                );
+            }
+
+            WorkflowEmailService::paymentReviewed($payment);
+        }
 
         return redirect()
             ->route('hr.payments.index')
@@ -358,6 +390,25 @@ $clientGroups = $matchingInvoices
             $this->syncInvoiceStatus($payment->invoice->fresh()->load('payments'));
         });
 
+        $payment->refresh()->load('invoice.quotation.request');
+
+        $client = User::query()
+            ->where('role', 'client')
+            ->where('email', $payment->invoice?->quotation?->request?->email)
+            ->first();
+
+        if ($client) {
+            AlertService::send(
+                $client,
+                'Payment confirmed',
+                "Payment {$payment->payment_no} has been verified and confirmed.",
+                route('client.payments.show', $payment),
+                'success'
+            );
+        }
+
+        WorkflowEmailService::paymentReviewed($payment);
+
         return redirect()
             ->route('hr.payments.index')
             ->with('success', 'Payment confirmed successfully.');
@@ -381,6 +432,25 @@ $clientGroups = $matchingInvoices
             'verified_at' => now(),
             'verification_notes' => $validated['verification_notes'],
         ]);
+
+        $payment->refresh()->load('invoice.quotation.request');
+
+        $client = User::query()
+            ->where('role', 'client')
+            ->where('email', $payment->invoice?->quotation?->request?->email)
+            ->first();
+
+        if ($client) {
+            AlertService::send(
+                $client,
+                'Payment rejected',
+                "Payment {$payment->payment_no} could not be verified. Please review the verification notes.",
+                route('client.payments.show', $payment),
+                'warning'
+            );
+        }
+
+        WorkflowEmailService::paymentReviewed($payment);
 
         return redirect()
             ->route('hr.payments.index')

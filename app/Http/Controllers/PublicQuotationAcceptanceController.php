@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\JobOrder;
 use App\Models\Quotation;
+use App\Services\AlertService;
 use App\Services\AuditLogService;
+use App\Services\JobOrderNumberService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Http\Request;
 
 class PublicQuotationAcceptanceController extends Controller
@@ -83,6 +86,24 @@ class PublicQuotationAcceptanceController extends Controller
             "Client accepted quotation #{$quotation->id} through the public quotation acceptance link."
         );
 
+        AlertService::sendToRole(
+            'hr',
+            'Quotation accepted',
+            "{$quotation->request?->full_name} accepted quotation {$quotation->quotation_no}.",
+            route('hr.quotations.show', $quotation),
+            'success'
+        );
+
+        AlertService::sendToRole(
+            'admin',
+            'Quotation accepted',
+            "{$quotation->request?->full_name} accepted quotation {$quotation->quotation_no}.",
+            route('admin.quotations.index'),
+            'success'
+        );
+
+        WorkflowEmailService::quotationResponded($quotation, 'accepted');
+
         return back()->with(
             'success',
             'Quotation accepted successfully. Your service is now awaiting work assignment and scheduling.'
@@ -117,7 +138,7 @@ class PublicQuotationAcceptanceController extends Controller
             'accepted_at' => null,
         ]);
 
-        $quotation->refresh();
+        $quotation->refresh()->load('request');
 
         AuditLogService::log(
             'Client Declined Quotation',
@@ -136,6 +157,24 @@ class PublicQuotationAcceptanceController extends Controller
             "Client declined quotation #{$quotation->id} through the public quotation acceptance link."
         );
 
+        AlertService::sendToRole(
+            'hr',
+            'Quotation declined',
+            "{$quotation->request?->full_name} declined quotation {$quotation->quotation_no}.",
+            route('hr.quotations.show', $quotation),
+            'warning'
+        );
+
+        AlertService::sendToRole(
+            'admin',
+            'Quotation declined',
+            "{$quotation->request?->full_name} declined quotation {$quotation->quotation_no}.",
+            route('admin.quotations.index'),
+            'warning'
+        );
+
+        WorkflowEmailService::quotationResponded($quotation, 'declined');
+
         return back()->with('success', 'Quotation declined. Thank you for your response.');
     }
 
@@ -143,14 +182,11 @@ class PublicQuotationAcceptanceController extends Controller
     {
         $serviceRequest = $quotation->request;
 
-        return JobOrder::firstOrCreate(
-            [
-                'quotation_request_id' => $serviceRequest->id,
-                'job_type' => 'service',
-            ],
+        return app(JobOrderNumberService::class)->createForRequest(
+            $serviceRequest->id,
+            'service',
             [
                 'worker_id' => null,
-                'job_order_no' => $this->generateJobOrderNumber(),
                 'service_flow' => $serviceRequest->service_flow,
                 'service_type' => $serviceRequest->service_type,
                 'project_type' => $serviceRequest->project_type,
@@ -162,18 +198,6 @@ class PublicQuotationAcceptanceController extends Controller
                 'created_by' => null,
             ]
         );
-    }
-
-    protected function generateJobOrderNumber(): string
-    {
-        $nextId = (JobOrder::max('id') ?? 0) + 1;
-
-        do {
-            $jobOrderNo = 'JO-' . now()->format('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
-            $nextId++;
-        } while (JobOrder::where('job_order_no', $jobOrderNo)->exists());
-
-        return $jobOrderNo;
     }
 
     protected function buildPaymentTerms(float $total, string $planKey): array

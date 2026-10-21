@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Hr;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Receipt;
+use App\Models\User;
+use App\Services\AlertService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -87,17 +90,21 @@ class ReceiptController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $payment = Payment::with(['invoice.quotation.request', 'paymentSchedule', 'receipt'])->findOrFail($validated['payment_id']);
+        $payment = Payment::with([
+            'invoice.quotation.request',
+            'paymentSchedule',
+            'receipt',
+        ])->findOrFail($validated['payment_id']);
 
         if ($payment->status !== 'confirmed') {
             return back()->withErrors([
-                'payment_id' => 'Only confirmed payments can have receipts generated.'
+                'payment_id' => 'Only confirmed payments can have receipts generated.',
             ])->withInput();
         }
 
         if ($payment->receipt) {
             return back()->withErrors([
-                'payment_id' => 'This payment already has a receipt.'
+                'payment_id' => 'This payment already has a receipt.',
             ])->withInput();
         }
 
@@ -112,6 +119,25 @@ class ReceiptController extends Controller
             'issued_by' => Auth::id(),
             'issued_at' => now(),
         ]);
+
+        $receipt->load('payment.invoice.quotation.request');
+
+        $client = User::query()
+            ->where('role', 'client')
+            ->where('email', $receipt->payment?->invoice?->quotation?->request?->email)
+            ->first();
+
+        if ($client) {
+            AlertService::send(
+                $client,
+                'Receipt ready',
+                "Official receipt {$receipt->receipt_no} is ready.",
+                route('client.receipts.show', $receipt),
+                'success'
+            );
+        }
+
+        WorkflowEmailService::receiptGenerated($receipt);
 
         return redirect()
             ->route('hr.receipts.show', $receipt)
@@ -133,6 +159,7 @@ class ReceiptController extends Controller
     {
         $nextId = (Receipt::max('id') ?? 0) + 1;
 
-        return 'RCPT-' . now()->format('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
+        return 'RCPT-' . now()->format('Y') . '-' .
+            str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
     }
 }

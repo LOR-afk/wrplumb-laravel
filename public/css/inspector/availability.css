@@ -798,3 +798,278 @@
         padding: 4px 5px;
     }
 }
+
+/* ============================================================
+   WRPlumb Inspector Availability - Leave Request UI Additions
+   Append to: public/css/inspector/availability.css
+   ============================================================ */
+
+.leave-request-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-height: 68px;
+    padding: 12px 14px;
+    border: 1px solid #e0e9f2;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 7px 18px rgba(15, 23, 42, 0.04);
+}
+
+.leave-request-bar-copy {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 11px;
+}
+
+.leave-request-bar-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: 11px;
+    background: #f3e8ff;
+    color: #7c3aed;
+    font-size: 0.72rem;
+}
+
+.leave-request-bar-copy strong {
+    display: block;
+    color: #172033;
+    font-size: 0.72rem;
+    font-weight: 950;
+}
+
+.leave-request-bar-copy span {
+    display: block;
+    margin-top: 2px;
+    color: #8a97a7;
+    font-size: 0.59rem;
+    line-height: 1.4;
+}
+
+.leave-request-bar-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 7px;
+}
+
+.leave-request-btn,
+.leave-history-btn {
+    display: inline-flex;
+    min-height: 35px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border-radius: 10px;
+    font-size: 0.63rem;
+    font-weight: 900;
+    text-decoration: none;
+    transition:
+        border-color 140ms ease,
+        background 140ms ease,
+        color 140ms ease,
+        transform 140ms ease;
+}
+
+.leave-request-btn {
+    border: 1px solid #7c3aed;
+    background: #7c3aed;
+    color: #fff;
+}
+
+.leave-request-btn:hover {
+    border-color: #6d28d9;
+    background: #6d28d9;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.leave-history-btn {
+    border: 1px solid #dce7f1;
+    background: #fff;
+    color: #5c6d80;
+}
+
+.leave-history-btn:hover {
+    border-color: #c8dceb;
+    background: #f7fbff;
+    color: #0b67b3;
+}
+
+.leave-history-card {
+    margin-top: 0;
+}
+
+.leave-history-status {
+    display: inline-flex;
+    min-height: 22px;
+    align-items: center;
+    padding: 4px 7px;
+    border-radius: 7px;
+    font-size: 0.52rem;
+    font-weight: 900;
+    text-transform: capitalize;
+}
+
+.leave-history-status.pending {
+    background: #fff7df;
+    color: #a16207;
+}
+
+.leave-history-status.approved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.leave-history-status.declined {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.leave-request-modal .modal-dialog {
+    max-width: 520px;
+}
+
+.leave-request-modal .modal-content {
+    overflow: hidden;
+    border: 1px solid #e0e9f2 !important;
+    border-radius: 17px;
+    box-shadow: 0 20px 55px rgba(15, 23, 42, 0.16) !important;
+}
+
+.leave-request-modal .modal-header {
+    align-items: flex-start;
+    padding: 15px 16px;
+    border-bottom: 1px solid #edf2f7;
+    background:
+        radial-gradient(circle at 8% 12%, rgba(124, 58, 237, 0.08), transparent 34%),
+        #fff;
+}
+
+.leave-request-modal .modal-title {
+    margin: 0;
+    color: #172033;
+    font-size: 0.86rem;
+    font-weight: 950;
+}
+
+.leave-request-modal .modal-header small {
+    display: block;
+    margin-top: 3px;
+    color: #8a97a7 !important;
+    font-size: 0.59rem;
+    line-height: 1.4;
+}
+
+.leave-request-modal .modal-body {
+    padding: 16px;
+}
+
+.leave-request-modal .modal-footer {
+    padding: 11px 16px;
+    border-top: 1px solid #edf2f7;
+    background: #fbfdff;
+}
+
+.leave-request-modal .form-label {
+    margin-bottom: 5px;
+    color: #49596c;
+    font-size: 0.64rem;
+    font-weight: 850;
+}
+
+.leave-request-modal .form-control {
+    min-height: 41px;
+    border: 1px solid #dbe6f0;
+    border-radius: 11px;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    box-shadow: none;
+}
+
+.leave-request-modal textarea.form-control {
+    min-height: 92px;
+    resize: vertical;
+}
+
+.leave-request-modal .form-control:focus {
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 0.16rem rgba(124, 58, 237, 0.10);
+}
+
+.leave-modal-note {
+    padding: 10px 11px;
+    border: 1px solid #e8defe;
+    border-radius: 10px;
+    background: #faf7ff;
+    color: #6b5a82;
+    font-size: 0.59rem;
+    line-height: 1.45;
+}
+
+.leave-request-modal .btn {
+    min-height: 36px;
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-size: 0.64rem;
+    font-weight: 850;
+}
+
+.leave-request-modal .btn-primary {
+    border-color: #7c3aed;
+    background: #7c3aed;
+}
+
+.leave-request-modal .btn-primary:hover {
+    border-color: #6d28d9;
+    background: #6d28d9;
+}
+
+@media (max-width: 767.98px) {
+    .leave-request-bar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .leave-request-bar-actions {
+        width: 100%;
+    }
+
+    .leave-request-btn,
+    .leave-history-btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .leave-request-bar {
+        padding: 11px 12px;
+    }
+
+    .leave-request-bar-icon {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+
+    .leave-request-bar-copy span {
+        font-size: 0.56rem;
+    }
+
+    .leave-request-bar-actions {
+        gap: 6px;
+    }
+
+    .leave-request-btn,
+    .leave-history-btn {
+        min-height: 34px;
+        padding: 6px 9px;
+        font-size: 0.59rem;
+    }
+}

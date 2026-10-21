@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JobOrder;
 use App\Models\Quotation;
 use App\Services\AuditLogService;
+use App\Services\JobOrderNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -111,14 +112,11 @@ class QuotationController extends Controller
     {
         $serviceRequest = $quotation->request;
 
-        return JobOrder::firstOrCreate(
-            [
-                'quotation_request_id' => $serviceRequest->id,
-                'job_type' => 'service',
-            ],
+        return app(JobOrderNumberService::class)->createForRequest(
+            $serviceRequest->id,
+            'service',
             [
                 'worker_id' => null,
-                'job_order_no' => $this->generateJobOrderNumber(),
                 'service_flow' => $serviceRequest->service_flow,
                 'service_type' => $serviceRequest->service_type,
                 'project_type' => $serviceRequest->project_type,
@@ -130,18 +128,6 @@ class QuotationController extends Controller
                 'created_by' => Auth::id(),
             ]
         );
-    }
-
-    protected function generateJobOrderNumber(): string
-    {
-        $nextId = (JobOrder::max('id') ?? 0) + 1;
-
-        do {
-            $jobOrderNo = 'JO-' . now()->format('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
-            $nextId++;
-        } while (JobOrder::where('job_order_no', $jobOrderNo)->exists());
-
-        return $jobOrderNo;
     }
 
     protected function buildPaymentTerms(float $total, string $planKey): array

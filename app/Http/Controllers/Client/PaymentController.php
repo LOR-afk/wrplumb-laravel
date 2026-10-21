@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentSchedule;
+use App\Services\AlertService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -115,6 +117,16 @@ class PaymentController extends Controller
             'verified_at' => null,
             'verification_notes' => null,
         ]);
+
+        AlertService::sendToRole(
+            'hr',
+            'Payment submitted',
+            "{$user->name} submitted payment {$payment->payment_no} for verification.",
+            route('hr.payments.show', $payment),
+            'info'
+        );
+
+        WorkflowEmailService::paymentSubmitted($payment);
 
         return redirect()
             ->route('client.payments.show', $payment)

@@ -16,9 +16,16 @@ use App\Models\User;
 
 use App\Services\AuditLogService;
 
+use App\Services\InspectorWorkloadService;
+use App\Services\JobOrderNumberService;
+
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Support\Facades\DB;
+
+use Illuminate\Validation\ValidationException;
 
 
 
@@ -26,23 +33,33 @@ class JobOrderController extends Controller
 
 {
 
+    public function __construct(
+
+        protected InspectorWorkloadService $workload
+
+    ) {}
+
+
+
     public function index(Request $request)
 
     {
 
-        $allowedStatuses = ['pending', 'scheduled', 'in_progress', 'completed', 'cancelled'];
-
-
+        $allowedStatuses = ['scheduled', 'in_progress', 'completed', 'cancelled'];
 
         $search = trim((string) $request->input('search'));
 
         $status = $request->input('status');
 
-        $serviceType = $request->input('service_type');
+        $jobType = $request->input('job_type');
+        if (!in_array($jobType, ['inspection', 'service', 'legacy'], true)) {
+            $jobType = null;
+        }
 
-        $workerId = $request->input('worker_id');
-
-
+        $year = $request->input('year');
+        if (!is_string($year) || !preg_match('/^(?:19|20)\d{2}$/', $year)) {
+            $year = null;
+        }
 
         $allowedSorts = [
 
@@ -64,34 +81,27 @@ class JobOrderController extends Controller
 
         ];
 
-
-
         $sort = $request->input('sort', 'created_at');
 
         $direction = strtolower((string) $request->input('direction', 'desc'));
 
-
-
         if (!in_array($sort, $allowedSorts, true)) {
 
             $sort = 'created_at';
+
         }
-
-
 
         if (!in_array($direction, ['asc', 'desc'], true)) {
 
             $direction = 'desc';
+
         }
-
-
 
         if ($status && !in_array($status, $allowedStatuses, true)) {
 
             $status = null;
+
         }
-
-
 
         $baseQuery = JobOrder::query()
 
@@ -103,13 +113,11 @@ class JobOrderController extends Controller
 
                 $terms = collect(preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY))
 
-                    ->map(fn($term) => trim($term))
+                    ->map(fn ($term) => trim($term))
 
                     ->filter()
 
                     ->values();
-
-
 
                 $query->where(function ($q) use ($search, $terms) {
 
@@ -155,8 +163,6 @@ class JobOrderController extends Controller
 
                                     ->orWhere('phone', 'like', "%{$search}%");
 
-
-
                                 // If the displayed client name contains initials/punctuation,
 
                                 // require every typed token to occur somewhere in the client record.
@@ -178,11 +184,17 @@ class JobOrderController extends Controller
                                                     ->orWhere('last_name', 'like', "%{$cleanTerm}%")
 
                                                     ->orWhere('email', 'like', "%{$cleanTerm}%");
+
                                             });
+
                                         }
+
                                     });
+
                                 }
+
                             });
+
                         })
 
                         ->orWhereHas('worker', function ($workerQuery) use ($search) {
@@ -200,18 +212,26 @@ class JobOrderController extends Controller
                                     )
 
                                     ->orWhere('email', 'like', "%{$search}%");
+
                             });
+
                         });
+
                 });
+
             })
 
-            ->when($status, fn($query) => $query->where('status', $status))
+            ->when($status, fn ($query) => $query->where('status', $status))
 
-            ->when($serviceType, fn($query) => $query->where('service_type', $serviceType))
+            ->when($jobType, function ($query) use ($jobType) {
+                if ($jobType === 'legacy') {
+                    $query->where('job_order_no', 'like', 'JO-%');
+                } else {
+                    $query->where('job_type', $jobType);
+                }
+            })
 
-            ->when($workerId, fn($query) => $query->where('worker_id', $workerId));
-
-
+            ->when($year, fn ($query) => $query->whereYear('created_at', (int) $year));
 
         $summary = [
 
@@ -227,11 +247,7 @@ class JobOrderController extends Controller
 
         ];
 
-
-
         $jobOrdersQuery = clone $baseQuery;
-
-
 
         switch ($sort) {
 
@@ -255,8 +271,6 @@ class JobOrderController extends Controller
 
                 break;
 
-
-
             case 'worker':
 
                 $jobOrdersQuery->orderBy(
@@ -276,8 +290,6 @@ class JobOrderController extends Controller
                 );
 
                 break;
-
-
 
             case 'progress':
 
@@ -301,33 +313,27 @@ class JobOrderController extends Controller
 
                 break;
 
-
-
             default:
 
                 $jobOrdersQuery->orderBy($sort, $direction);
 
                 break;
+
         }
-
-
 
         // Stable secondary sort keeps pagination predictable.
 
         if ($sort !== 'id') {
 
             $jobOrdersQuery->orderBy('id', 'desc');
+
         }
-
-
 
         $jobOrders = $jobOrdersQuery
 
             ->paginate(10)
 
             ->withQueryString();
-
-
 
         if ($request->ajax()) {
 
@@ -339,8 +345,6 @@ class JobOrderController extends Controller
 
                 ])->render(),
 
-
-
                 'stats_html' => view('admin.job-orders.partials.stats', [
 
                     'jobOrders' => $jobOrders,
@@ -350,35 +354,15 @@ class JobOrderController extends Controller
                 ])->render(),
 
             ]);
+
         }
 
-
-
-        $serviceTypes = JobOrder::query()
-
-            ->whereNotNull('service_type')
-
-            ->where('service_type', '<>', '')
-
+        $years = JobOrder::query()
+            ->whereNotNull('created_at')
+            ->selectRaw('YEAR(created_at) AS job_year')
             ->distinct()
-
-            ->orderBy('service_type')
-
-            ->pluck('service_type');
-
-
-
-        $workers = User::query()
-
-            ->where('role', 'worker')
-
-            ->orderBy('name')
-
-            ->orderBy('first_name')
-
-            ->get(['id', 'name', 'first_name', 'last_name', 'email']);
-
-
+            ->orderByDesc('job_year')
+            ->pluck('job_year');
 
         return view('admin.job-orders.index', compact(
 
@@ -386,32 +370,29 @@ class JobOrderController extends Controller
 
             'summary',
 
-            'serviceTypes',
-
-            'workers',
+            'years',
 
             'search',
 
             'status',
 
-            'serviceType',
+            'jobType',
 
-            'workerId',
+            'year',
 
             'sort',
 
             'direction'
 
         ));
+
     }
 
 
 
     public function create(QuotationRequest $quotation)
     {
-        $jobType = $quotation->service_flow === 'inspection_required'
-            ? 'inspection'
-            : 'service';
+        $jobType = $quotation->service_flow === 'inspection_required' ? 'inspection' : 'service';
 
         $existingJobOrder = $quotation->jobOrders()
             ->where('job_type', $jobType)
@@ -439,12 +420,8 @@ class JobOrderController extends Controller
             'admin_notes' => ['nullable', 'string'],
         ]);
 
-        $quotation = QuotationRequest::with('worker')
-            ->findOrFail($validated['quotation_request_id']);
-
-        $jobType = $quotation->service_flow === 'inspection_required'
-            ? 'inspection'
-            : 'service';
+        $quotation = QuotationRequest::with('worker')->findOrFail($validated['quotation_request_id']);
+        $jobType = $quotation->service_flow === 'inspection_required' ? 'inspection' : 'service';
 
         $existingJobOrder = $quotation->jobOrders()
             ->where('job_type', $jobType)
@@ -456,21 +433,36 @@ class JobOrderController extends Controller
                 ->with('info', ucfirst($jobType) . ' job order already exists for this request.');
         }
 
-        $jobOrder = JobOrder::create([
-            'quotation_request_id' => $quotation->id,
-            'worker_id' => $validated['worker_id'] ?? $quotation->worker_id,
-            'job_order_no' => $this->generateJobOrderNumber(),
-            'job_type' => $jobType,
-            'service_flow' => $quotation->service_flow,
-            'service_type' => $quotation->service_type,
-            'project_type' => $quotation->project_type,
-            'scheduled_date' => $validated['scheduled_date'] ?? $quotation->appointment_date ?? $quotation->preferred_date,
-            'scheduled_time' => $validated['scheduled_time'] ?? $quotation->appointment_time ?? $quotation->preferred_time,
-            'status' => 'scheduled',
-            'scope_of_work' => $validated['scope_of_work'] ?? $quotation->details,
-            'admin_notes' => $validated['admin_notes'] ?? $quotation->admin_notes,
-            'created_by' => Auth::id(),
-        ]);
+        $selectedWorkerId = $validated['worker_id'] ?? $quotation->worker_id;
+
+        if ($selectedWorkerId && $this->workload->isBusy((int) $selectedWorkerId)) {
+            return back()->withErrors([
+                'worker_id' => 'Selected inspector is currently on duty with another active job.',
+            ])->withInput();
+        }
+
+        $jobOrder = app(JobOrderNumberService::class)->createForRequest(
+            $quotation->id,
+            $jobType,
+            [
+                'worker_id' => $selectedWorkerId,
+                'service_flow' => $quotation->service_flow,
+                'service_type' => $quotation->service_type,
+                'project_type' => $quotation->project_type,
+                'scheduled_date' => $validated['scheduled_date'] ?? $quotation->appointment_date ?? $quotation->preferred_date,
+                'scheduled_time' => $validated['scheduled_time'] ?? $quotation->appointment_time ?? $quotation->preferred_time,
+                'status' => 'scheduled',
+                'scope_of_work' => $validated['scope_of_work'] ?? $quotation->details,
+                'admin_notes' => $validated['admin_notes'] ?? $quotation->admin_notes,
+                'created_by' => Auth::id(),
+            ]
+        );
+
+        if (!$jobOrder->wasRecentlyCreated) {
+            return redirect()
+                ->route('admin.job-orders.show', $jobOrder)
+                ->with('info', ucfirst($jobType) . ' job order already exists for this request.');
+        }
 
         $this->syncQuotationRequestFromJobOrder($jobOrder);
 
@@ -496,13 +488,9 @@ class JobOrderController extends Controller
 
         $jobOrder->load(['quotationRequest', 'worker', 'creator']);
 
+        $availableWorkers = $this->workload
 
-
-        $availableWorkers = User::query()
-
-            ->whereIn('role', ['worker', 'inspector'])
-
-            ->where('is_active', true)
+            ->availableWorkersQuery()
 
             ->orderBy('first_name')
 
@@ -510,182 +498,335 @@ class JobOrderController extends Controller
 
             ->get(['id', 'name', 'first_name', 'last_name', 'email', 'role']);
 
-
-
         return view('admin.job-orders.show', compact('jobOrder', 'availableWorkers'));
+
     }
 
 
 
     public function reschedule(Request $request, JobOrder $jobOrder)
+
     {
+
         if (in_array($jobOrder->status, ['completed', 'cancelled'], true)) {
+
             return back()->withErrors([
+
                 'job_order' => 'Completed or cancelled job orders can no longer be rescheduled.'
+
             ]);
+
         }
 
         $validated = $request->validate([
+
             'scheduled_date' => ['required', 'date'],
+
             'scheduled_time' => ['nullable', 'string', 'max:20'],
+
         ]);
 
         $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
 
-        $payload = [
+        $jobOrder->update([
+
             'scheduled_date' => $validated['scheduled_date'],
+
             'scheduled_time' => $validated['scheduled_time'] ?? null,
-        ];
 
-        if ($jobOrder->status === 'pending') {
-            $payload['status'] = 'scheduled';
-        }
-
-        $jobOrder->update($payload);
+        ]);
 
         $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
 
         $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
 
         AuditLogService::log(
+
             'Admin Rescheduled Job Order',
+
             'Job Orders',
+
             $jobOrder,
+
             $oldValues,
+
             $this->jobOrderAuditSnapshot($jobOrder),
-            "Admin updated the schedule for job order {$jobOrder->job_order_no}."
+
+            "Admin rescheduled job order {$jobOrder->job_order_no}."
+
         );
 
         return back()->with('success', 'Job order schedule updated successfully.');
+
     }
 
+
+
     public function reassign(Request $request, JobOrder $jobOrder)
+
     {
-        if (in_array($jobOrder->status, ['completed', 'cancelled'], true)) {
+
+        if (in_array($jobOrder->status, ['in_progress', 'completed', 'cancelled'], true)) {
+
             return back()->withErrors([
-                'job_order' => 'Completed or cancelled job orders can no longer be reassigned.'
+
+                'job_order' => 'In-progress, completed, or cancelled job orders can no longer be reassigned.'
+
             ]);
+
         }
 
         $validated = $request->validate([
+
             'worker_id' => ['required', 'exists:users,id'],
+
         ]);
 
         $worker = User::query()
+
             ->whereKey($validated['worker_id'])
+
             ->whereIn('role', ['worker', 'inspector'])
+
             ->where('is_active', true)
+
             ->firstOrFail();
+
+
+
+        if ($this->workload->isBusy($worker->id)) {
+
+            return back()->withErrors([
+
+                'worker_id' => 'Selected inspector is currently on duty with another active job.'
+
+            ])->withInput();
+
+        }
+
+
 
         $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
 
-        $payload = [
+        $jobOrder->update([
+
             'worker_id' => $worker->id,
-        ];
 
-        if (
-            $jobOrder->status === 'pending' &&
-            !empty($jobOrder->scheduled_date)
-        ) {
-            $payload['status'] = 'scheduled';
-        }
-
-        $jobOrder->update($payload);
+        ]);
 
         $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
 
         $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
 
         AuditLogService::log(
+
             'Admin Reassigned Job Order',
+
             'Job Orders',
+
             $jobOrder,
+
             $oldValues,
+
             $this->jobOrderAuditSnapshot($jobOrder),
+
             "Admin reassigned job order {$jobOrder->job_order_no} to {$worker->name}."
+
         );
 
         return back()->with('success', 'Job order worker reassigned successfully.');
+
     }
+
+
 
     public function start(JobOrder $jobOrder)
+
     {
-        if ($jobOrder->job_type === 'inspection') {
-            return back()->withErrors([
-                'job_order' => 'Inspection job orders are started by the assigned inspector from the inspection workflow.'
+
+        $oldValues = null;
+
+
+
+        DB::transaction(function () use ($jobOrder, &$oldValues) {
+
+            $lockedJobOrder = JobOrder::query()
+
+                ->whereKey($jobOrder->id)
+
+                ->lockForUpdate()
+
+                ->firstOrFail();
+
+
+
+            if ($lockedJobOrder->status !== 'scheduled') {
+
+                throw ValidationException::withMessages([
+
+                    'job_order' => 'Only scheduled job orders can be started.'
+
+                ]);
+
+            }
+
+
+
+            if (!$lockedJobOrder->worker_id) {
+
+                throw ValidationException::withMessages([
+
+                    'worker_id' => 'Assign an inspector or worker before starting this job.'
+
+                ]);
+
+            }
+
+
+
+            User::query()
+
+                ->whereKey($lockedJobOrder->worker_id)
+
+                ->lockForUpdate()
+
+                ->firstOrFail();
+
+
+
+            if ($this->workload->isBusy($lockedJobOrder->worker_id, $lockedJobOrder->id)) {
+
+                throw ValidationException::withMessages([
+
+                    'worker_id' => 'This inspector is already on duty with another active job.'
+
+                ]);
+
+            }
+
+
+
+            $oldValues = $this->jobOrderAuditSnapshot($lockedJobOrder);
+
+
+
+            $lockedJobOrder->update([
+
+                'status' => 'in_progress',
+
+                'started_at' => $lockedJobOrder->started_at ?? now(),
+
             ]);
-        }
 
-        if (!in_array($jobOrder->status, ['scheduled'], true)) {
-            return back()->withErrors([
-                'job_order' => 'Only scheduled job orders can be started.'
-            ]);
-        }
 
-        $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
 
-        $jobOrder->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
+            $this->workload->markOnDuty($lockedJobOrder->worker_id);
 
-        $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
+            $this->syncQuotationRequestFromJobOrder($lockedJobOrder->fresh());
+
+        });
+
+
 
         $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
 
+
+
         AuditLogService::log(
+
             'Admin Started Job Order',
+
             'Job Orders',
+
             $jobOrder,
+
             $oldValues,
+
             $this->jobOrderAuditSnapshot($jobOrder),
-            "Admin started service job order {$jobOrder->job_order_no}."
+
+            "Admin started job order {$jobOrder->job_order_no}."
+
         );
 
-        return back()->with('success', 'Service job order marked as in progress.');
+
+
+        return back()->with('success', 'Job order marked as in progress. Inspector is now on duty.');
+
     }
+
+
 
     public function complete(Request $request, JobOrder $jobOrder)
+
     {
-        if ($jobOrder->job_type === 'inspection') {
-            return back()->withErrors([
-                'job_order' => 'Inspection job orders are completed automatically when the inspector completes the inspection.'
-            ]);
-        }
 
         $validated = $request->validate([
+
             'completion_notes' => ['nullable', 'string'],
+
         ]);
 
-        if (!in_array($jobOrder->status, ['in_progress', 'scheduled'], true)) {
+        if (!in_array($jobOrder->status, ['in_progress', 'scheduled'])) {
+
             return back()->withErrors([
-                'job_order' => 'Only scheduled or in-progress service job orders can be completed.'
+
+                'job_order' => 'Only scheduled or in-progress job orders can be completed.'
+
             ]);
+
         }
 
         $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
 
+        $workerId = $jobOrder->worker_id;
+
+
+
         $jobOrder->update([
+
             'status' => 'completed',
+
             'completed_at' => now(),
+
             'completion_notes' => $validated['completion_notes'] ?? $jobOrder->completion_notes,
+
         ]);
+
+
+
+        if ($workerId) {
+
+            $this->workload->markAvailableIfFree($workerId);
+
+        }
+
+
 
         $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
 
         $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
 
         AuditLogService::log(
+
             'Admin Completed Job Order',
+
             'Job Orders',
+
             $jobOrder,
+
             $oldValues,
+
             $this->jobOrderAuditSnapshot($jobOrder),
-            "Admin completed service job order {$jobOrder->job_order_no}."
+
+            "Admin completed job order {$jobOrder->job_order_no}."
+
         );
 
-        return back()->with('success', 'Service job order marked as completed.');
+        return back()->with('success', 'Job order marked as completed.');
+
     }
+
+
 
     public function cancel(Request $request, JobOrder $jobOrder)
 
@@ -697,8 +838,6 @@ class JobOrderController extends Controller
 
         ]);
 
-
-
         if ($jobOrder->status === 'completed') {
 
             return back()->withErrors([
@@ -706,11 +845,12 @@ class JobOrderController extends Controller
                 'job_order' => 'Completed job orders can no longer be cancelled.'
 
             ]);
+
         }
 
-
-
         $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
+
+        $workerId = $jobOrder->worker_id;
 
 
 
@@ -726,13 +866,17 @@ class JobOrderController extends Controller
 
 
 
+        if ($workerId) {
+
+            $this->workload->markAvailableIfFree($workerId);
+
+        }
+
+
+
         $this->syncQuotationRequestFromJobOrder($jobOrder->fresh());
 
-
-
         $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
-
-
 
         AuditLogService::log(
 
@@ -750,9 +894,8 @@ class JobOrderController extends Controller
 
         );
 
-
-
         return back()->with('success', 'Job order cancelled successfully.');
+
     }
 
 
@@ -769,11 +912,7 @@ class JobOrderController extends Controller
 
         ]);
 
-
-
         $oldValues = $this->jobOrderAuditSnapshot($jobOrder);
-
-
 
         $jobOrder->update([
 
@@ -783,11 +922,7 @@ class JobOrderController extends Controller
 
         ]);
 
-
-
         $jobOrder->refresh()->load(['quotationRequest', 'worker', 'creator']);
-
-
 
         AuditLogService::log(
 
@@ -805,89 +940,103 @@ class JobOrderController extends Controller
 
         );
 
-
-
         return back()->with('success', 'Job order remarks updated successfully.');
+
     }
 
 
 
     protected function syncQuotationRequestFromJobOrder(JobOrder $jobOrder): void
+
     {
+
         $jobOrder->loadMissing('quotationRequest');
 
         $quotation = $jobOrder->quotationRequest;
 
         if (!$quotation) {
+
             return;
+
         }
 
         $payload = [];
 
         if (!empty($jobOrder->worker_id)) {
+
             $payload['worker_id'] = $jobOrder->worker_id;
+
         }
 
-        if ($jobOrder->job_type === 'inspection') {
-            if (!empty($jobOrder->scheduled_date)) {
-                $payload['appointment_date'] = $jobOrder->scheduled_date;
+        if (!empty($jobOrder->scheduled_date)) {
+
+            $payload['appointment_date'] = $jobOrder->scheduled_date;
+
+        }
+
+        if (!empty($jobOrder->scheduled_time)) {
+
+            $payload['appointment_time'] = $jobOrder->scheduled_time;
+
+        }
+
+        if ($jobOrder->status === 'cancelled') {
+
+            $payload['appointment_status'] = 'cancelled';
+
+            $payload['status'] = 'pending';
+
+            if (empty($quotation->cancelled_at)) {
+
+                $payload['cancelled_at'] = now();
+
             }
 
-            if (!empty($jobOrder->scheduled_time)) {
-                $payload['appointment_time'] = $jobOrder->scheduled_time;
-            }
-
-            if ($jobOrder->status === 'cancelled') {
-                $payload['appointment_status'] = 'cancelled';
-
-                if (!$quotation->ready_for_quotation_at) {
-                    $payload['status'] = 'pending';
-                }
-
-                if (empty($quotation->cancelled_at)) {
-                    $payload['cancelled_at'] = now();
-                }
-            } else {
-                if (empty($quotation->appointment_status) || $quotation->appointment_status === 'pending') {
-                    $payload['appointment_status'] = 'approved';
-
-                    if (empty($quotation->approved_at)) {
-                        $payload['approved_at'] = now();
-                    }
-                }
-
-                if (!$quotation->ready_for_quotation_at) {
-                    if ($jobOrder->status === 'scheduled') {
-                        $payload['status'] = 'assigned';
-                    } elseif (in_array($jobOrder->status, ['in_progress', 'completed'], true)) {
-                        $payload['status'] = 'in_progress';
-                        $payload['completed_at'] = null;
-                    }
-                }
-            }
         } else {
-            if ($jobOrder->status === 'cancelled') {
-                $payload['status'] = 'pending';
-                $payload['completed_at'] = null;
-            } elseif ($jobOrder->status === 'scheduled') {
+
+            if (empty($quotation->appointment_status) || $quotation->appointment_status === 'pending') {
+
+                $payload['appointment_status'] = 'approved';
+
+                if (empty($quotation->approved_at)) {
+
+                    $payload['approved_at'] = now();
+
+                }
+
+            }
+
+            if ($jobOrder->status === 'scheduled') {
+
                 $payload['status'] = 'assigned';
-                $payload['completed_at'] = null;
+
             } elseif ($jobOrder->status === 'in_progress') {
+
                 $payload['status'] = 'in_progress';
-                $payload['completed_at'] = null;
+
             } elseif ($jobOrder->status === 'completed') {
+
                 $payload['status'] = 'completed';
 
                 if (empty($quotation->completed_at)) {
+
                     $payload['completed_at'] = now();
+
                 }
+
             }
+
         }
 
         if (!empty($payload)) {
+
             $quotation->update($payload);
+
         }
+
     }
+
+
 
     protected function jobOrderAuditSnapshot(JobOrder $jobOrder): array
 
@@ -896,6 +1045,7 @@ class JobOrderController extends Controller
         return [
 
             'job_order_no' => $jobOrder->job_order_no,
+
             'job_type' => $jobOrder->job_type,
 
             'quotation_request_id' => $jobOrder->quotation_request_id,
@@ -935,6 +1085,7 @@ class JobOrderController extends Controller
             'created_by_name' => $jobOrder->creator?->name,
 
         ];
+
     }
 
 
@@ -946,11 +1097,11 @@ class JobOrderController extends Controller
         if (empty($value)) {
 
             return null;
+
         }
 
-
-
         return date('Y-m-d', strtotime((string) $value));
+
     }
 
 
@@ -962,23 +1113,14 @@ class JobOrderController extends Controller
         if (empty($value)) {
 
             return null;
+
         }
 
-
-
         return date('Y-m-d H:i:s', strtotime((string) $value));
+
     }
 
 
 
-    protected function generateJobOrderNumber(): string
 
-    {
-
-        $nextId = (JobOrder::max('id') ?? 0) + 1;
-
-
-
-        return 'JO-' . now()->format('Y') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
-    }
 }

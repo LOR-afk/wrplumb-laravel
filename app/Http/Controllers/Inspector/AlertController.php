@@ -13,9 +13,14 @@ class AlertController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $alerts = $user->alerts()->paginate(10);
+        $alerts = $user->alerts()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(10);
 
-        $user->alerts()->where('is_read', false)->update(['is_read' => true]);
+        $user->alerts()
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
 
         return view('inspector.alerts.index', compact('alerts'));
     }

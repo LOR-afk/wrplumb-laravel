@@ -1,1532 +1,663 @@
 :root {
-
     --wr-primary: #1d9bf0;
-
     --wr-primary-dark: #0d4f83;
-
     --wr-navy: #082541;
-
     --wr-bg: #f3f7fb;
-
     --wr-border: #dfe8f1;
-
     --wr-text: #132238;
-
     --wr-muted: #6f7f92;
-
     --wr-success: #16a34a;
-
     --wr-danger: #ef4444;
-
     --wr-shadow: 0 5px 16px rgba(15,39,75,.045);
-
     --sidebar-expanded: 214px;
-
     --sidebar-collapsed: 70px;
-
 }
-
-
-
 * { box-sizing: border-box; }
-
-
-
 html, body { min-height: 100%; }
-
-
-
 body {
-
     margin: 0;
-
     background: var(--wr-bg);
-
     color: var(--wr-text);
-
     font-family: "Inter", "Segoe UI", Arial, sans-serif;
-
 }
-
-
-
 button, input, select, textarea { font: inherit; }
-
-
-
 .app-shell { min-height: 100vh; }
-
-
-
 .sidebar {
-
     position: fixed;
-
     inset: 0 auto 0 0;
-
     z-index: 1040;
-
     display: flex;
-
     width: var(--sidebar-expanded);
-
     flex-direction: column;
-
     padding: 12px 9px;
-
     overflow-x: hidden;
-
     overflow-y: auto;
-
     background: linear-gradient(180deg, #071f37 0%, #082b49 100%);
-
     color: #fff;
-
     scrollbar-width: none;
-
     transition: width 190ms cubic-bezier(.2,.75,.25,1), transform 190ms ease;
-
 }
-
-
-
 .sidebar::-webkit-scrollbar { display: none; }
-
-
-
 .sidebar-brand {
-
     display: flex;
-
     min-height: 54px;
-
     align-items: center;
-
     gap: 10px;
-
     margin-bottom: 10px;
-
     padding: 6px;
-
     border-radius: 10px;
-
     color: #fff;
-
     text-decoration: none;
-
 }
-
-
-
 .brand-logo {
-
     width: 40px;
-
     height: 40px;
-
     flex: 0 0 40px;
-
     object-fit: cover;
-
     border: 1px solid rgba(255,255,255,.14);
-
     border-radius: 10px;
-
     background: #fff;
-
     padding: 3px;
-
 }
-
-
-
 .brand-copy,
-
 .sidebar-text {
-
     min-width: 0;
-
     overflow: hidden;
-
     white-space: nowrap;
-
     transition: opacity 120ms ease, width 160ms ease, transform 160ms ease;
-
 }
-
-
-
 .brand-copy strong,
-
 .brand-copy small { display: block; }
-
-
-
 .brand-copy strong {
-
     color: #fff;
-
     font-size: .93rem;
-
     font-weight: 900;
-
     line-height: 1.05;
-
 }
-
-
-
 .brand-copy small {
-
     margin-top: 3px;
-
     color: #8fb2d2;
-
     font-size: .68rem;
-
     font-weight: 700;
-
 }
-
-
-
 .sidebar-nav {
-
     display: grid;
-
     gap: 4px;
-
 }
-
-
-
 .sidebar-link,
-
 .logout-btn {
-
     position: relative;
-
     display: flex;
-
     min-height: 41px;
-
     align-items: center;
-
     gap: 10px;
-
     border-radius: 9px;
-
     color: #b7cce0;
-
     font-size: .78rem;
-
     font-weight: 780;
-
     text-decoration: none;
-
     transition: background 130ms ease, color 130ms ease;
-
 }
-
-
-
 .sidebar-link { padding: 7px 10px; }
-
-
-
 .sidebar-icon {
-
     display: grid;
-
     width: 24px;
-
     flex: 0 0 24px;
-
     place-items: center;
-
     color: #a8c5dd;
-
     font-size: .8rem;
-
 }
-
-
-
 .sidebar-link:hover {
-
     background: rgba(255,255,255,.07);
-
     color: #fff;
-
 }
-
-
-
 .sidebar-link:hover .sidebar-icon { color: #fff; }
-
-
-
 .sidebar-link.active {
-
     background: rgba(29,155,240,.22);
-
     color: #fff;
-
     box-shadow: inset 3px 0 0 #2bb1ff;
-
 }
-
-
-
 .sidebar-link.active .sidebar-icon { color: #4bc0ff; }
-
-
-
 .sidebar-footer {
-
     margin-top: auto;
-
     padding-top: 10px;
-
     border-top: 1px solid rgba(255,255,255,.08);
-
 }
-
-
-
 .sidebar-footer form { margin: 0; }
-
-
-
 .logout-btn {
-
     width: 100%;
-
     padding: 7px 10px;
-
     border: 0;
-
     background: transparent;
-
     color: #f0b4b4;
-
     text-align: left;
-
 }
-
-
-
 .logout-btn .sidebar-icon { color: #ff8f8f; }
-
-
-
 .logout-btn:hover {
-
     background: rgba(239,68,68,.12);
-
     color: #fff;
-
 }
-
-
-
 .main {
-
     min-width: 0;
-
     min-height: 100vh;
-
     margin-left: var(--sidebar-expanded);
-
     transition: margin-left 190ms cubic-bezier(.2,.75,.25,1);
-
 }
-
-
-
 .topbar {
-
     position: sticky;
-
     top: 0;
-
     z-index: 1020;
-
     display: flex;
-
     min-height: 58px;
-
     align-items: center;
-
     justify-content: space-between;
-
     gap: 18px;
-
     padding: 8px 20px;
-
     border-bottom: 1px solid var(--wr-border);
-
     background: rgba(255,255,255,.96);
-
     backdrop-filter: blur(10px);
-
 }
-
-
-
 .topbar-left,
-
 .topbar-actions {
-
     display: flex;
-
     align-items: center;
-
     gap: 10px;
-
 }
-
-
-
 .topbar-menu-btn,
-
 .topbar-icon-btn {
-
     display: grid;
-
     width: 38px;
-
     height: 38px;
-
     place-items: center;
-
     padding: 0;
-
     border: 0;
-
     border-radius: 9px;
-
     background: transparent;
-
     color: #34516c;
-
 }
-
-
-
 .topbar-menu-btn:hover,
-
 .topbar-icon-btn:hover {
-
     background: #eef5fb;
-
     color: var(--wr-primary-dark);
-
 }
-
-
-
 .topbar-search-wrap {
-
     display: flex;
-
     width: min(400px, 38vw);
-
     min-height: 38px;
-
     align-items: center;
-
     gap: 8px;
-
     padding: 0 9px 0 12px;
-
     border: 1px solid #d9e5ef;
-
     border-radius: 9px;
-
     background: #f4f8fc;
-
 }
-
-
-
 .topbar-search-wrap > i {
-
     color: #6f88a2;
-
     font-size: .78rem;
-
 }
-
-
-
 .topbar-search {
-
     min-width: 0;
-
     flex: 1;
-
     border: 0;
-
     outline: 0;
-
     background: transparent;
-
     color: #24384d;
-
     font-size: .78rem;
-
 }
-
-
-
 .topbar-search::placeholder { color: #8998a8; }
-
-
-
 .topbar-search-wrap kbd {
-
     padding: 3px 6px;
-
     border: 1px solid #d7e2ec;
-
     border-radius: 5px;
-
     background: #fff;
-
     color: #718096;
-
     box-shadow: none;
-
     font-family: inherit;
-
     font-size: .6rem;
-
     font-weight: 700;
-
 }
-
-
-
 .topbar-icon-btn {
-
     position: relative;
-
     text-decoration: none;
-
 }
-
-
-
 .topbar-alert-count {
-
     position: absolute;
-
     top: 1px;
-
     right: 1px;
-
     display: grid;
-
     min-width: 16px;
-
     height: 16px;
-
     place-items: center;
-
     padding: 0 4px;
-
     border: 2px solid #fff;
-
     border-radius: 999px;
-
     background: #ef4444;
-
     color: #fff;
-
     font-size: .54rem;
-
     font-weight: 900;
-
 }
-
-
-
 .topbar-user {
-
     display: inline-flex;
-
     min-height: 40px;
-
     align-items: center;
-
     gap: 8px;
-
     padding: 4px 7px 4px 5px;
-
     border-radius: 9px;
-
     color: #24384d;
-
 }
-
-
-
 .topbar-user-avatar {
-
     display: grid;
-
     width: 31px;
-
     height: 31px;
-
     place-items: center;
-
     border-radius: 9px;
-
     background: #e7f3fc;
-
     color: #0d4f83;
-
     font-size: .68rem;
-
     font-weight: 900;
-
 }
-
-
-
 .topbar-user-copy {
-
     display: grid;
-
     line-height: 1.05;
-
 }
-
-
-
 .topbar-user-copy strong {
-
     max-width: 100px;
-
     overflow: hidden;
-
     color: #24384d;
-
     font-size: .76rem;
-
     font-weight: 850;
-
     text-overflow: ellipsis;
-
     white-space: nowrap;
-
 }
-
-
-
 .topbar-user-copy small {
-
     margin-top: 3px;
-
     color: #8a98a8;
-
     font-size: .68rem;
-
 }
-
-
-
 .content { padding: 20px 24px 28px; }
-
-
-
 .page-heading { margin-bottom: 16px; }
-
-
-
 .page-heading h1 {
-
     margin: 0;
-
     color: #102038;
-
     font-size: 1.38rem;
-
     font-weight: 900;
-
     letter-spacing: -.025em;
-
 }
-
-
-
 .page-heading-meta {
-
     display: flex;
-
     align-items: center;
-
     gap: 6px;
-
     margin-top: 6px;
-
     color: #7690a7;
-
     font-size: .68rem;
-
 }
-
-
-
 .page-heading-meta i { font-size: .43rem; }
-
-
-
 .page-heading-meta strong {
-
     color: #35526c;
-
     font-weight: 800;
-
 }
-
-
-
 .page-heading p {
-
     margin: 5px 0 0;
-
     color: #7b8998;
-
     font-size: .74rem;
-
 }
-
-
-
 /* Desktop collapsed state */
-
 body.hr-sidebar-collapsed .sidebar { width: var(--sidebar-collapsed); }
-
 body.hr-sidebar-collapsed .main { margin-left: var(--sidebar-collapsed); }
-
-
-
 body.hr-sidebar-collapsed .brand-copy,
-
 body.hr-sidebar-collapsed .sidebar-text {
-
     width: 0;
-
     opacity: 0;
-
     pointer-events: none;
-
     transform: translateX(-5px);
-
 }
-
-
-
 body.hr-sidebar-collapsed .sidebar-brand,
-
 body.hr-sidebar-collapsed .sidebar-link,
-
 body.hr-sidebar-collapsed .logout-btn {
-
     justify-content: center;
-
     gap: 0;
-
     padding-inline: 0;
-
 }
-
-
-
 body.hr-sidebar-collapsed .sidebar-icon {
-
     width: 30px;
-
     flex-basis: 30px;
-
 }
-
-
-
 body.hr-sidebar-collapsed .sidebar-link::after,
-
 body.hr-sidebar-collapsed .logout-btn::after {
-
     position: fixed;
-
     left: 80px;
-
     z-index: 1200;
-
     visibility: hidden;
-
     padding: 6px 8px;
-
     border-radius: 6px;
-
     background: #102338;
-
     color: #fff;
-
     content: attr(data-label);
-
     font-size: .68rem;
-
     font-weight: 800;
-
     opacity: 0;
-
     pointer-events: none;
-
     transform: translateX(-3px);
-
     transition: opacity 110ms ease, transform 110ms ease, visibility 110ms ease;
-
     white-space: nowrap;
-
 }
-
-
-
 body.hr-sidebar-collapsed .sidebar-link:hover::after,
-
 body.hr-sidebar-collapsed .logout-btn:hover::after {
-
     visibility: visible;
-
     opacity: 1;
-
     transform: translateX(0);
-
 }
-
-
-
 .sidebar-backdrop { display: none; }
-
-
-
 .panel,
-
 .page-header,
-
 .page-header-card,
-
 .stat-card {
-
     border: 1px solid var(--wr-border);
-
     border-radius: 9px;
-
     background: #fff;
-
     box-shadow: var(--wr-shadow);
-
 }
-
-
-
 .panel { overflow: hidden; }
-
-
-
 .panel-header {
-
     padding: 10px 12px;
-
     border-bottom: 1px solid #edf1f5;
-
     background: #fbfdff;
-
 }
-
-
-
 .panel-header h4,
-
 .panel-header h5 {
-
     margin: 0;
-
     font-size: .88rem;
-
     font-weight: 900;
-
 }
-
-
-
 .panel-body { padding: 12px; }
-
-
-
 .table { margin-bottom: 0; }
-
-
-
 .table thead th {
-
     padding: 11px 12px;
-
     border-bottom: 1px solid #e8eef5;
-
     background: #f7f9fc;
-
     color: #718399;
-
     font-size: .68rem;
-
     font-weight: 900;
-
     text-transform: uppercase;
-
     white-space: nowrap;
-
 }
-
-
-
 .table tbody td {
-
     padding: 11px 12px;
-
     border-color: #edf1f5;
-
     font-size: .78rem;
-
     vertical-align: middle;
-
 }
-
-
-
 .form-control,
-
 .form-select,
-
 textarea {
-
     border: 1px solid var(--wr-border) !important;
-
     border-radius: 9px !important;
-
     box-shadow: none !important;
-
 }
-
-
-
 .form-control:focus,
-
 .form-select:focus,
-
 textarea:focus {
-
     border-color: #7dd3fc !important;
-
     box-shadow: 0 0 0 .13rem rgba(29,155,240,.12) !important;
-
 }
-
-
-
 .hr-toast {
-
     position: fixed;
-
     top: 70px;
-
     right: 18px;
-
     z-index: 2000;
-
     display: grid;
-
     width: min(330px, calc(100vw - 32px));
-
     grid-template-columns: 32px minmax(0,1fr) 26px;
-
     gap: 9px;
-
     align-items: center;
-
     padding: 10px;
-
     border: 1px solid #dfe7f1;
-
     border-radius: 10px;
-
     background: rgba(255,255,255,.98);
-
     box-shadow: 0 14px 38px rgba(15,39,75,.16);
-
     animation: hrToastIn .2s ease both;
-
 }
-
-
-
 .hr-toast-success { border-color: #bbf7d0; }
-
 .hr-toast-error { border-color: #fecaca; }
-
-
-
 .hr-toast-icon {
-
     display: grid;
-
     width: 30px;
-
     height: 30px;
-
     place-items: center;
-
     border-radius: 8px;
-
     font-size: .64rem;
-
 }
-
-
-
 .hr-toast-success .hr-toast-icon {
-
     background: #ecfdf3;
-
     color: #15803d;
-
 }
-
-
-
 .hr-toast-error .hr-toast-icon {
-
     background: #fff1f2;
-
     color: #b91c1c;
-
 }
-
-
-
 .hr-toast-copy strong,
-
 .hr-toast-copy span { display: block; }
-
-
-
 .hr-toast-copy strong {
-
     color: #0f172a;
-
     font-size: .68rem;
-
     font-weight: 900;
-
 }
-
-
-
 .hr-toast-copy span {
-
     margin-top: 2px;
-
     color: #64748b;
-
     font-size: .64rem;
-
     line-height: 1.35;
-
 }
-
-
-
 .hr-toast-close {
-
     display: grid;
-
     width: 26px;
-
     height: 26px;
-
     place-items: center;
-
     padding: 0;
-
     border: 0;
-
     border-radius: 7px;
-
     background: transparent;
-
     color: #94a3b8;
-
     font-size: .64rem;
-
 }
-
-
-
 .hr-toast-close:hover {
-
     background: #f1f5f9;
-
     color: #475569;
-
 }
-
-
-
 .hr-toast.is-hiding {
-
     opacity: 0;
-
     transform: translateX(14px);
-
     transition: opacity .2s ease, transform .2s ease;
-
 }
-
-
-
 @keyframes hrToastIn {
-
     from {
-
         opacity: 0;
-
         transform: translateX(14px);
-
     }
-
-
-
     to {
-
         opacity: 1;
-
         transform: translateX(0);
-
     }
-
 }
-
-
-
 [data-hr-search].is-hr-search-hidden {
-
     display: none !important;
-
 }
-
-
-
 @media (max-width: 991.98px) {
-
     .main,
-
     body.hr-sidebar-collapsed .main {
-
         margin-left: 0;
-
     }
-
-
-
     .sidebar,
-
     body.hr-sidebar-collapsed .sidebar {
-
         width: min(220px, 84vw);
-
         transform: translateX(-105%);
-
         box-shadow: 18px 0 40px rgba(4,20,36,.22);
-
     }
-
-
-
     body.hr-sidebar-open { overflow: hidden; }
-
     body.hr-sidebar-open .sidebar { transform: translateX(0); }
-
-
-
     body.hr-sidebar-open .brand-copy,
-
     body.hr-sidebar-open .sidebar-text {
-
         width: auto !important;
-
         opacity: 1 !important;
-
         pointer-events: auto !important;
-
         transform: none !important;
-
     }
-
-
-
     body.hr-sidebar-open .sidebar-brand,
-
     body.hr-sidebar-open .sidebar-link,
-
     body.hr-sidebar-open .logout-btn {
-
         justify-content: flex-start !important;
-
         gap: 10px !important;
-
         padding-inline: 10px !important;
-
     }
-
-
-
     .sidebar-backdrop {
-
         position: fixed;
-
         inset: 0;
-
         z-index: 1030;
-
         display: block;
-
         border: 0;
-
         background: rgba(8,24,42,.42);
-
         opacity: 0;
-
         pointer-events: none;
-
         transition: opacity 160ms ease;
-
     }
-
-
-
     body.hr-sidebar-open .sidebar-backdrop {
-
         opacity: 1;
-
         pointer-events: auto;
-
     }
-
-
-
     .content { padding: 16px 18px 24px; }
-
     .topbar { padding-inline: 14px; }
-
     .topbar-search-wrap { width: min(340px, 48vw); }
-
 }
-
-
-
 @media (max-width: 575.98px) {
-
     .topbar-search-wrap { display: none; }
-
     .topbar-user-copy { display: none; }
-
     .content { padding: 14px; }
-
-
-
     .page-heading h1 {
-
         font-size: 1.18rem;
-
     }
-
-
-
     .hr-toast {
-
         top: 68px;
-
         right: 12px;
-
         left: 12px;
-
         width: auto;
-
     }
-
 }
-
 /* =========================================================
-
    HR SIDEBAR - CLEAN ICON SPACING
-
    Paste at the VERY BOTTOM of public/css/hr/layout.css
-
    ========================================================= */
-
-
-
 /* Keep the collapsed HR sidebar visually balanced */
-
 #hrSidebar {
-
     padding: 18px 8px 16px !important;
-
 }
-
-
-
 /* Logo area */
-
 #hrSidebar .sidebar-brand {
-
     width: 46px;
-
     height: 46px;
-
     min-height: 46px;
-
     margin: 0 auto 16px !important;
-
     padding: 0 !important;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     border-radius: 12px;
-
 }
-
-
-
 #hrSidebar .brand-logo {
-
     width: 40px !important;
-
     height: 40px !important;
-
     margin: 0 !important;
-
     object-fit: cover;
-
     border-radius: 10px;
-
 }
-
-
-
 /* Navigation stack */
-
 #hrSidebar .sidebar-nav {
-
     width: 100%;
-
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
-
     gap: 7px;
-
 }
-
-
-
 /* Every icon gets the same clickable area */
-
 #hrSidebar .sidebar-link {
-
     width: 44px !important;
-
     height: 44px !important;
-
     min-width: 44px;
-
     min-height: 44px;
-
     margin: 0 !important;
-
     padding: 0 !important;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     border-radius: 12px;
-
 }
-
-
-
 /* Center the icon exactly */
-
 #hrSidebar .sidebar-icon {
-
     width: 18px;
-
     height: 18px;
-
     min-width: 18px;
-
     display: inline-flex;
-
     align-items: center;
-
     justify-content: center;
-
     margin: 0 !important;
-
 }
-
-
-
 #hrSidebar .sidebar-link i {
-
     width: auto !important;
-
     margin: 0 !important;
-
     font-size: 0.92rem !important;
-
     line-height: 1;
-
 }
-
-
-
 /* Slightly stronger active state without making it oversized */
-
 #hrSidebar .sidebar-link.active {
-
     width: 44px !important;
-
     height: 44px !important;
-
     border-radius: 12px;
-
 }
-
-
-
 /* Hide labels cleanly in icon-only/collapsed mode */
-
 .app-shell.sidebar-collapsed #hrSidebar .sidebar-text,
-
 .app-shell.sidebar-collapsed #hrSidebar .brand-copy {
-
     display: none !important;
-
 }
-
-
-
 /* If your current CSS keeps HR permanently icon-only at desktop */
-
 @media (min-width: 769px) {
-
     #hrSidebar .sidebar-text,
-
     #hrSidebar .brand-copy {
-
         display: none;
-
     }
-
 }
-
-
-
 /* Mobile keeps normal tap spacing */
-
 @media (max-width: 768px) {
-
     #hrSidebar {
-
         padding: 16px 14px !important;
-
     }
-
-
-
     #hrSidebar .sidebar-brand {
-
         width: 100%;
-
         height: auto;
-
         justify-content: flex-start;
-
         margin-bottom: 14px !important;
-
     }
-
-
-
     #hrSidebar .sidebar-nav {
-
         align-items: stretch;
-
         gap: 5px;
-
     }
-
-
-
     #hrSidebar .sidebar-link {
-
         width: 100% !important;
-
         height: auto !important;
-
         min-height: 44px;
-
         justify-content: flex-start;
-
         padding: 10px 12px !important;
-
     }
-
-
-
     #hrSidebar .sidebar-text,
-
     #hrSidebar .brand-copy {
-
         display: inline;
-
     }
-
 }
-
 /* =========================================================
    HR SIDEBAR - EXPANDED BY DEFAULT, ICON-ONLY WHEN COLLAPSED
    ========================================================= */
-
 /* Normal desktop sidebar */
 #hrSidebar {
     padding: 12px 9px !important;
 }
-
 #hrSidebar .sidebar-brand {
     width: 100%;
     min-height: 54px;
@@ -1534,7 +665,6 @@ textarea:focus {
     padding: 6px !important;
     justify-content: flex-start;
 }
-
 #hrSidebar .brand-logo {
     width: 40px !important;
     height: 40px !important;
@@ -1543,13 +673,11 @@ textarea:focus {
     object-fit: cover;
     border-radius: 10px;
 }
-
 #hrSidebar .sidebar-nav {
     width: 100%;
     display: grid;
     gap: 4px;
 }
-
 #hrSidebar .sidebar-link {
     width: 100% !important;
     min-height: 41px;
@@ -1559,7 +687,6 @@ textarea:focus {
     justify-content: flex-start;
     border-radius: 9px;
 }
-
 #hrSidebar .sidebar-icon {
     width: 24px;
     height: auto;
@@ -1567,24 +694,20 @@ textarea:focus {
     flex: 0 0 24px;
     margin: 0 !important;
 }
-
 #hrSidebar .sidebar-link i {
     width: auto !important;
     margin: 0 !important;
     font-size: 0.8rem !important;
     line-height: 1;
 }
-
 #hrSidebar .sidebar-text,
 #hrSidebar .brand-copy {
     display: block;
 }
-
 /* Collapsed desktop sidebar */
 body.hr-sidebar-collapsed #hrSidebar {
     padding: 12px 8px !important;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-brand {
     width: 46px;
     height: 46px;
@@ -1593,19 +716,16 @@ body.hr-sidebar-collapsed #hrSidebar .sidebar-brand {
     padding: 0 !important;
     justify-content: center;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .brand-logo {
     width: 40px !important;
     height: 40px !important;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-nav {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 7px;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-link {
     width: 44px !important;
     height: 44px !important;
@@ -1615,7 +735,6 @@ body.hr-sidebar-collapsed #hrSidebar .sidebar-link {
     justify-content: center;
     border-radius: 12px;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-icon {
     width: 18px;
     height: 18px;
@@ -1625,22 +744,18 @@ body.hr-sidebar-collapsed #hrSidebar .sidebar-icon {
     align-items: center;
     justify-content: center;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-link i {
     font-size: 0.92rem !important;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-text,
 body.hr-sidebar-collapsed #hrSidebar .brand-copy {
     display: none !important;
 }
-
 /* Mobile drawer always shows labels */
 @media (max-width: 991.98px) {
     #hrSidebar {
         padding: 16px 14px !important;
     }
-
     #hrSidebar .sidebar-brand,
     body.hr-sidebar-collapsed #hrSidebar .sidebar-brand {
         width: 100%;
@@ -1650,14 +765,12 @@ body.hr-sidebar-collapsed #hrSidebar .brand-copy {
         padding: 6px !important;
         justify-content: flex-start;
     }
-
     #hrSidebar .sidebar-nav,
     body.hr-sidebar-collapsed #hrSidebar .sidebar-nav {
         display: grid;
         align-items: stretch;
         gap: 5px;
     }
-
     #hrSidebar .sidebar-link,
     body.hr-sidebar-collapsed #hrSidebar .sidebar-link {
         width: 100% !important;
@@ -1668,7 +781,6 @@ body.hr-sidebar-collapsed #hrSidebar .brand-copy {
         justify-content: flex-start;
         border-radius: 9px;
     }
-
     #hrSidebar .sidebar-icon,
     body.hr-sidebar-collapsed #hrSidebar .sidebar-icon {
         width: 24px;
@@ -1676,7 +788,6 @@ body.hr-sidebar-collapsed #hrSidebar .brand-copy {
         min-width: 24px;
         flex-basis: 24px;
     }
-
     #hrSidebar .sidebar-text,
     #hrSidebar .brand-copy,
     body.hr-sidebar-collapsed #hrSidebar .sidebar-text,
@@ -1688,12 +799,10 @@ body.hr-sidebar-collapsed #hrSidebar .brand-copy {
         transform: none !important;
     }
 }
-
 /* =========================================================
    HR SIDEBAR ACTIVE ITEM FIX
    Keep selected item full-width while sidebar is expanded.
    ========================================================= */
-
 #hrSidebar .sidebar-link.active {
     width: 100% !important;
     height: auto !important;
@@ -1704,7 +813,6 @@ body.hr-sidebar-collapsed #hrSidebar .brand-copy {
     padding: 7px 10px !important;
     border-radius: 9px !important;
 }
-
 #hrSidebar .sidebar-link.active .sidebar-text {
     display: block !important;
     width: auto !important;
@@ -1712,7 +820,6 @@ body.hr-sidebar-collapsed #hrSidebar .brand-copy {
     pointer-events: auto !important;
     transform: none !important;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-link.active {
     width: 44px !important;
     height: 44px !important;
@@ -1723,8 +830,228 @@ body.hr-sidebar-collapsed #hrSidebar .sidebar-link.active {
     padding: 0 !important;
     border-radius: 12px !important;
 }
-
 body.hr-sidebar-collapsed #hrSidebar .sidebar-link.active .sidebar-text {
     display: none !important;
 }
 
+.sidebar-group {
+    display: grid;
+    gap: 2px;
+}
+.sidebar-group-toggle {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-height: 41px;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #b7cce0;
+    font-size: .78rem;
+    font-weight: 780;
+    text-align: left;
+    cursor: pointer;
+    transition: background 130ms ease, color 130ms ease;
+}
+.sidebar-group-toggle:hover,
+.sidebar-group.is-active > .sidebar-group-toggle {
+    background: rgba(255,255,255,.07);
+    color: #fff;
+}
+.sidebar-group.is-active > .sidebar-group-toggle {
+    box-shadow: inset 3px 0 0 #2bb1ff;
+}
+.sidebar-group-toggle:hover .sidebar-icon,
+.sidebar-group.is-active > .sidebar-group-toggle .sidebar-icon {
+    color: #4bc0ff;
+}
+.sidebar-group-chevron {
+    display: inline-grid;
+    width: 18px;
+    height: 18px;
+    margin-left: auto;
+    place-items: center;
+    color: #7898b5;
+    font-size: .54rem;
+    transition: transform 150ms ease;
+}
+.sidebar-group.is-open .sidebar-group-chevron {
+    transform: rotate(180deg);
+}
+.sidebar-group-menu {
+    display: grid;
+    max-height: 0;
+    gap: 2px;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 180ms ease, opacity 140ms ease, padding 180ms ease;
+}
+.sidebar-group.is-open .sidebar-group-menu {
+    max-height: 190px;
+    padding: 2px 0 4px 34px;
+    opacity: 1;
+}
+.sidebar-sublink {
+    display: flex;
+    min-height: 34px;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    color: #8fb0cc;
+    font-size: .7rem;
+    font-weight: 720;
+    text-decoration: none;
+    transition: background 120ms ease, color 120ms ease;
+}
+.sidebar-sublink:hover {
+    background: rgba(255,255,255,.06);
+    color: #fff;
+}
+.sidebar-sublink.active {
+    background: rgba(29,155,240,.14);
+    color: #fff;
+}
+.sidebar-subdot {
+    width: 5px;
+    height: 5px;
+    flex: 0 0 5px;
+    border-radius: 999px;
+    background: #6689a8;
+}
+.sidebar-sublink.active .sidebar-subdot {
+    background: #2bb1ff;
+    box-shadow: 0 0 0 3px rgba(43,177,255,.12);
+}
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group {
+    width: 44px;
+}
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    border-radius: 12px;
+}
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle .sidebar-icon {
+    width: 18px;
+    min-width: 18px;
+    flex-basis: 18px;
+}
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle .sidebar-text,
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-chevron,
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-menu {
+    display: none;
+}
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle::after {
+    position: fixed;
+    left: 80px;
+    z-index: 1200;
+    visibility: hidden;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #102338;
+    color: #fff;
+    content: attr(data-label);
+    font-size: .68rem;
+    font-weight: 800;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-3px);
+    transition: opacity 110ms ease, transform 110ms ease, visibility 110ms ease;
+    white-space: nowrap;
+}
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle:hover::after {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(0);
+}
+@media (max-width: 991.98px) {
+    #hrSidebar .sidebar-group {
+        width: 100%;
+    }
+    #hrSidebar .sidebar-group-toggle,
+    body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle {
+        width: 100%;
+        height: auto;
+        min-height: 44px;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 9px;
+    }
+    #hrSidebar .sidebar-group-toggle .sidebar-icon,
+    body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle .sidebar-icon {
+        width: 24px;
+        min-width: 24px;
+        flex-basis: 24px;
+    }
+    body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle .sidebar-text,
+    body.hr-sidebar-collapsed #hrSidebar .sidebar-group-chevron {
+        display: inline-grid;
+    }
+    body.hr-sidebar-collapsed #hrSidebar .sidebar-group-menu {
+        display: grid;
+    }
+    #hrSidebar .sidebar-group-menu,
+    body.hr-sidebar-collapsed #hrSidebar .sidebar-group-menu {
+        padding-left: 38px;
+    }
+    body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle::after {
+        display: none;
+    }
+}
+/* =========================================================
+   HR SIDEBAR CATEGORY SPACING
+   ========================================================= */
+
+#hrSidebar .sidebar-nav {
+    gap: 9px !important;
+}
+
+#hrSidebar .sidebar-nav > .sidebar-link {
+    margin-bottom: 2px !important;
+}
+
+#hrSidebar .sidebar-group {
+    width: 100%;
+}
+
+#hrSidebar .sidebar-group-toggle {
+    min-height: 43px;
+}
+
+#hrSidebar .sidebar-group-menu {
+    margin-top: 3px;
+}
+
+#hrSidebar .sidebar-sublink {
+    min-height: 35px;
+}
+
+body.hr-sidebar-collapsed #hrSidebar .sidebar-nav {
+    gap: 10px !important;
+}
+
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group {
+    width: 44px;
+}
+
+body.hr-sidebar-collapsed #hrSidebar .sidebar-group-toggle {
+    margin: 0 !important;
+}
+
+@media (max-width: 991.98px) {
+    #hrSidebar .sidebar-nav {
+        gap: 7px !important;
+    }
+
+    #hrSidebar .sidebar-group-menu {
+        margin-top: 2px;
+    }
+}

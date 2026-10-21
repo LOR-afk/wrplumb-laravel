@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Hr;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\Quotation;
+use App\Models\User;
+use App\Services\AlertService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -114,6 +117,15 @@ class ContractController extends Controller
             'generated_by' => Auth::id(),
         ]);
 
+        $contract->load('quotation.request');
+        $this->sendClientAlert(
+            $contract,
+            'Contract ready',
+            "Contract {$contract->contract_no} is ready for your review.",
+            'info'
+        );
+        WorkflowEmailService::contractGenerated($contract);
+
         return redirect()
             ->route('hr.contracts.show', $contract)
             ->with('success', 'Contract generated successfully.');
@@ -212,16 +224,23 @@ class ContractController extends Controller
             'total_contract_price' => $newTotal,
             'special_terms' => $validated['special_terms'] ?? null,
             'revision_no' => max(1, (int) $contract->revision_no) + 1,
-            'status' => $requiresReacceptance
-                ? 'generated'
-                : $oldStatus,
-            'sent_at' => $requiresReacceptance
-                ? null
-                : $contract->sent_at,
+            'status' => $requiresReacceptance ? 'generated' : $oldStatus,
+            'sent_at' => $requiresReacceptance ? null : $contract->sent_at,
             'client_accepted_at' => $requiresReacceptance
                 ? null
                 : $contract->client_accepted_at,
         ]);
+
+        if ($requiresReacceptance) {
+            $contract->refresh()->load('quotation.request');
+            $this->sendClientAlert(
+                $contract,
+                'Contract revised',
+                "Contract {$contract->contract_no} was revised and requires your acceptance again.",
+                'warning'
+            );
+            WorkflowEmailService::contractGenerated($contract);
+        }
 
         $message = $requiresReacceptance
             ? 'Contract revised successfully. The previous client acceptance was cleared and the revised contract must be accepted again.'
@@ -244,6 +263,15 @@ class ContractController extends Controller
             'status' => 'finalized',
             'finalized_at' => now(),
         ]);
+
+        $contract->refresh()->load('quotation.request');
+        $this->sendClientAlert(
+            $contract,
+            'Contract finalized',
+            "Contract {$contract->contract_no} has been finalized.",
+            'success'
+        );
+        WorkflowEmailService::contractFinalized($contract);
 
         return redirect()
             ->route('hr.contracts.show', $contract)
@@ -268,6 +296,15 @@ class ContractController extends Controller
             'voided_at' => now(),
             'voided_by' => Auth::id(),
         ]);
+
+        $contract->refresh()->load('quotation.request');
+        $this->sendClientAlert(
+            $contract,
+            'Contract voided',
+            "Contract {$contract->contract_no} has been voided.",
+            'warning'
+        );
+        WorkflowEmailService::contractVoided($contract);
 
         return redirect()
             ->route('hr.contracts.show', $contract)
@@ -340,5 +377,33 @@ class ContractController extends Controller
             ->all();
 
         return $paymentTerms;
+    }
+
+    private function sendClientAlert(
+        Contract $contract,
+        string $title,
+        string $message,
+        string $type
+    ): void {
+        $email = $contract->quotation?->request?->email;
+
+        if (!$email) {
+            return;
+        }
+
+        $client = User::query()
+            ->where('role', 'client')
+            ->where('email', $email)
+            ->first();
+
+        if ($client) {
+            AlertService::send(
+                $client,
+                $title,
+                $message,
+                route('client.contracts.show', $contract),
+                $type
+            );
+        }
     }
 }

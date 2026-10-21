@@ -80,6 +80,77 @@ class AlertController extends Controller
         return view('admin.alerts.index', compact('alerts', 'stats', 'filter'));
     }
 
+    public function open(UserAlert $alert)
+    {
+        abort_unless($alert->user_id === Auth::id(), 403);
+
+        if (!$alert->is_read) {
+            $alert->update(['is_read' => true]);
+        }
+
+        $parts = parse_url((string) $alert->link);
+        $path = is_array($parts) ? ($parts['path'] ?? '') : '';
+
+        if (!is_string($path) || !preg_match('#^/admin(?:/|$)#', $path)) {
+            return redirect()->route('admin.alerts.index');
+        }
+
+        if ($path === '/admin/quotations') {
+            parse_str((string) ($parts['query'] ?? ''), $parameters);
+
+            if (empty($parameters['request_id'])) {
+                $requestId = $this->resolveLegacyServiceRequest($alert);
+
+                if ($requestId !== null) {
+                    return redirect()->route('admin.quotations.index', [
+                        'request_id' => $requestId,
+                    ]);
+                }
+            }
+        }
+
+        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+        $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+
+        return redirect()->to($path . $query . $fragment);
+    }
+
+    private function resolveLegacyServiceRequest(UserAlert $alert): ?int
+    {
+        $message = trim((string) $alert->message);
+
+        if (preg_match('/\bIR-\d{8}-\d{6}\b/i', $message, $match)) {
+            $requestId = \App\Models\InspectionReport::query()
+                ->where('report_no', $match[0])
+                ->value('quotation_request_id');
+
+            return $requestId ? (int) $requestId : null;
+        }
+
+        if (!preg_match('/^(.+?) submitted a new (?:service|quotation) request\.?$/iu', $message, $match)) {
+            return null;
+        }
+
+        $targetName = mb_strtolower(trim($match[1]));
+        $createdAt = $alert->created_at;
+
+        if (!$createdAt || $targetName === '') {
+            return null;
+        }
+
+        $matches = \App\Models\QuotationRequest::query()
+            ->whereNull('archived_at')
+            ->whereBetween('created_at', [
+                $createdAt->copy()->subMinutes(15),
+                $createdAt->copy()->addMinutes(5),
+            ])
+            ->get()
+            ->filter(fn ($item) => mb_strtolower(trim((string) $item->full_name)) === $targetName)
+            ->values();
+
+        return $matches->count() === 1 ? (int) $matches->first()->id : null;
+    }
+
     public function markRead(UserAlert $alert)
     {
         abort_unless($alert->user_id === Auth::id(), 403);

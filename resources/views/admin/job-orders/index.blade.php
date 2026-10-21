@@ -48,7 +48,7 @@
                 >
             </div>
 
-            <select name="status" class="form-select job-filter-select">
+            <select name="status" class="form-select job-filter-select" aria-label="Filter by status">
                 <option value="">All statuses</option>
                 <option value="scheduled" @selected(request('status') === 'scheduled')>Scheduled</option>
                 <option value="in_progress" @selected(request('status') === 'in_progress')>In Progress</option>
@@ -56,29 +56,18 @@
                 <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
             </select>
 
-            <select name="service_type" class="form-select job-filter-select">
-                <option value="">All service types</option>
-                @foreach (($serviceTypes ?? collect()) as $type)
-                    <option value="{{ $type }}" @selected(request('service_type') === $type)>
-                        {{ $type }}
-                    </option>
-                @endforeach
+            <select name="job_type" class="form-select job-filter-select" aria-label="Filter by job order type">
+                <option value="">All JO Types</option>
+                <option value="inspection" @selected(request('job_type') === 'inspection')>Inspection JO (IJO)</option>
+                <option value="service" @selected(request('job_type') === 'service')>Service JO (SJO)</option>
+                <option value="legacy" @selected(request('job_type') === 'legacy')>Legacy JO (JO)</option>
             </select>
 
-            <select name="worker_id" class="form-select job-filter-select">
-                <option value="">All workers</option>
-                @foreach (($workers ?? collect()) as $worker)
-                    @php
-                        $name = $worker->name
-                            ?? trim(($worker->first_name ?? '') . ' ' . ($worker->last_name ?? ''))
-                            ?: $worker->email;
-                    @endphp
-
-                    <option
-                        value="{{ $worker->id }}"
-                        @selected((string) request('worker_id') === (string) $worker->id)
-                    >
-                        {{ $name }}
+            <select name="year" class="form-select job-filter-select" aria-label="Filter by year">
+                <option value="">All Years</option>
+                @foreach (($years ?? collect()) as $yearOption)
+                    <option value="{{ $yearOption }}" @selected((string) request('year') === (string) $yearOption)>
+                        {{ $yearOption }}
                     </option>
                 @endforeach
             </select>
@@ -101,7 +90,6 @@
         </div>
     </section>
 </div>
-
 
 <script>
 (function () {
@@ -183,7 +171,6 @@
             }
         }
 
-        // LIVE SEARCH
         if (search) {
             search.addEventListener('input', function () {
                 clearTimeout(searchTimer);
@@ -198,22 +185,19 @@
             });
         }
 
-        // LIVE DROPDOWN FILTERS
         form.querySelectorAll(
-            'select[name="status"], select[name="service_type"], select[name="worker_id"]'
+            'select[name="status"], select[name="job_type"], select[name="year"]'
         ).forEach(function (select) {
             select.addEventListener('change', function () {
                 refreshJobs();
             });
         });
 
-        // APPLY
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             refreshJobs();
         });
 
-        // RESET
         if (reset) {
             reset.addEventListener('click', function () {
                 form.reset();
@@ -223,8 +207,6 @@
             });
         }
 
-        // SORTING + PAGINATION
-        // Uses event delegation because the table HTML gets replaced after AJAX.
         document.addEventListener('click', function (event) {
             const sortButton = event.target.closest(
                 '#jobListContainer button[data-sort-column]'

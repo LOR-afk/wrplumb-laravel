@@ -1,3 +1,4 @@
+
 @extends('inspector.layouts.app')
 
 @section('title', 'Request Details - WRPlumb')
@@ -769,7 +770,7 @@
 
                 <div>
                     <span>Estimated Total</span>
-                    <strong>
+                    <strong id="submitEstimatedTotal">
                         ₱{{ number_format($inspectionReport?->estimated_total_cost ?? 0, 2) }}
                     </strong>
                 </div>
@@ -1109,9 +1110,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmSubmitReportButton = document.getElementById('confirmSubmitReport');
     const inspectionReportForm = document.getElementById('inspectionReportForm');
     const inspectionReportAction = document.getElementById('inspectionReportAction');
+    const submitEstimatedTotal = document.getElementById('submitEstimatedTotal');
 
     function openInspectionSubmitModal() {
         if (!submitReportModal) return;
+
+        calculateEstimate();
+
+        if (submitEstimatedTotal && estimatedTotalDisplay) {
+            submitEstimatedTotal.textContent = estimatedTotalDisplay.textContent.trim();
+        }
 
         submitReportModal.hidden = false;
         document.body.classList.add('inspection-modal-open');

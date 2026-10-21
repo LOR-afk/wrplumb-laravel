@@ -427,7 +427,7 @@
                                         <span>2</span><strong>Assign</strong>
                                     </button>
                                     <button type="button" class="workflow-step" data-step-target="3">
-                                        <span>3</span><strong>Confirm</strong>
+                                        <span>3</span><strong>Date and Time</strong>
                                     </button>
                                     <button type="button" class="workflow-step" data-step-target="4">
                                         <span>4</span><strong>Job Order</strong>
@@ -1357,6 +1357,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
         showStep(currentStep);
     });
+
+    const focusedRequestId = @json(request()->query('request_id'));
+
+    if (focusedRequestId && /^\d+$/.test(String(focusedRequestId))) {
+        const focusedModal = document.getElementById('requestWorkflowModal' + focusedRequestId);
+
+        if (focusedModal && window.bootstrap?.Modal) {
+            const clientCard = focusedModal.closest('details.grouped-client-card');
+
+            if (clientCard) {
+                clientCard.open = true;
+            }
+
+            bootstrap.Modal.getOrCreateInstance(focusedModal).show();
+        }
+    }
 
     function escapeWorkflowHtml(value) {
         return String(value ?? '')

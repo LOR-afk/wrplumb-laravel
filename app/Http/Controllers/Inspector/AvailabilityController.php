@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inspector;
 
 use App\Http\Controllers\Controller;
 use App\Models\InspectorAvailability;
+use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,10 @@ class AvailabilityController extends Controller
         $monthEnd = $monthStart->copy()->endOfMonth();
 
         $monthlyAvailabilities = InspectorAvailability::where('inspector_id', Auth::id())
-            ->whereBetween('availability_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->whereBetween('availability_date', [
+                $monthStart->toDateString(),
+                $monthEnd->toDateString(),
+            ])
             ->orderBy('availability_date')
             ->get();
 
@@ -50,7 +54,10 @@ class AvailabilityController extends Controller
                     'status_label' => $this->formatStatusLabel($record->status),
                     'start_time' => $record->start_time,
                     'end_time' => $record->end_time,
-                    'time_display' => $this->formatTimeRange($record->start_time, $record->end_time),
+                    'time_display' => $this->formatTimeRange(
+                        $record->start_time,
+                        $record->end_time
+                    ),
                     'notes' => $record->notes,
                 ] : null,
             ];
@@ -63,7 +70,10 @@ class AvailabilityController extends Controller
                 'date' => $availability->availability_date->format('M d, Y'),
                 'status' => $availability->status,
                 'status_label' => $this->formatStatusLabel($availability->status),
-                'time_display' => $this->formatTimeRange($availability->start_time, $availability->end_time),
+                'time_display' => $this->formatTimeRange(
+                    $availability->start_time,
+                    $availability->end_time
+                ),
                 'notes' => $availability->notes ?: 'No notes provided.',
             ];
         });
@@ -84,11 +94,17 @@ class AvailabilityController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $leaveRequests = LeaveRequest::where('inspector_id', Auth::id())
+            ->latest()
+            ->limit(8)
+            ->get();
+
         return view('inspector.availability.index', compact(
             'availabilities',
             'calendarDays',
             'calendarRecords',
             'monthlySummary',
+            'leaveRequests',
             'selectedMonth',
             'monthStart',
             'previousMonth',
@@ -100,11 +116,23 @@ class AvailabilityController extends Controller
     {
         $validated = $request->validate([
             'availability_date' => ['required', 'date'],
-            'start_time' => ['nullable'],
-            'end_time' => ['nullable'],
-            'status' => ['required', 'in:available,on_duty,off_duty,on_leave'],
-            'notes' => ['nullable', 'string'],
+            'start_time' => ['nullable', 'date_format:H:i', 'required_with:end_time'],
+            'end_time' => ['nullable', 'date_format:H:i', 'required_with:start_time', 'after:start_time'],
+            'status' => ['required', 'in:available,off_duty'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $existing = InspectorAvailability::where('inspector_id', Auth::id())
+            ->whereDate('availability_date', $validated['availability_date'])
+            ->first();
+
+        if ($existing && in_array($existing->status, ['on_duty', 'on_leave'], true)) {
+            return back()->withErrors([
+                'status' => $existing->status === 'on_leave'
+                    ? 'This date is managed by an HR-approved leave request and cannot be changed by the inspector.'
+                    : 'This date is currently marked On Duty by the system and cannot be changed manually.',
+            ])->withInput();
+        }
 
         InspectorAvailability::updateOrCreate(
             [
@@ -126,12 +154,20 @@ class AvailabilityController extends Controller
     {
         abort_if($availability->inspector_id !== Auth::id(), 403);
 
+        if (in_array($availability->status, ['on_duty', 'on_leave'], true)) {
+            return back()->withErrors([
+                'status' => $availability->status === 'on_leave'
+                    ? 'HR-approved leave records cannot be edited by the inspector.'
+                    : 'On Duty status is controlled automatically by the system.',
+            ]);
+        }
+
         $validated = $request->validate([
             'availability_date' => ['required', 'date'],
-            'start_time' => ['nullable'],
-            'end_time' => ['nullable'],
-            'status' => ['required', 'in:available,on_duty,off_duty,on_leave'],
-            'notes' => ['nullable', 'string'],
+            'start_time' => ['nullable', 'date_format:H:i', 'required_with:end_time'],
+            'end_time' => ['nullable', 'date_format:H:i', 'required_with:start_time', 'after:start_time'],
+            'status' => ['required', 'in:available,off_duty'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $availability->update($validated);
@@ -142,6 +178,14 @@ class AvailabilityController extends Controller
     public function destroy(InspectorAvailability $availability)
     {
         abort_if($availability->inspector_id !== Auth::id(), 403);
+
+        if (in_array($availability->status, ['on_duty', 'on_leave'], true)) {
+            return back()->withErrors([
+                'availability' => $availability->status === 'on_leave'
+                    ? 'HR-approved leave records cannot be deleted by the inspector.'
+                    : 'On Duty records are controlled automatically by the system.',
+            ]);
+        }
 
         $availability->delete();
 

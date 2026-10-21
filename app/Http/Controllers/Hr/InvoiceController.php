@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\PaymentSchedule;
 use App\Models\Quotation;
+use App\Models\User;
+use App\Services\AlertService;
+use App\Services\WorkflowEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -112,9 +115,7 @@ class InvoiceController extends Controller
             ])->withInput();
         }
 
-        $invoice = null;
-
-        DB::transaction(function () use ($validated, $quotation, &$invoice) {
+        $invoice = DB::transaction(function () use ($validated, $quotation): Invoice {
             $quotation->load('items');
 
             $invoice = Invoice::create([
@@ -138,7 +139,28 @@ class InvoiceController extends Controller
             }
 
             $this->generatePaymentSchedules($invoice, $quotation);
+
+            return $invoice;
         });
+
+        $invoice->refresh()->load('quotation.request');
+
+        $client = User::query()
+            ->where('role', 'client')
+            ->where('email', $invoice->quotation?->request?->email)
+            ->first();
+
+        if ($client) {
+            AlertService::send(
+                $client,
+                'Invoice ready',
+                "Invoice {$invoice->invoice_no} and its payment schedule are ready.",
+                route('client.invoices.show', $invoice),
+                'info'
+            );
+        }
+
+        WorkflowEmailService::invoiceCreated($invoice);
 
         return redirect()
             ->route('hr.invoices.show', $invoice)
@@ -386,9 +408,8 @@ public function markScheduleReady(
         foreach ($paymentTerms['phases'] as $index => $phase) {
             $phaseLabel = $phase['label'] ?? ('Phase ' . ($index + 1));
 
-            $isInitialBillingPhase = $index === 0
-                || str_contains(strtolower($phaseLabel), 'downpayment')
-                || str_contains(strtolower($phaseLabel), 'full payment');
+            $isDownpayment = $index === 0
+                || str_contains(strtolower($phaseLabel), 'downpayment');
 
             $invoice->paymentSchedules()->create([
                 'label' => $phaseLabel,
@@ -400,17 +421,13 @@ public function markScheduleReady(
                     ->addDays($index * 15)
                     ->toDateString(),
                 'status' => 'pending',
-                'milestone_status' => $isInitialBillingPhase
+                'milestone_status' => $isDownpayment
                     ? 'ready_for_billing'
                     : 'not_ready',
-                'ready_for_billing_at' => $isInitialBillingPhase ? now() : null,
-                'ready_for_billing_by' => $isInitialBillingPhase ? Auth::id() : null,
-                'milestone_notes' => $isInitialBillingPhase
-                    ? (
-                        str_contains(strtolower($phaseLabel), 'full payment')
-                            ? 'Full payment schedule ready for billing.'
-                            : 'Initial downpayment phase.'
-                    )
+                'ready_for_billing_at' => $isDownpayment ? now() : null,
+                'ready_for_billing_by' => $isDownpayment ? Auth::id() : null,
+                'milestone_notes' => $isDownpayment
+                    ? 'Initial downpayment phase.'
                     : null,
                 'notes' => null,
                 'sort_order' => $index + 1,
